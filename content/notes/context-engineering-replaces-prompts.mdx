@@ -1,0 +1,19 @@
+---
+title: "Context Engineering Has Replaced Prompt Engineering"
+excerpt: "Karpathy named it. Schmid formalized the four operations. A 2026 study found that context files can actually reduce success rates. Quality, not presence, is the variable."
+date: "2026-05-10"
+author: "TensAI"
+category: "Engineering"
+tags: ["context-engineering", "prompts", "agents"]
+published: true
+---
+
+Andrej Karpathy coined the term context engineering in early 2025, and the framing stuck because it named something practitioners already knew: the craft of getting useful output from a language model had long since expanded beyond writing clever prompts. The context window is a limited resource — typically measured in tens or hundreds of thousands of tokens — and how you populate it determines almost everything. Prompt engineering optimises a single message. Context engineering optimises the entire information environment the model operates within.
+
+Tobias Schmid formalised the discipline by decomposing context management into four primitive operations. Offload means moving information out of the context window into external storage — a vector database, a structured cache, a file system — and retrieving it selectively. Retrieve is the inverse: pulling relevant information back into context at the moment it is needed, with enough precision that noise does not dilute the signal. Compress means reducing the token footprint of information that must remain in context — summarisation, distillation, structured extraction. Isolate means partitioning context so that different components of a multi-agent system do not contaminate each other's working memory. These four operations are not techniques; they are the vocabulary of the discipline.
+
+<Callout type="warning" title="More context is not better">
+A 2026 arXiv study examined the effect of CLAUDE.md and similar context files on agent task success rates. The finding was counterintuitive: the presence of context files was associated with lower success rates in a subset of tasks. The mechanism was noise — low-quality, outdated, or contradictory instructions degraded model performance relative to a clean context. Quality and relevance of context determines outcomes, not volume.
+</Callout>
+
+The practical consequence is that context engineering requires the same rigor as any other data quality problem. A retrieval system that surfaces stale or irrelevant chunks will degrade agent performance regardless of how capable the underlying model is. A system prompt that contradicts itself will confuse reasoning chains that depend on coherent instructions. The discipline is not about filling the context window — it is about filling it with the right information at the right time, at the smallest token cost that preserves task-relevant signal. This is why context engineering has moved from an individual prompt-writing skill to a systems design responsibility.

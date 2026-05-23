@@ -9,6 +9,7 @@ import { Callout } from "@/components/mdx/Callout";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
+import ConceptConnections from "@/components/content/ConceptConnections";
 
 const mdxComponents = {
   ContentPlaceholder,
@@ -155,6 +156,13 @@ export default async function OperatingModelConceptPage({
               components={mdxComponents}
             />
           </div>
+
+          {/* ── Related concepts ─────────────────────────────────── */}
+          <ConceptConnections
+            currentSlug={slug}
+            currentPillar="operating-model"
+            spineConcepts={concept.frontmatter.spineConcepts}
+          />
 
           {/* ── Prev / Next navigation ───────────────────────────── */}
           {(prevConcept || nextConcept) && (

@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import DiagramSlot from "@/components/diagrams/DiagramSlot";
 import { getConceptsByPillar } from "@/lib/content";
 import { PILLARS } from "@/lib/spine-data";
+import CrossAltitudeStrip from "@/components/content/CrossAltitudeStrip";
 
 export const metadata = {
   title: "The Groundwork — TensAI",
@@ -153,6 +154,25 @@ export default function GroundworkPage() {
             })}
           </div>
         </section>
+
+        {/* ── Worked example ────────────────────────────────────── */}
+        <CrossAltitudeStrip
+          workedExample={{
+            name: "Prompt Injection",
+            craft: {
+              headline: "Understand the attack",
+              text: "The practitioner learns how injection works, why instruction/data separation matters, and how to wire layered defences into the harness.",
+            },
+            operatingModel: {
+              headline: "Decide who can wire it",
+              text: "The org decides which tier of builder may connect agents to sensitive tools, and how the Agent Catalog risk-tiers those agents.",
+            },
+            groundwork: {
+              headline: "Set the policy and the gateway",
+              text: "The enterprise mandates the AI gateway, the classifier on every input path, and the governance answer to a live incident.",
+            },
+          }}
+        />
       </main>
 
       <SiteFooter />

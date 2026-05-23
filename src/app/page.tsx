@@ -3,6 +3,8 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { MapScrollSequence } from "@/components/marketing/MapScrollSequence";
+import { FractalRule } from "@/components/marketing/FractalRule";
 
 const PILLARS = [
   {
@@ -137,6 +139,10 @@ export default function Home() {
             }
           `}</style>
         </section>
+
+        <MapScrollSequence />
+
+        <FractalRule />
 
         {/* Pillar Gateways */}
         <section style={{ padding: "96px 24px" }}>

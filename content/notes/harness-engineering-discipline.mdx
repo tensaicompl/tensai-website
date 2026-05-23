@@ -1,0 +1,34 @@
+---
+title: "Harness Engineering Is the New Senior Discipline"
+excerpt: "The model is frozen. Everything that matters — memory, validation, tool use, permissioning — lives in the harness. This is where senior engineers now spend their time."
+date: "2026-05-20"
+author: "TensAI"
+category: "Engineering"
+tags: ["harness", "agents", "architecture"]
+published: true
+---
+
+Martin Fowler drew the line cleanly in his 2024 guide to LLM-based agents: the system that runs a model consists of guides and sensors. Guides shape what the model can do — system prompts, tool definitions, memory retrieval, constrained output schemas. Sensors observe what it actually does — structured output parsers, confidence checks, output validators, circuit breakers that catch hallucinations before they propagate downstream. Together, they are the harness. The model itself is a frozen artifact.
+
+This decomposition has a consequence that most teams have not fully absorbed. The model vendors — OpenAI, Anthropic, Google — are shipping increasingly capable reasoning engines on a fixed cadence. Fine-tuning is possible but rarely the right lever. What differentiates a production-grade AI system from a demo is almost entirely what surrounds the model: how carefully memory is scoped and retrieved, how tool permissions are gated, how validation catches semantic errors rather than just schema violations, how failures degrade gracefully rather than silently. LangChain summarised the shift bluntly: if you are not the model, you are the harness.
+
+<Callout type="note" title="The Fowler decomposition">
+Guides shape model behaviour at input time — system prompts, retrieved context, tool schemas, few-shot examples. Sensors constrain and evaluate output — parsers, validators, confidence thresholds, downstream circuit breakers. Senior engineering effort concentrates on the sensor layer, where most production failures originate.
+</Callout>
+
+The implication for team structure is significant. A mid-level engineer can wire up a working agent against a capable model in a day. The hard work — designing idempotent tool use, building evaluation pipelines that catch regression, implementing permission hierarchies that prevent privilege escalation across multi-agent chains, writing memory retrieval logic that stays coherent across long conversations — requires the kind of systems thinking that senior engineers spent the previous decade applying to databases and distributed services. Harness engineering is not a narrow specialisation. It is the domain where the field's most consequential technical decisions now live.
+
+<CodeBlock language="typescript">{`// Example: a sensor that validates structured output before it reaches downstream tools
+async function validateAgentOutput(raw: unknown): Promise<AgentOutput> {
+  const parsed = AgentOutputSchema.safeParse(raw);
+  if (!parsed.success) {
+    // Sensor fires — log, alert, and return a safe fallback
+    logger.warn({ errors: parsed.error.issues }, "agent_output_invalid");
+    throw new HarnessValidationError("Output failed schema check", parsed.error);
+  }
+  // Semantic check beyond schema
+  if (parsed.data.confidence < CONFIDENCE_THRESHOLD) {
+    throw new HarnessValidationError("Output below confidence threshold");
+  }
+  return parsed.data;
+}`}</CodeBlock>

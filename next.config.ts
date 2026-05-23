@@ -11,6 +11,21 @@ const nextConfig: NextConfig = {
   // MDX support placeholder — install @next/mdx and uncomment when ready:
   // pageExtensions: ["ts", "tsx", "md", "mdx"],
   // ...withMDX(),
+
+  async redirects() {
+    return [
+      {
+        source: "/privacy",
+        destination: "/legal/privacy",
+        permanent: true,
+      },
+      {
+        source: "/terms",
+        destination: "/legal/terms",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

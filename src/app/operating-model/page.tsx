@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import DiagramSlot from "@/components/diagrams/DiagramSlot";
 import { getConceptsByPillar } from "@/lib/content";
 import { PILLARS } from "@/lib/spine-data";
+import CrossAltitudeStrip from "@/components/content/CrossAltitudeStrip";
 
 export const metadata = {
   title: "The Operating Model — TensAI",
@@ -154,6 +155,25 @@ export default function OperatingModelPage() {
             })}
           </div>
         </section>
+
+        {/* ── Worked example ────────────────────────────────────── */}
+        <CrossAltitudeStrip
+          workedExample={{
+            name: "Skills",
+            craft: {
+              headline: "Build the skill",
+              text: "The practitioner defines a SKILL.md with metadata, scripts, and references — a portable, versioned unit of capability.",
+            },
+            operatingModel: {
+              headline: "Govern the catalog",
+              text: "The org registers skills in a searchable registry, scores them, and gates which tiers of users can deploy them.",
+            },
+            groundwork: {
+              headline: "Set the reuse policy",
+              text: "Leadership mandates that all AI capabilities ship as skills — versioned, governed, and findable across teams.",
+            },
+          }}
+        />
       </main>
 
       <SiteFooter />

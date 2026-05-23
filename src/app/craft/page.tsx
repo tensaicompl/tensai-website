@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import DiagramSlot from "@/components/diagrams/DiagramSlot";
 import { getConceptsByPillar } from "@/lib/content";
 import { PILLARS } from "@/lib/spine-data";
+import CrossAltitudeStrip from "@/components/content/CrossAltitudeStrip";
 
 export const metadata = {
   title: "The Craft — TensAI",
@@ -154,6 +155,25 @@ export default function CraftPage() {
             })}
           </div>
         </section>
+
+        {/* ── Worked example ────────────────────────────────────── */}
+        <CrossAltitudeStrip
+          workedExample={{
+            name: "Evals",
+            craft: {
+              headline: "Build the eval surface",
+              text: "Three evaluation surfaces — unit evals on discrete steps, regression suites, and continuous production trace sampling.",
+            },
+            operatingModel: {
+              headline: "Standardise the eval pipeline",
+              text: "The platform team provides shared eval infrastructure, dashboards, and quality gates that every agent must pass.",
+            },
+            groundwork: {
+              headline: "Set the quality bar",
+              text: "Leadership defines acceptable accuracy, latency, and cost thresholds per risk tier, and ties them to the governance framework.",
+            },
+          }}
+        />
       </main>
 
       <SiteFooter />
