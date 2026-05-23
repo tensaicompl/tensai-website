@@ -1,34 +1,29 @@
+import Link from "next/link";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { MapScrollSequence } from "@/components/marketing/MapScrollSequence";
-import { FractalRule } from "@/components/marketing/FractalRule";
+import { TheMap } from "@/components/marketing/TheMap";
 
-const PILLARS = [
+const GATEWAYS = [
   {
     numeral: "I",
-    tag: "For those who decide",
     name: "The Groundwork",
     description:
-      "The enterprise framework for AI. Operating model, security, governance, FinOps.",
+      "The enterprise framework for AI — operating model, security, governance, FinOps. Written for sharp people, not for a board deck.",
     href: "/groundwork",
   },
   {
     numeral: "II",
-    tag: "For those who scale it",
     name: "The Operating Model",
     description:
-      "How an organisation actually runs agents. Skills, catalogs, enablement.",
+      "How an organisation actually runs agents — skills, catalogs, power users, enablement.",
     href: "/operating-model",
   },
   {
     numeral: "III",
-    tag: "For those who build it",
     name: "The Craft",
     description:
-      "The practitioner's complete, concept-level playbook of AI today.",
+      "The practitioner's complete, concept-level playbook of AI today — novelties included.",
     href: "/craft",
   },
 ];
@@ -41,37 +36,25 @@ export default function Home() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden" style={{ padding: "64px 24px 96px" }}>
-          <div className="hero-grid mx-auto grid max-w-[1200px] items-center gap-16" style={{ gridTemplateColumns: "1.1fr 1fr" }}>
+          <div
+            className="hero-grid mx-auto grid max-w-[1200px] items-center gap-16"
+            style={{ gridTemplateColumns: "1.1fr 1fr" }}
+          >
             <div>
-              <div
-                className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5"
-                style={{
-                  background: "var(--bg-surface)",
-                  borderColor: "var(--border)",
-                  color: "var(--fg-2)",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                }}
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />
-                THE ENTERPRISE AI BLUEPRINT
-              </div>
+              <Eyebrow>A FIELD GUIDE TO ENTERPRISE AI</Eyebrow>
 
               <h1
                 className="font-display"
                 style={{
                   marginTop: "24px",
-                  fontSize: "clamp(48px, 6vw, 76px)",
+                  fontSize: "clamp(40px, 5vw, 64px)",
                   fontWeight: 700,
                   letterSpacing: "-0.025em",
                   lineHeight: 1.05,
                   color: "var(--fg-1)",
                 }}
               >
-                One system.
-                <br />
-                Whole before parts.
+                Building AI properly is an architecture problem.
               </h1>
 
               <p
@@ -80,31 +63,61 @@ export default function Home() {
                   fontSize: "20px",
                   lineHeight: 1.55,
                   color: "var(--fg-2)",
-                  maxWidth: "520px",
+                  maxWidth: "540px",
                 }}
               >
-                TensAI maps the territory of enterprise AI — from commodity
-                token sourcing to governed, compounding value. One taxonomy.
-                Three pillars. Every concept connected.
+                Most enterprises are not short on models. They are short on the
+                structure that turns models into something that compounds. TensAI
+                maps that structure — the whole of it, on one page — before the
+                descent into detail.
               </p>
 
-              <div className="mt-9 flex items-center gap-3">
-                <Button variant="primary" size="lg">
-                  Explore the Spine
-                </Button>
-                <Button variant="outline" size="lg">
-                  Read the Craft
-                </Button>
+              <div
+                style={{
+                  marginTop: "20px",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: "var(--fs-small)",
+                  letterSpacing: "var(--tracking-wide)",
+                  color: "var(--fg-3)",
+                }}
+              >
+                Driving innovation.
               </div>
 
-              <div
-                className="mt-7 flex items-center gap-3"
-                style={{ fontSize: "13px", color: "var(--fg-3)" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-                18 canonical concepts &nbsp;·&nbsp; 3 pillars &nbsp;·&nbsp; Vendor-neutral
+              <div className="mt-8 flex items-center gap-3">
+                <Link
+                  href="/spine"
+                  className="inline-flex items-center justify-center font-semibold"
+                  style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                    padding: "14px 26px",
+                    borderRadius: "var(--radius-pill)",
+                    fontSize: "15px",
+                    boxShadow: "var(--shadow-accent)",
+                    textDecoration: "none",
+                    transition: "background var(--dur-fast) var(--ease-out)",
+                  }}
+                >
+                  Open the Spine
+                </Link>
+                <Link
+                  href="/craft"
+                  className="inline-flex items-center justify-center font-semibold"
+                  style={{
+                    background: "var(--bg-card)",
+                    color: "var(--fg-1)",
+                    border: "1px solid var(--border)",
+                    padding: "13px 25px",
+                    borderRadius: "var(--radius-pill)",
+                    fontSize: "15px",
+                    textDecoration: "none",
+                    transition: "border-color var(--dur-fast) var(--ease-out)",
+                  }}
+                >
+                  Read the Craft
+                </Link>
               </div>
             </div>
 
@@ -112,7 +125,8 @@ export default function Home() {
               <div
                 className="absolute inset-0"
                 style={{
-                  background: "radial-gradient(circle at center, rgba(109,40,217,0.06), transparent 60%)",
+                  background:
+                    "radial-gradient(circle at center, rgba(109,40,217,0.06), transparent 60%)",
                 }}
               />
               <img
@@ -140,14 +154,17 @@ export default function Home() {
           `}</style>
         </section>
 
-        <MapScrollSequence />
-
-        <FractalRule />
-
-        {/* Pillar Gateways */}
+        {/* The Map */}
         <section style={{ padding: "96px 24px" }}>
-          <div className="mx-auto max-w-[1200px]">
-            <Eyebrow>THREE PILLARS, ONE ASCENT</Eyebrow>
+          <div
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              textAlign: "center",
+              marginBottom: "64px",
+            }}
+          >
+            <Eyebrow className="justify-center">THE WHOLE SYSTEM</Eyebrow>
             <h2
               className="font-display"
               style={{
@@ -158,114 +175,266 @@ export default function Home() {
                 lineHeight: 1.1,
               }}
             >
-              Lay the groundwork. Install the model. Master the craft.
+              Enterprise AI, drawn as one system.
             </h2>
-
-            <div
-              className="mt-14 grid gap-5"
-              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}
+            <p
+              style={{
+                marginTop: "16px",
+                fontSize: "20px",
+                lineHeight: 1.55,
+                color: "var(--fg-2)",
+                maxWidth: "680px",
+                margin: "16px auto 0",
+              }}
             >
-              {PILLARS.map((p) => (
-                <a key={p.numeral} href={p.href} className="no-underline">
-                  <Card className="h-full">
-                    <div
-                      className="font-display"
-                      style={{
-                        fontWeight: 800,
-                        fontSize: "48px",
-                        lineHeight: 0.9,
-                        color: "var(--color-surface)",
-                        WebkitTextStroke: "1.2px var(--color-midnight)",
-                      }}
-                    >
-                      {p.numeral}
-                    </div>
-                    <div
-                      className="mt-4"
-                      style={{
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color: "var(--fg-3)",
-                      }}
-                    >
-                      {p.tag}
-                    </div>
-                    <h3
-                      className="font-display mt-2"
-                      style={{ fontSize: "22px", fontWeight: 700, color: "var(--fg-1)" }}
-                    >
-                      {p.name}
-                    </h3>
-                    <p className="mt-2" style={{ fontSize: "14px", color: "var(--fg-2)", lineHeight: 1.6 }}>
-                      {p.description}
-                    </p>
-                  </Card>
-                </a>
-              ))}
-            </div>
+              One system. It converts sourced, commodity intelligence into
+              governed, compounding value. Commodity inputs at the floor, three
+              pillars in elevation, the spine threading through them, governance
+              framing the whole.
+            </p>
           </div>
+
+          <TheMap />
         </section>
 
-        {/* CTA */}
-        <section
-          className="relative overflow-hidden"
-          style={{ background: "var(--bg-darker)", color: "var(--fg-on-dark)", padding: "120px 24px" }}
-        >
-          <img
-            src="/logos/icon-black.svg"
-            alt=""
+        {/* Fractal Rule */}
+        <section style={{ padding: "96px 24px" }}>
+          <div
+            className="fractal-grid"
             style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "760px",
-              opacity: 0.16,
-              pointerEvents: "none",
-              filter: "invert(1)",
+              maxWidth: "1200px",
+              margin: "0 auto",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "48px",
+              alignItems: "center",
             }}
-          />
-          <div className="relative mx-auto max-w-[760px] text-center">
-            <Eyebrow className="text-[var(--fg-sub-dark)]">DRIVING INNOVATION</Eyebrow>
+          >
+            <div>
+              <Eyebrow>HOW TO READ THIS SITE</Eyebrow>
+              <p
+                className="font-display"
+                style={{
+                  marginTop: "18px",
+                  fontSize: "clamp(24px, 3vw, 36px)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.15,
+                  color: "var(--fg-1)",
+                }}
+              >
+                Whole before parts.
+                <br />
+                <em style={{ fontStyle: "italic", fontWeight: 400 }}>
+                  At every level.
+                </em>
+              </p>
+              <p
+                style={{
+                  marginTop: "22px",
+                  fontSize: "20px",
+                  lineHeight: 1.55,
+                  color: "var(--fg-2)",
+                  maxWidth: "460px",
+                }}
+              >
+                The same shape — frame, pillars, spine — appears at the scale of
+                the site, of a pillar, and of a single page. The site opens with
+                this map. Each pillar opens with its own map. Each page opens
+                with its own diagram. You always see the shape of a thing before
+                its detail.
+              </p>
+            </div>
+
+            <div
+              style={{
+                border: "1px solid var(--fg-3)",
+                padding: "24px",
+                position: "relative",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: "10.5px",
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "var(--fg-3)",
+                }}
+              >
+                Site
+              </span>
+              <div
+                style={{
+                  border: "1px solid var(--fg-2)",
+                  padding: "24px",
+                  marginTop: "14px",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 700,
+                    fontSize: "10.5px",
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "var(--fg-2)",
+                  }}
+                >
+                  Pillar
+                </span>
+                <div
+                  style={{
+                    border: "1px solid var(--fg-1)",
+                    padding: "24px",
+                    marginTop: "14px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 700,
+                      fontSize: "10.5px",
+                      letterSpacing: "0.16em",
+                      textTransform: "uppercase",
+                      color: "var(--fg-1)",
+                    }}
+                  >
+                    Page
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <style>{`
+            @media (max-width: 768px) {
+              .fractal-grid { grid-template-columns: 1fr !important; }
+            }
+          `}</style>
+        </section>
+
+        {/* Pillar Gateways */}
+        <section style={{ padding: "96px 24px" }}>
+          <div
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              textAlign: "center",
+              marginBottom: "48px",
+            }}
+          >
+            <Eyebrow className="justify-center">PILLARS</Eyebrow>
             <h2
               className="font-display"
               style={{
-                marginTop: "14px",
-                fontSize: "clamp(32px, 5vw, 60px)",
+                marginTop: "12px",
+                fontSize: "clamp(28px, 4vw, 44px)",
                 fontWeight: 700,
-                color: "var(--fg-on-dark)",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
               }}
             >
-              The territory, mapped. The craft, codified.
+              Enter the field guide.
             </h2>
-            <p className="mt-5" style={{ fontSize: "20px", color: "var(--fg-sub-dark)", lineHeight: 1.55 }}>
-              Explore 18 canonical concepts across three altitudes — from
-              enterprise governance to practitioner playbook.
-            </p>
-            <div className="mt-9 flex items-center justify-center gap-3">
-              <Button variant="primary" size="lg">
-                Explore the Spine
-              </Button>
-              <button
-                className="inline-flex items-center justify-center font-semibold"
+          </div>
+
+          <div
+            className="gateway-grid"
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "20px",
+            }}
+          >
+            {GATEWAYS.map((g) => (
+              <Link
+                key={g.numeral}
+                href={g.href}
+                className="gateway-card"
                 style={{
-                  background: "transparent",
-                  color: "var(--fg-on-dark)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  padding: "16px 30px",
-                  borderRadius: "999px",
-                  fontSize: "16px",
-                  cursor: "pointer",
+                  display: "block",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "28px",
+                  textDecoration: "none",
+                  color: "var(--fg-1)",
+                  transition:
+                    "box-shadow var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out)",
                 }}
               >
-                Read the Groundwork
-              </button>
-            </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "var(--fg-3)",
+                  }}
+                >
+                  {g.numeral} · PILLAR
+                </div>
+                <div
+                  className="font-display"
+                  style={{
+                    fontWeight: 700,
+                    fontSize: "22px",
+                    marginTop: "12px",
+                    letterSpacing: "-0.02em",
+                    color: "var(--fg-1)",
+                  }}
+                >
+                  {g.name}
+                </div>
+                <p
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "14px",
+                    lineHeight: 1.55,
+                    color: "var(--fg-2)",
+                  }}
+                >
+                  {g.description}
+                </p>
+                <div
+                  style={{
+                    marginTop: "20px",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    color: "var(--fg-1)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  Read pillar
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            ))}
           </div>
+
+          <style>{`
+            .gateway-card:hover {
+              box-shadow: var(--shadow-md);
+              border-color: var(--color-midnight-muted);
+            }
+            @media (max-width: 768px) {
+              .gateway-grid { grid-template-columns: 1fr !important; }
+            }
+          `}</style>
         </section>
       </main>
 

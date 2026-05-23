@@ -1,0 +1,396 @@
+/* =============================================================
+   TheMap — CSS Module
+   Architectural blueprint diagram. Tokens only — no hardcoded colours.
+   ============================================================= */
+
+/* ── Outer wrapper ─────────────────────────────────────────── */
+.mapWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 980px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Value indicator (top) ─────────────────────────────────── */
+.valueOut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 6px;
+}
+
+.valueArrow {
+  display: block;
+  color: var(--color-midnight);
+}
+
+.valueLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--color-midnight);
+}
+
+/* ── Outer frame ───────────────────────────────────────────── */
+.mapFrame {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--color-midnight);
+  background-color: var(--bg-page);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(15, 23, 42, 0.08) 1px,
+    transparent 1.4px
+  );
+  background-size: 16px 16px;
+}
+
+/* Corner bracket — top-left */
+.mapFrame::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 18px;
+  height: 18px;
+  border-top: 2px solid var(--color-midnight);
+  border-left: 2px solid var(--color-midnight);
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Corner bracket — bottom-right */
+.mapFrame::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  border-bottom: 2px solid var(--color-midnight);
+  border-right: 2px solid var(--color-midnight);
+  background: transparent;
+  pointer-events: none;
+}
+
+/* ── Governance band ───────────────────────────────────────── */
+.govBand {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--color-midnight);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: var(--color-midnight);
+  background: transparent;
+}
+
+.govBandLeft {
+  color: var(--color-midnight);
+}
+
+.govBandRight {
+  color: var(--color-midnight);
+  opacity: 0.55;
+}
+
+/* ── Spine ─────────────────────────────────────────────────── */
+.spineWrap {
+  position: relative;
+}
+
+/* Spine vertical line: sits at left edge of the 96px numeral column */
+.spineLine {
+  position: absolute;
+  /* 96px numeral col — place at centre of it = 48px */
+  left: 48px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-midnight);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spineLabel {
+  position: absolute;
+  left: 48px;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--color-midnight);
+  white-space: nowrap;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Pillar stratum ────────────────────────────────────────── */
+.pillar {
+  display: grid;
+  grid-template-columns: 96px 1fr 220px;
+  border-bottom: 1px solid var(--color-midnight);
+  background: var(--bg-page);
+  position: relative;
+}
+
+/* Junction square — filled midnight square on spine at pillar top */
+.junction {
+  position: absolute;
+  top: 0;
+  /* Centre on spine: 48px - half of 9px = 43.5px */
+  left: 43.5px;
+  width: 9px;
+  height: 9px;
+  background: var(--color-midnight);
+  z-index: 3;
+}
+
+/* ── Pillar numeral column ─────────────────────────────────── */
+.pillarNum {
+  padding: 28px 0 28px 18px;
+  border-right: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  position: relative;
+  z-index: 2;
+}
+
+.pillarNumeral {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-midnight);
+  /* nudge so the numeral clears the spine line visually */
+  padding-left: 14px;
+}
+
+.pillarNumSub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg-3);
+  margin-top: 4px;
+  padding-left: 15px;
+}
+
+/* ── Pillar body column ────────────────────────────────────── */
+.pillarBody {
+  padding: 28px 28px 28px 32px;
+  min-height: 168px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.pillarName {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--fg-1);
+  margin: 0;
+}
+
+.pillarDesc {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--fg-2);
+  max-width: 360px;
+  line-height: 1.55;
+}
+
+/* ── Pillar notes column ───────────────────────────────────── */
+.pillarNotes {
+  padding: 28px 18px;
+  border-left: 1px dashed var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.notesHeader {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg-3);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.notesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.noteRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0;
+  line-height: 1.7;
+}
+
+/* Strata concept links */
+.strataLink {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-midnight);
+  text-decoration: none;
+  transition: text-decoration var(--dur-fast) var(--ease-out);
+}
+
+.strataLink:hover {
+  text-decoration: underline;
+  color: var(--color-midnight);
+}
+
+/* ── Inputs floor ──────────────────────────────────────────── */
+.floor {
+  display: flex;
+  align-items: center;
+  padding: 18px 30px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fg-3);
+  flex-wrap: wrap;
+  gap: 0;
+  background: var(--bg-page);
+}
+
+.floorItem {
+  padding: 0 16px 0 0;
+  color: var(--fg-3);
+}
+
+.floorItem:not(:last-child) {
+  margin-right: 16px;
+  padding-right: 16px;
+  border-right: 1px solid var(--border);
+}
+
+/* ── Measurement strip (below frame) ───────────────────────── */
+.measure {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 0;
+  padding: 0;
+  position: relative;
+}
+
+.measureNum {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-3);
+  opacity: 0.6;
+  flex-shrink: 0;
+  padding: 6px 0;
+}
+
+.measureTicks {
+  flex: 1;
+  height: 6px;
+  margin: 0 10px;
+  background-image: linear-gradient(
+    to right,
+    var(--color-midnight) 1px,
+    transparent 1px
+  );
+  background-size: 12px 100%;
+  opacity: 0.18;
+}
+
+.measureLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: lowercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+  opacity: 0.6;
+  flex-shrink: 0;
+  padding: 6px 0;
+}
+
+/* ── Responsive: hide notes column below 768px ─────────────── */
+@media (max-width: 768px) {
+  .pillar {
+    grid-template-columns: 72px 1fr;
+  }
+
+  .pillarNotes {
+    display: none;
+  }
+
+  .pillarNumeral {
+    font-size: 40px;
+    padding-left: 10px;
+  }
+
+  .pillarNum {
+    padding: 20px 0 20px 12px;
+  }
+
+  .pillarBody {
+    padding: 20px 18px 20px 22px;
+    min-height: auto;
+  }
+
+  .pillarName {
+    font-size: 20px;
+  }
+
+  .pillarDesc {
+    font-size: 13px;
+    max-width: 100%;
+  }
+
+  .spineLine {
+    left: 36px;
+  }
+
+  .spineLabel {
+    left: 36px;
+  }
+
+  .junction {
+    left: 31.5px;
+  }
+
+  .floor {
+    padding: 14px 18px;
+    gap: 8px;
+  }
+
+  .floorItem:not(:last-child) {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+}
