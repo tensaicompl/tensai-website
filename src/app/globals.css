@@ -1,0 +1,367 @@
+@import "tailwindcss";
+
+/* =============================================================
+   TensAI Design System — globals.css
+   Tailwind CSS 4 · @theme inline approach · light mode only
+   ============================================================= */
+
+/* ---------- CSS Custom Properties (design tokens) ---------- */
+:root {
+  /* =========================================================
+     COLOR · Brand foundation
+     ========================================================= */
+
+  /* Backgrounds */
+  --color-bg-black:         #000000;
+  --color-bg-white:         #FAFAFA;
+
+  /* Primary — Violet */
+  --color-violet:           #6D28D9;  /* base · primary actions */
+  --color-violet-hover:     #7C3AED;  /* hover state */
+  --color-violet-pressed:   #5B21B6;  /* active / pressed */
+  --color-violet-light:     #C4B5FD;  /* text on dark */
+  --color-violet-wash:      #EDE9FE;  /* tinted backgrounds, callouts */
+  --color-violet-tint:      rgba(109, 40, 217, 0.12); /* overlays */
+
+  /* Midnight (deep neutral / dark surfaces) */
+  --color-midnight:         #0F172A;  /* headlines, dark sections */
+  --color-midnight-light:   #1E293B;  /* cards / surfaces on black */
+  --color-midnight-muted:   #334155;  /* body text */
+  --color-midnight-subtext: #94A3B8;  /* secondary on dark */
+  --color-midnight-on-dark: #F8FAFC;  /* primary text on dark */
+
+  /* Gray & Surface */
+  --color-gray:             #6B7280;  /* helper, captions */
+  --color-gray-light:       #9CA3AF;  /* input placeholders */
+  --color-surface:          #F1F5F9;  /* cards, raised areas */
+  --color-border:           #E2E8F0;  /* dividers, input borders */
+
+  /* =========================================================
+     SEMANTIC · Roles
+     ========================================================= */
+  --fg-1:        var(--color-midnight);
+  --fg-2:        var(--color-midnight-muted);
+  --fg-3:        var(--color-gray);
+  --fg-4:        var(--color-gray-light);
+  --fg-on-dark:  var(--color-midnight-on-dark);
+  --fg-sub-dark: var(--color-midnight-subtext);
+
+  --bg-page:           var(--color-bg-white);
+  --bg-surface:        var(--color-surface);
+  --bg-card:           #FFFFFF;
+  --bg-dark:           var(--color-midnight);
+  --bg-darker:         var(--color-bg-black);
+  --bg-elevated-dark:  var(--color-midnight-light);
+
+  --border:      var(--color-border);
+  --border-dark: var(--color-midnight-muted);
+
+  --accent:          var(--color-violet);
+  --accent-hover:    var(--color-violet-hover);
+  --accent-pressed:  var(--color-violet-pressed);
+  --accent-wash:     var(--color-violet-wash);
+  --accent-tint:     var(--color-violet-tint);
+  --accent-on-dark:  var(--color-violet-light);
+
+  /* Status */
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-danger:  #DC2626;
+  --status-info:    var(--color-violet);
+
+  /* =========================================================
+     TYPOGRAPHY
+     ========================================================= */
+  --font-display: var(--font-montserrat, "Montserrat"), "Helvetica Neue", system-ui, -apple-system, sans-serif;
+  --font-body:    var(--font-inter, "Inter"), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
+  --fw-extrabold: 800;
+
+  /* Scale */
+  --fs-display:  72px;
+  --fs-h1:       56px;
+  --fs-h2:       40px;
+  --fs-h3:       28px;
+  --fs-h4:       22px;
+  --fs-lead:     20px;
+  --fs-body:     16px;
+  --fs-small:    14px;
+  --fs-caption:  12px;
+  --fs-eyebrow:  11px;
+
+  --lh-tight:    1.05;
+  --lh-snug:     1.2;
+  --lh-normal:   1.45;
+  --lh-relaxed:  1.6;
+
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.04em;
+  --tracking-eyebrow: 0.14em;
+
+  /* =========================================================
+     SPACING (4px grid)
+     ========================================================= */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* =========================================================
+     RADII
+     ========================================================= */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
+  --radius-pill: 999px;
+
+  /* =========================================================
+     SHADOWS
+     ========================================================= */
+  --shadow-xs:     0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm:     0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md:     0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg:     0 12px 32px rgba(15, 23, 42, 0.10), 0 4px 8px rgba(15, 23, 42, 0.04);
+  --shadow-xl:     0 24px 64px rgba(15, 23, 42, 0.14), 0 8px 16px rgba(15, 23, 42, 0.06);
+  --shadow-accent: 0 12px 32px rgba(109, 40, 217, 0.28);
+  --shadow-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* =========================================================
+     MOTION
+     ========================================================= */
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --dur-page: 480ms;
+}
+
+/* ---------- Tailwind v4 theme mapping ---------- */
+@theme inline {
+  /* ----- Colors ----- */
+
+  /* Violet palette */
+  --color-violet-wash:    var(--color-violet-wash);
+  --color-violet-light:   var(--color-violet-light);
+  --color-violet-hover:   var(--color-violet-hover);
+  --color-violet-base:    var(--color-violet);
+  --color-violet-pressed: var(--color-violet-pressed);
+  --color-violet-tint:    var(--color-violet-tint);
+
+  /* Midnight palette */
+  --color-midnight-base:    var(--color-midnight);
+  --color-midnight-light:   var(--color-midnight-light);
+  --color-midnight-muted:   var(--color-midnight-muted);
+  --color-midnight-subtext: var(--color-midnight-subtext);
+  --color-midnight-on-dark: var(--color-midnight-on-dark);
+
+  /* Gray palette */
+  --color-gray-base:  var(--color-gray);
+  --color-gray-light: var(--color-gray-light);
+
+  /* Surface & border */
+  --color-surface: var(--color-surface);
+  --color-border:  var(--color-border);
+
+  /* Page & card backgrounds */
+  --color-bg-page:  var(--bg-page);
+  --color-bg-card:  var(--bg-card);
+  --color-bg-dark:  var(--bg-dark);
+  --color-bg-darker: var(--bg-darker);
+  --color-bg-elevated-dark: var(--bg-elevated-dark);
+
+  /* Semantic foregrounds */
+  --color-fg-1:        var(--fg-1);
+  --color-fg-2:        var(--fg-2);
+  --color-fg-3:        var(--fg-3);
+  --color-fg-4:        var(--fg-4);
+  --color-fg-on-dark:  var(--fg-on-dark);
+  --color-fg-sub-dark: var(--fg-sub-dark);
+
+  /* Status */
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger:  var(--status-danger);
+  --color-status-info:    var(--status-info);
+
+  /* ----- Font families ----- */
+  --font-display: var(--font-display);
+  --font-body:    var(--font-body);
+  --font-mono:    var(--font-mono);
+
+  /* ----- Font sizes ----- */
+  --font-size-display: var(--fs-display);
+  --font-size-h1:      var(--fs-h1);
+  --font-size-h2:      var(--fs-h2);
+  --font-size-h3:      var(--fs-h3);
+  --font-size-h4:      var(--fs-h4);
+  --font-size-lead:    var(--fs-lead);
+  --font-size-body:    var(--fs-body);
+  --font-size-small:   var(--fs-small);
+  --font-size-caption: var(--fs-caption);
+  --font-size-eyebrow: var(--fs-eyebrow);
+
+  /* ----- Spacing (4px grid) ----- */
+  --spacing-0:  var(--space-0);
+  --spacing-1:  var(--space-1);
+  --spacing-2:  var(--space-2);
+  --spacing-3:  var(--space-3);
+  --spacing-4:  var(--space-4);
+  --spacing-5:  var(--space-5);
+  --spacing-6:  var(--space-6);
+  --spacing-8:  var(--space-8);
+  --spacing-10: var(--space-10);
+  --spacing-12: var(--space-12);
+  --spacing-16: var(--space-16);
+  --spacing-20: var(--space-20);
+  --spacing-24: var(--space-24);
+  --spacing-32: var(--space-32);
+
+  /* ----- Border radii ----- */
+  --radius-xs:   var(--radius-xs);
+  --radius-sm:   var(--radius-sm);
+  --radius-md:   var(--radius-md);
+  --radius-lg:   var(--radius-lg);
+  --radius-xl:   var(--radius-xl);
+  --radius-2xl:  var(--radius-2xl);
+  --radius-pill: var(--radius-pill);
+
+  /* ----- Shadows ----- */
+  --shadow-xs:     var(--shadow-xs);
+  --shadow-sm:     var(--shadow-sm);
+  --shadow-md:     var(--shadow-md);
+  --shadow-lg:     var(--shadow-lg);
+  --shadow-xl:     var(--shadow-xl);
+  --shadow-accent: var(--shadow-accent);
+
+  /* ----- Motion easings ----- */
+  --ease-out:      var(--ease-out);
+  --ease-in-out:   var(--ease-in-out);
+  --ease-standard: var(--ease-standard);
+
+  /* ----- Motion durations ----- */
+  --duration-fast: var(--dur-fast);
+  --duration-base: var(--dur-base);
+  --duration-slow: var(--dur-slow);
+  --duration-page: var(--dur-page);
+}
+
+/* =============================================================
+   Base typography reset
+   ============================================================= */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--fg-1);
+  background: var(--bg-page);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--fg-1);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-tight);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-snug);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-snug);
+}
+
+h4 {
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+}
+
+p {
+  margin: 0;
+  color: var(--fg-2);
+  line-height: var(--lh-relaxed);
+}
+
+small {
+  font-size: var(--fs-small);
+  color: var(--fg-3);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+code {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  color: var(--fg-1);
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--fg-3);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-extrabold);
+  letter-spacing: -0.025em;
+  line-height: var(--lh-tight);
+}

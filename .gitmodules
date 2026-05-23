@@ -1,0 +1,3 @@
+[submodule ".claude/skills/tensai-design"]
+	path = .claude/skills/tensai-design
+	url = https://github.com/tensaicompl/tensai-website-design-system
