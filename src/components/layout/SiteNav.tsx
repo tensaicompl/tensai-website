@@ -94,7 +94,13 @@ export function SiteNav() {
             <img
               src="/logos/icon-black.svg"
               alt="TensAI"
-              style={{ height: "48px", width: "auto", display: "block" }}
+              style={{
+                height: "72px",
+                width: "72px",
+                display: "block",
+                margin: "-10px -14px -14px -14px",
+                objectFit: "contain",
+              }}
             />
             <span
               style={{
@@ -103,7 +109,7 @@ export function SiteNav() {
                 fontSize: "22px",
                 letterSpacing: "-0.02em",
                 color: "var(--color-midnight)",
-                marginLeft: "-4px",
+                marginLeft: "-6px",
                 lineHeight: 1,
               }}
             >
