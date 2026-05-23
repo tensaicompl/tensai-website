@@ -41,7 +41,7 @@ export default function Home() {
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden" style={{ padding: "64px 24px 96px" }}>
-          <div className="mx-auto grid max-w-[1200px] items-center gap-16" style={{ gridTemplateColumns: "1.1fr 1fr" }}>
+          <div className="hero-grid mx-auto grid max-w-[1200px] items-center gap-16" style={{ gridTemplateColumns: "1.1fr 1fr" }}>
             <div>
               <div
                 className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5"
@@ -135,7 +135,7 @@ export default function Home() {
               100% { opacity: 1; transform: scale(1) rotate(0); }
             }
             @media (max-width: 768px) {
-              .grid { grid-template-columns: 1fr !important; }
+              .hero-grid { grid-template-columns: 1fr !important; }
             }
           `}</style>
         </section>
@@ -211,7 +211,7 @@ export default function Home() {
         {/* CTA */}
         <section
           className="relative overflow-hidden"
-          style={{ background: "#000", color: "#fff", padding: "120px 24px" }}
+          style={{ background: "var(--bg-darker)", color: "var(--fg-on-dark)", padding: "120px 24px" }}
         >
           <img
             src="/logos/icon-black.svg"
@@ -235,7 +235,7 @@ export default function Home() {
                 marginTop: "14px",
                 fontSize: "clamp(32px, 5vw, 60px)",
                 fontWeight: 700,
-                color: "#fff",
+                color: "var(--fg-on-dark)",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
               }}
@@ -254,7 +254,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center font-semibold"
                 style={{
                   background: "transparent",
-                  color: "#fff",
+                  color: "var(--fg-on-dark)",
                   border: "1px solid rgba(255,255,255,0.18)",
                   padding: "16px 30px",
                   borderRadius: "999px",

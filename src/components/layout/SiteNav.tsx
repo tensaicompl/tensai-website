@@ -205,7 +205,7 @@ export function SiteNav() {
             left: 0,
             right: 0,
             zIndex: 49,
-            background: "#ffffff",
+            background: "var(--bg-card)",
             borderBottom: "1px solid var(--border)",
             boxShadow: "var(--shadow-md)",
             padding: "16px 24px 24px",
