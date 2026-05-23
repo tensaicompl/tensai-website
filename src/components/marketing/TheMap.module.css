@@ -108,22 +108,22 @@
   position: relative;
 }
 
-/* Spine vertical line: sits at left edge of the 96px numeral column */
+/* Spine vertical line: centred in the body column (between numeral 96px and notes 220px) */
 .spineLine {
   position: absolute;
-  /* 96px numeral col — place at centre of it = 48px */
-  left: 48px;
+  left: calc(96px + (100% - 96px - 220px) / 2);
   top: 0;
   bottom: 0;
   width: 1px;
   background: var(--color-midnight);
   pointer-events: none;
   z-index: 1;
+  transform: translateX(-50%);
 }
 
 .spineLabel {
   position: absolute;
-  left: 48px;
+  left: calc(96px + (100% - 96px - 220px) / 2);
   top: 50%;
   transform: translate(-50%, -50%) rotate(-90deg);
   font-family: var(--font-mono);
@@ -150,12 +150,12 @@
 /* Junction square — filled midnight square on spine at pillar top */
 .junction {
   position: absolute;
-  top: 0;
-  /* Centre on spine: 48px - half of 9px = 43.5px */
-  left: 43.5px;
+  top: -5px;
+  left: calc(96px + (100% - 96px - 220px) / 2);
   width: 9px;
   height: 9px;
   background: var(--color-midnight);
+  transform: translateX(-50%);
   z-index: 3;
 }
 
@@ -178,8 +178,6 @@
   line-height: 1;
   letter-spacing: -0.02em;
   color: var(--color-midnight);
-  /* nudge so the numeral clears the spine line visually */
-  padding-left: 14px;
 }
 
 .pillarNumSub {
@@ -190,7 +188,6 @@
   letter-spacing: 0.18em;
   color: var(--fg-3);
   margin-top: 4px;
-  padding-left: 15px;
 }
 
 /* ── Pillar body column ────────────────────────────────────── */
@@ -372,15 +369,15 @@
   }
 
   .spineLine {
-    left: 36px;
+    left: calc(72px + (100% - 72px) / 2);
   }
 
   .spineLabel {
-    left: 36px;
+    left: calc(72px + (100% - 72px) / 2);
   }
 
   .junction {
-    left: 31.5px;
+    left: calc(72px + (100% - 72px) / 2);
   }
 
   .floor {
