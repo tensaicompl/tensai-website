@@ -103,39 +103,9 @@
   opacity: 0.55;
 }
 
-/* ── Spine ─────────────────────────────────────────────────── */
+/* ── Spine wrap (no longer positions the spine — pillars do) ── */
 .spineWrap {
   position: relative;
-}
-
-/* Spine vertical line: centred in the body column (between numeral 96px and notes 220px) */
-.spineLine {
-  position: absolute;
-  left: calc(96px + (100% - 96px - 220px) / 2);
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--color-midnight);
-  pointer-events: none;
-  z-index: 1;
-  transform: translateX(-50%);
-}
-
-.spineLabel {
-  position: absolute;
-  left: calc(96px + (100% - 96px - 220px) / 2);
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: var(--color-midnight);
-  white-space: nowrap;
-  opacity: 0.45;
-  pointer-events: none;
-  z-index: 2;
 }
 
 /* ── Pillar stratum ────────────────────────────────────────── */
@@ -147,16 +117,54 @@
   position: relative;
 }
 
-/* Junction square — filled midnight square on spine at pillar top */
+/* ── Spine channel ───────────────────────────────────────────
+   A narrow vertical track positioned inside the pillarBody column.
+   Uses left: 50% of the body column — no calc() tied to grid widths.
+   The channel is defined by its hairline walls, not by a fill.        */
+.spineChannel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  border-left: 1px solid var(--color-midnight);
+  border-right: 1px solid var(--color-midnight);
+  background: var(--bg-page);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+
+/* Spine label — vertical text inside the channel */
+.spineLabel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--color-midnight);
+  white-space: nowrap;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Junction square — filled midnight square centered on the channel
+   at the top edge of each pillar */
 .junction {
   position: absolute;
-  top: -5px;
-  left: calc(96px + (100% - 96px - 220px) / 2);
+  top: -4px;
+  left: 50%;
   width: 9px;
   height: 9px;
   background: var(--color-midnight);
   transform: translateX(-50%);
-  z-index: 3;
+  z-index: 2;
 }
 
 /* ── Pillar numeral column ─────────────────────────────────── */
@@ -197,6 +205,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  position: relative;
+  z-index: 2;
 }
 
 .pillarName {
@@ -224,6 +234,8 @@
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.7;
+  position: relative;
+  z-index: 2;
 }
 
 .notesHeader {
@@ -347,7 +359,6 @@
 
   .pillarNumeral {
     font-size: 40px;
-    padding-left: 10px;
   }
 
   .pillarNum {
@@ -368,16 +379,8 @@
     max-width: 100%;
   }
 
-  .spineLine {
-    left: calc(72px + (100% - 72px) / 2);
-  }
-
-  .spineLabel {
-    left: calc(72px + (100% - 72px) / 2);
-  }
-
-  .junction {
-    left: calc(72px + (100% - 72px) / 2);
+  .spineChannel {
+    width: 22px;
   }
 
   .floor {

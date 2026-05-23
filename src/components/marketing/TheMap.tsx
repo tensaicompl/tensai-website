@@ -11,7 +11,7 @@ const PILLARS = [
   {
     id: "III",
     name: "The Craft",
-    desc: "The practitioner's complete, concept-level playbook of AI today — agents, harnesses, and everything hard that lives around the model.",
+    desc: "The practitioner’s complete, concept-level playbook of AI today — agents, harnesses, and everything hard that lives around the model.",
     notesHeader: "In This Stratum",
     rows: [
       [
@@ -114,124 +114,113 @@ const PILLARS = [
 
 export function TheMap() {
   return (
-    <section
-      style={{
-        padding: "96px 24px 80px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <div className={styles.mapWrap}>
+    <div className={styles.mapWrap}>
+      {/* ── Value indicator ─────────────────────────────────── */}
+      <div className={styles.valueOut}>
+        <svg
+          className={styles.valueArrow}
+          width="16"
+          height="22"
+          viewBox="0 0 16 22"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M8 20V2M8 2L2 8M8 2L14 8"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="square"
+            strokeLinejoin="miter"
+          />
+        </svg>
+        <span className={styles.valueLabel}>Value</span>
+      </div>
 
-        {/* ── Value indicator ─────────────────────────────────── */}
-        <div className={styles.valueOut}>
-          <svg
-            className={styles.valueArrow}
-            width="16"
-            height="22"
-            viewBox="0 0 16 22"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M8 20V2M8 2L2 8M8 2L14 8"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-            />
-          </svg>
-          <span className={styles.valueLabel}>Value</span>
+      {/* ── Map frame ───────────────────────────────────────── */}
+      <div className={styles.mapFrame}>
+        {/* Governance band */}
+        <div className={styles.govBand}>
+          <span className={styles.govBandLeft}>
+            Governed · Secured · Observed
+          </span>
+          <span className={styles.govBandRight}>Frame · 01</span>
         </div>
 
-        {/* ── Map frame ───────────────────────────────────────── */}
-        <div className={styles.mapFrame}>
+        {/* Spine + pillars wrapper */}
+        <div className={styles.spineWrap}>
+          {/* ── Pillar strata ──────────────────────────────── */}
+          {PILLARS.map((pillar, idx) => (
+            <div key={pillar.id} className={styles.pillar}>
+              {/* Numeral column */}
+              <div className={styles.pillarNum}>
+                <span className={styles.pillarNumeral}>{pillar.id}</span>
+                <span className={styles.pillarNumSub}>Pillar</span>
+              </div>
 
-          {/* Governance band */}
-          <div className={styles.govBand}>
-            <span className={styles.govBandLeft}>
-              Governed · Secured · Observed
-            </span>
-            <span className={styles.govBandRight}>Frame · 01</span>
-          </div>
+              {/* Body column — spine channel lives here */}
+              <div className={styles.pillarBody}>
+                {/* Spine channel — hairline-walled vertical track */}
+                <div className={styles.spineChannel} aria-hidden="true" />
 
-          {/* Spine + pillars wrapper */}
-          <div className={styles.spineWrap}>
-            {/* Spine vertical line */}
-            <div className={styles.spineLine} aria-hidden="true" />
-            {/* Spine label */}
-            <span className={styles.spineLabel} aria-hidden="true">
-              Spine
-            </span>
-
-            {/* ── Pillar strata ──────────────────────────────── */}
-            {PILLARS.map((pillar) => (
-              <div key={pillar.id} className={styles.pillar}>
-                {/* Junction square at top of each pillar, on spine */}
+                {/* Junction square at top of each pillar */}
                 <div className={styles.junction} aria-hidden="true" />
 
-                {/* Numeral column */}
-                <div className={styles.pillarNum}>
-                  <span className={styles.pillarNumeral}>{pillar.id}</span>
-                  <span className={styles.pillarNumSub}>Pillar</span>
-                </div>
-
-                {/* Body column */}
-                <div className={styles.pillarBody}>
-                  <h3 className={styles.pillarName}>{pillar.name}</h3>
-                  <p className={styles.pillarDesc}>{pillar.desc}</p>
-                </div>
-
-                {/* Notes column */}
-                <div className={styles.pillarNotes}>
-                  <span className={styles.notesHeader}>
-                    {pillar.notesHeader}
+                {/* Spine label — only on the middle pillar */}
+                {idx === 1 && (
+                  <span className={styles.spineLabel} aria-hidden="true">
+                    Spine
                   </span>
-                  <div className={styles.notesList}>
-                    {pillar.rows.map((row, rowIdx) => (
-                      <div
-                        key={rowIdx}
-                        className={styles.noteRow}
-                      >
-                        {row.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className={styles.strataLink}
-                          >
-                            {link.label}
-                          </Link>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
+                )}
+
+                <h3 className={styles.pillarName}>{pillar.name}</h3>
+                <p className={styles.pillarDesc}>{pillar.desc}</p>
+              </div>
+
+              {/* Notes column */}
+              <div className={styles.pillarNotes}>
+                <span className={styles.notesHeader}>
+                  {pillar.notesHeader}
+                </span>
+                <div className={styles.notesList}>
+                  {pillar.rows.map((row, rowIdx) => (
+                    <div key={rowIdx} className={styles.noteRow}>
+                      {row.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={styles.strataLink}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-
-            {/* ── Inputs floor ───────────────────────────────── */}
-            <div className={styles.floor}>
-              {["Inputs", "Token sourcing", "Models", "Compute", "Data"].map(
-                (item) => (
-                  <span key={item} className={styles.floorItem}>
-                    {item}
-                  </span>
-                )
-              )}
             </div>
+          ))}
+
+          {/* ── Inputs floor ───────────────────────────────── */}
+          <div className={styles.floor}>
+            {["Inputs", "Token sourcing", "Models", "Compute", "Data"].map(
+              (item) => (
+                <span key={item} className={styles.floorItem}>
+                  {item}
+                </span>
+              )
+            )}
           </div>
         </div>
-
-        {/* ── Measurement strip ───────────────────────────────── */}
-        <div className={styles.measure}>
-          <span className={styles.measureNum}>00</span>
-          <div className={styles.measureTicks} aria-hidden="true" />
-          <span className={styles.measureLabel}>
-            elevation · ground → value
-          </span>
-        </div>
       </div>
-    </section>
+
+      {/* ── Measurement strip ───────────────────────────────── */}
+      <div className={styles.measure}>
+        <span className={styles.measureNum}>00</span>
+        <div className={styles.measureTicks} aria-hidden="true" />
+        <span className={styles.measureLabel}>
+          elevation · ground → value
+        </span>
+      </div>
+    </div>
   );
 }
