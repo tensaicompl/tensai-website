@@ -233,7 +233,7 @@ export default function ReusablesPage() {
               margin: "0 auto",
               display: "grid",
               gridTemplateColumns: "1.1fr 1fr",
-              alignItems: "center",
+              alignItems: "start",
               gap: "48px",
             }}
           >
@@ -268,7 +268,7 @@ export default function ReusablesPage() {
             </p>
             </div>
 
-            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "hidden" }}>
               <div
                 style={{
                   position: "absolute",
@@ -279,7 +279,7 @@ export default function ReusablesPage() {
               <img
                 src="/logos/icon-black.svg"
                 alt=""
-                style={{ width: "min(680px, 42vw)", height: "auto", objectFit: "contain", display: "block", position: "relative", margin: "-18% -10%" }}
+                style={{ width: "min(680px, 42vw)", height: "auto", objectFit: "contain", display: "block", position: "relative", margin: "-18% -10% -22% -10%" }}
               />
             </div>
           </div>
