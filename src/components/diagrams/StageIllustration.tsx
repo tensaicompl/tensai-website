@@ -55,8 +55,8 @@ function Stage2() {
 }
 
 function Stage3() {
-  const cx = STAGE_W / 2, barY = 22, barW = 100, barH = 10;
-  const coeY = 8, coeR = 12;
+  const cx = STAGE_W / 2, barY = 42, barW = 100, barH = 10;
+  const coeY = 22, coeR = 12;
   const dots = [
     { dx: -32, dy: 36 }, { dx: -8, dy: 50 }, { dx: 16, dy: 36 }, { dx: 38, dy: 46 },
   ];
@@ -87,9 +87,9 @@ function Stage3() {
 }
 
 function Stage4() {
-  const cx = STAGE_W / 2, barY = 40, barW = 100, barH = 10;
-  const coeY = 14, coeR = 12;
-  const usersY = 115, usersW = 44, usersH = 16;
+  const cx = STAGE_W / 2, barY = 46, barW = 100, barH = 10;
+  const coeY = 20, coeR = 12;
+  const usersY = 118, usersW = 44, usersH = 16;
   const R = 8, off = 52;
   const dots = [
     { dx: -32, dy: 36 }, { dx: -8, dy: 50 }, { dx: 16, dy: 36 }, { dx: 38, dy: 46 },
