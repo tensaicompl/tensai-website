@@ -17,19 +17,19 @@ The maturity model has four stages. Each describes not just what an organisation
 
 To make this concrete, follow a single organisation through all four: a mid-size European bank — call it Rheinbank — with 4,000 employees, a legacy core-banking platform, and a board that approved an AI strategy eighteen months ago.
 
-<StageIllustration stage={1} />
+<StageIllustration stage="1" />
 
 **Stage 1 — Experimentation.** Individual teams run ad-hoc pilots. There is no shared infrastructure, no governance, no catalogue of what has been built. Success depends entirely on hero developers — the one data scientist in credit risk who built a churn model in a notebook over a weekend, the operations analyst who wired a chatbot to the internal knowledge base. At Rheinbank, three teams are running pilots independently: fraud detection, customer-service triage, and document extraction for compliance. None of them knows about the others. Each chose its own model provider, its own deployment method, its own evaluation approach. Two of the three will be abandoned within six months, not because they failed technically but because nobody owns them.
 
-<StageIllustration stage={2} />
+<StageIllustration stage="2" />
 
 **Stage 2 — Standardisation.** A central team — often branded an AI Centre of Excellence — appears. It selects a shared model provider, publishes prompt templates, and begins writing governance policies. First patterns emerge: a standard way to call the model, a shared vector store, a template for evaluation. At Rheinbank, the CoE has consolidated the three pilots onto a single platform, written an acceptable-use policy, and started a quarterly review of AI initiatives. The fraud model is in production. The chatbot has been rebuilt using the shared stack. This feels like progress, and it is — but the CoE is still doing most of the work itself, and every new use case queues behind the same four people.
 
-<StageIllustration stage={3} />
+<StageIllustration stage="3" />
 
 **Stage 3 — Scaling.** Reusable assets replace bespoke builds. A platform team maintains shared infrastructure — model gateway, evaluation harness, prompt registry, observability stack — and business units build on top of it without waiting for a central team. Governance shifts from approval-based (everything passes through a gate) to standards-based (the platform defines what is required; teams demonstrate compliance). At Rheinbank, the credit-risk team deploys its own model using the platform's standard pipeline, monitored by the platform's standard observability, evaluated by the platform's standard evals. The CoE no longer builds; it enables. The catalogue lists fourteen production systems, and the newest three were built by teams the CoE has never spoken to.
 
-<StageIllustration stage={4} />
+<StageIllustration stage="4" />
 
 **Stage 4 — AI Factory.** AI is embedded in every workflow that benefits from it, not as a separate initiative but as a default capability. Self-service tooling means any team can build, evaluate, and deploy a model-backed process within the platform's guardrails. Continuous improvement is structural — evaluation data flows back into prompt refinement, model upgrades propagate automatically, governance is encoded in the platform itself. Rheinbank no longer has an AI strategy. It has a strategy, and AI is how parts of it execute.
 

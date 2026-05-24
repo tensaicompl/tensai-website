@@ -1,5 +1,3 @@
-"use client";
-
 const STAGE_W = 140;
 const STAGE_H = 160;
 
@@ -101,8 +99,8 @@ function Stage4() {
 
 const STAGES: Record<number, () => React.JSX.Element> = { 1: Stage1, 2: Stage2, 3: Stage3, 4: Stage4 };
 
-export function StageIllustration({ stage }: { stage: number }) {
-  const StageComponent = STAGES[stage];
+export function StageIllustration({ stage }: { stage: number | string }) {
+  const StageComponent = STAGES[Number(stage)];
   if (!StageComponent) return null;
   return (
     <figure
