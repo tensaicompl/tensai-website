@@ -33,16 +33,17 @@ export function Callout({ type = "info", title, children }: CalloutProps) {
             size={18}
             style={{ color: "var(--fg-1)", flexShrink: 0 }}
           />
-          <p
+          <span
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
               fontSize: "var(--fs-body)",
               color: "var(--fg-1)",
+              lineHeight: 1,
             }}
           >
             {title}
-          </p>
+          </span>
         </div>
       )}
       <div style={{ fontSize: "var(--fs-small)", color: "var(--fg-2)", lineHeight: "var(--lh-relaxed)", paddingLeft: title ? "30px" : "0" }}>
