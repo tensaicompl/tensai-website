@@ -36,7 +36,7 @@ export default function Home() {
 
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden" style={{ padding: "64px 24px 96px" }}>
+        <section className="relative overflow-hidden" style={{ padding: "64px 16px 96px" }}>
           <div
             className="hero-grid mx-auto grid max-w-[1200px] items-center gap-16"
             style={{ gridTemplateColumns: "1.1fr 1fr" }}
@@ -156,7 +156,7 @@ export default function Home() {
         </section>
 
         {/* The Map */}
-        <section style={{ padding: "96px 24px" }}>
+        <section style={{ padding: "96px 16px" }}>
           <div
             style={{
               maxWidth: "1200px",
@@ -199,7 +199,7 @@ export default function Home() {
         </section>
 
         {/* Fractal Rule */}
-        <section style={{ padding: "96px 24px" }}>
+        <section style={{ padding: "96px 16px" }}>
           <div
             className="fractal-grid"
             style={{
@@ -317,7 +317,7 @@ export default function Home() {
         </section>
 
         {/* Pillar Gateways */}
-        <section style={{ padding: "96px 24px" }}>
+        <section style={{ padding: "96px 16px" }}>
           <div
             style={{
               maxWidth: "1200px",

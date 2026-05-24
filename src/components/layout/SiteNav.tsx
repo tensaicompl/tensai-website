@@ -77,11 +77,11 @@ export function SiteNav() {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "0 24px",
+            padding: "0 16px",
             width: "100%",
-            display: "flex",
+            display: "grid",
+            gridTemplateColumns: "auto 1fr auto",
             alignItems: "center",
-            justifyContent: "space-between",
             height: "100%",
           }}
         >
@@ -135,12 +135,13 @@ export function SiteNav() {
             </span>
           </Link>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav links — centered */}
           <div
             aria-label="Site links"
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "24px",
             }}
             className="hidden-mobile"
@@ -158,6 +159,27 @@ export function SiteNav() {
                 </Link>
               );
             })}
+          </div>
+
+          {/* Sign in — right side */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }} className="hidden-mobile">
+            <button
+              className="nav-signin"
+              style={{
+                background: "none",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-pill)",
+                padding: "6px 16px",
+                fontFamily: "var(--font-body)",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--fg-1)",
+                cursor: "pointer",
+                transition: "background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out)",
+              }}
+            >
+              Sign in
+            </button>
           </div>
 
           {/* Mobile hamburger button */}
@@ -271,6 +293,7 @@ export function SiteNav() {
         }
         .nav-link:hover { color: var(--fg-1); }
         .nav-link-active { font-weight: 600; color: var(--fg-1); }
+        .nav-signin:hover { background: var(--bg-surface); border-color: var(--color-midnight-muted); }
         @media (min-width: 768px) {
           .hidden-mobile { display: flex !important; }
           .show-mobile { display: none !important; }
