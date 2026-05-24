@@ -3,6 +3,7 @@ import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { TheIndex } from "@/components/marketing/TheIndex";
+import { HomeWithIntro } from "@/components/marketing/HomeWithIntro";
 
 const GATEWAYS = [
   {
@@ -30,7 +31,7 @@ const GATEWAYS = [
 
 export default function Home() {
   return (
-    <>
+    <HomeWithIntro>
       <SiteNav />
 
       <main>
@@ -439,6 +440,6 @@ export default function Home() {
       </main>
 
       <SiteFooter />
-    </>
+    </HomeWithIntro>
   );
 }

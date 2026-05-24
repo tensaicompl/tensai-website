@@ -1,0 +1,145 @@
+/* =============================================================
+   LogoIntro — opening animation
+   Brush draws itself with a feathered conic sweep, then the
+   wordmark rises in, then everything transitions to the nav.
+   Tokens only.
+   ============================================================= */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  transition: opacity 0.6s var(--ease-out);
+}
+
+.backdropHidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Lockup (centered logo + wordmark) ─────────────────────── */
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  opacity: 0;
+}
+
+/* ── The brush mark ────────────────────────────────────────── */
+@property --swept {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 400;
+}
+
+.mark {
+  --start: 45deg;
+  --feather: 30deg;
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex: none;
+}
+
+.art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.artInk {
+  fill: var(--color-midnight);
+  --m: conic-gradient(
+    from var(--start),
+    transparent 0deg,
+    transparent calc(360deg - var(--swept) * 1deg),
+    #000 calc(360deg - var(--swept) * 1deg + var(--feather)),
+    #000 360deg
+  );
+  -webkit-mask: var(--m);
+  mask: var(--m);
+}
+
+.artWet {
+  fill: var(--color-midnight-muted);
+  opacity: 0;
+  --m: conic-gradient(
+    from var(--start),
+    transparent 0deg,
+    transparent calc(360deg - var(--swept) * 1deg),
+    #000 calc(360deg - var(--swept) * 1deg + 26deg),
+    transparent calc(360deg - var(--swept) * 1deg + 74deg),
+    transparent 360deg
+  );
+  -webkit-mask: var(--m);
+  mask: var(--m);
+}
+
+/* ── Divider + wordmark ────────────────────────────────────── */
+.divider {
+  width: 1px;
+  height: 74px;
+  background: var(--border);
+  transform: scaleY(0);
+  transform-origin: 50% 50%;
+}
+
+.wordmark {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--color-midnight);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+}
+
+.wordmarkName {
+  display: flex;
+}
+
+.tagline {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-top: 4px;
+}
+
+.ch {
+  display: inline-block;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .lockup {
+    gap: 22px;
+  }
+
+  .mark {
+    width: 104px;
+    height: 104px;
+  }
+
+  .wordmark {
+    font-size: 18px;
+  }
+
+  .divider {
+    height: 56px;
+  }
+
+  .tagline {
+    font-size: 10px;
+  }
+}
