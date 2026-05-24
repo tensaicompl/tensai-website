@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoPaths } from "@/components/marketing/logo-paths";
 
 interface NavLink {
   label: string;
@@ -95,18 +96,22 @@ export function SiteNav() {
               flexShrink: 0,
             }}
           >
-            <img
-              src="/logos/icon-black.svg"
-              alt="TensAI"
+            <svg
+              data-nav-icon
+              viewBox="0 0 1500 1500"
+              aria-hidden="true"
               style={{
                 height: "72px",
                 width: "72px",
                 display: "block",
                 margin: "-10px -14px -14px -14px",
-                objectFit: "contain",
+                fill: "var(--color-bg-black)",
               }}
-            />
+            >
+              <LogoPaths />
+            </svg>
             <span
+              data-nav-wordmark
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 800,

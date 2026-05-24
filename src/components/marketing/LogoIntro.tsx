@@ -16,7 +16,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
   const taglineRef = useRef<HTMLSpanElement>(null);
   const wetRef = useRef<SVGSVGElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
-  const pageWrapRef = useRef<HTMLDivElement | null>(null);
+  const wordmarkRef = useRef<HTMLSpanElement>(null);
   const [phase, setPhase] = useState<"intro" | "flying" | "done">("intro");
   const played = useRef(false);
 
@@ -45,6 +45,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
       const tagline = taglineRef.current;
       const wet = wetRef.current;
       const backdrop = backdropRef.current;
+      const wordmarkBlock = wordmarkRef.current;
 
       if (!lockup || !mark || !divider || !wet || !backdrop) return;
 
@@ -54,9 +55,9 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
         return;
       }
 
-      // Step 1: Draw animation
       const tl = gsap.timeline({ paused: true });
 
+      // Initial states
       tl.set(lockup, { opacity: 1 }, 0)
         .set(mark, { scale: 1.06, "--swept": 0, transformOrigin: "50% 50%" }, 0)
         .set(wet, { opacity: 1 }, 0)
@@ -64,7 +65,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
         .set(chars, { yPercent: 125, opacity: 0 }, 0)
         .set(tagline, { yPercent: 80, opacity: 0 }, 0);
 
-      // Brush sweep
+      // Step 1: Brush sweep
       tl.to(mark, { scale: 1, duration: SWEEP_DURATION, ease: "power2.out" }, 0);
       tl.to(mark, { "--swept": 392, duration: SWEEP_DURATION, ease: "power1.inOut" }, 0)
         .to(wet, { opacity: 0, duration: 0.55, ease: "power1.in" }, SWEEP_DURATION - 0.45);
@@ -80,50 +81,90 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
         }, SWEEP_DURATION + 0.3);
 
       // Brief hold
-      tl.to({}, { duration: 0.6 });
+      tl.to({}, { duration: 0.8 });
 
-      // Step 2: Fly lockup to nav position
-      tl.call(() => setPhase("flying"));
+      // Step 2: Fly to nav position
+      tl.call(() => {
+        setPhase("flying");
 
-      // Calculate target position (top-left nav area)
-      const navTargetX = 24; // nav padding-left
-      const navTargetY = 14; // vertically centered in 72px nav
-      const lockupRect = lockup.getBoundingClientRect();
-      const centerX = lockupRect.left + lockupRect.width / 2;
-      const centerY = lockupRect.top + lockupRect.height / 2;
+        const navIcon = document.querySelector("[data-nav-icon]");
+        const navWordmark = document.querySelector("[data-nav-wordmark]");
 
-      // Target: icon shrinks to 72px (nav size), wordmark to 22px
-      // Nav lockup left edge ~ 24px from viewport left, centered at ~72px vertically
-      const targetCenterX = navTargetX + 60; // approximate center of nav lockup
-      const targetCenterY = navTargetY + 22; // center of 72px nav height
+        if (!navIcon || !navWordmark) {
+          // Fallback: just fade out
+          gsap.to(backdrop, {
+            opacity: 0, duration: 0.6, ease: "power2.out",
+            onComplete: () => { setPhase("done"); onComplete?.(); },
+          });
+          return;
+        }
 
-      const deltaX = targetCenterX - centerX;
-      const deltaY = targetCenterY - centerY;
-      const scaleFactor = 72 / 168; // nav icon / intro icon
+        // Measure positions
+        const markRect = mark.getBoundingClientRect();
+        const navIconRect = navIcon.getBoundingClientRect();
+        const wordmarkNameEl = wordmarkBlock;
+        const navWordmarkRect = navWordmark.getBoundingClientRect();
 
-      // Fade out divider and tagline during fly
-      tl.to(divider, { opacity: 0, scaleY: 0, duration: 0.3, ease: "power2.in" }, "<")
-        .to(tagline, { opacity: 0, duration: 0.3, ease: "power2.in" }, "<");
+        // Calculate how much the icon needs to move
+        const markCenterX = markRect.left + markRect.width / 2;
+        const markCenterY = markRect.top + markRect.height / 2;
+        const navIconCenterX = navIconRect.left + navIconRect.width / 2;
+        const navIconCenterY = navIconRect.top + navIconRect.height / 2;
 
-      // Fly + shrink the lockup
-      tl.to(lockup, {
-        x: deltaX,
-        y: deltaY,
-        scale: scaleFactor,
-        duration: 0.9,
-        ease: "power3.inOut",
-      }, "<+=0.1");
+        const iconScale = navIconRect.width / markRect.width;
 
-      // Step 3: Fade backdrop out, reveal page
-      tl.to(backdrop, {
-        opacity: 0,
-        duration: 0.6,
-        ease: "power2.out",
-        onComplete: () => {
+        // Hide nav elements during transition (we're animating on top of them)
+        gsap.set(navIcon, { opacity: 0 });
+        gsap.set(navWordmark, { opacity: 0 });
+
+        // Fade out divider and tagline
+        const flyTl = gsap.timeline();
+
+        flyTl.to(divider, { opacity: 0, scaleY: 0, duration: 0.4, ease: "power2.in" }, 0)
+          .to(tagline, { opacity: 0, yPercent: -20, duration: 0.3, ease: "power2.in" }, 0);
+
+        // Fly the mark to the nav icon position
+        flyTl.to(mark, {
+          x: navIconCenterX - markCenterX,
+          y: navIconCenterY - markCenterY,
+          scale: iconScale,
+          duration: 1.2,
+          ease: "power3.inOut",
+        }, 0.15);
+
+        // Fly the wordmark name to the nav wordmark position
+        if (wordmarkNameEl) {
+          const wordmarkNameRect = wordmarkNameEl.getBoundingClientRect();
+          const wordScale = navWordmarkRect.height / wordmarkNameRect.height;
+          const wordCenterX = wordmarkNameRect.left + wordmarkNameRect.width / 2;
+          const wordCenterY = wordmarkNameRect.top + wordmarkNameRect.height / 2;
+          const navWordCenterX = navWordmarkRect.left + navWordmarkRect.width / 2;
+          const navWordCenterY = navWordmarkRect.top + navWordmarkRect.height / 2;
+
+          flyTl.to(wordmarkNameEl, {
+            x: navWordCenterX - wordCenterX,
+            y: navWordCenterY - wordCenterY,
+            scale: wordScale,
+            duration: 1.2,
+            ease: "power3.inOut",
+          }, 0.15);
+        }
+
+        // Fade backdrop
+        flyTl.to(backdrop, {
+          opacity: 0,
+          duration: 0.6,
+          ease: "power2.out",
+        }, 0.9);
+
+        // Restore nav elements and finish
+        flyTl.call(() => {
+          gsap.set(navIcon, { opacity: 1 });
+          gsap.set(navWordmark, { opacity: 1 });
           setPhase("done");
           onComplete?.();
-        },
-      }, "-=0.2");
+        });
+      });
 
       document.fonts?.ready
         ? document.fonts.ready.then(() => tl.play())
@@ -160,14 +201,10 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
 
         <span ref={dividerRef} className={styles.divider} />
 
-        <span className={styles.wordmark}>
+        <span ref={wordmarkRef} className={styles.wordmark}>
           <span className={styles.wordmarkName}>
             {[...WORD].map((ch, i) => (
-              <span
-                key={i}
-                ref={addCharRef(i)}
-                className={styles.ch}
-              >
+              <span key={i} ref={addCharRef(i)} className={styles.ch}>
                 {ch}
               </span>
             ))}
