@@ -235,6 +235,8 @@
 
 .spineExpanded {
   padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
 }
 
 .spineHeader {
@@ -270,8 +272,9 @@
 }
 
 .spineListVisible {
-  max-height: 1000px;
+  max-height: 2000px;
   opacity: 1;
+  flex: 1;
 }
 
 .spineItem {
@@ -279,7 +282,8 @@
   grid-template-columns: 34px 1fr 10px;
   gap: 6px;
   align-items: center;
-  padding: 6px 0;
+  flex: 1;
+  padding: 4px 0;
   border-bottom: 1px solid var(--border);
 }
 
