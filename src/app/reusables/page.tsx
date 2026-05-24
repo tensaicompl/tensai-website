@@ -268,7 +268,7 @@ export default function ReusablesPage() {
             </p>
             </div>
 
-            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "hidden" }}>
+            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", alignSelf: "center" }}>
               <div
                 style={{
                   position: "absolute",
