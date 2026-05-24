@@ -10,6 +10,7 @@ import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
 import ConceptConnections from "@/components/content/ConceptConnections";
+import { mdxOptions } from "@/lib/mdx-options";
 
 const mdxComponents = {
   ContentPlaceholder,
@@ -154,6 +155,7 @@ export default async function OperatingModelConceptPage({
             <MDXRemote
               source={concept.content}
               components={mdxComponents}
+              options={mdxOptions}
             />
           </div>
 

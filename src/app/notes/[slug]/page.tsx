@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getAllNotes, getNoteBySlug } from "@/lib/content";
+import { mdxOptions } from "@/lib/mdx-options";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import ContentPlaceholder from "@/components/mdx/ContentPlaceholder";
@@ -102,7 +103,7 @@ export default async function NoteDetailPage({
 
           {/* ── MDX body ────────────────────────────────────── */}
           <div className="note-body" style={{ marginTop: "48px" }}>
-            <MDXRemote source={note.content} components={mdxComponents} />
+            <MDXRemote source={note.content} components={mdxComponents} options={mdxOptions} />
           </div>
         </article>
 

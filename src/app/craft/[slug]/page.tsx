@@ -10,6 +10,7 @@ import { Callout } from "@/components/mdx/Callout";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
+import { mdxOptions } from "@/lib/mdx-options";
 import ConceptConnections from "@/components/content/ConceptConnections";
 
 const mdxComponents = {
@@ -159,6 +160,7 @@ export default async function CraftConceptPage({
             <MDXRemote
               source={concept.content}
               components={mdxComponents}
+              options={mdxOptions}
             />
           </div>
 
