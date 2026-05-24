@@ -6,7 +6,7 @@
  * 2. Runtime exploration: Codebase → grep → read file → follow imports → Context Window
  * 3. No retrieval (failure): Training knowledge → Context Window → phantom API error
  *
- * No violet accent — uses #DC2626 (--status-danger) only for the phantom API error.
+ * No violet accent — uses var(--status-danger) (--status-danger) only for the phantom API error.
  * Bottom lane visually dimmer with var(--fg-3).
  */
 
@@ -88,7 +88,7 @@ export function CodeDocIndexingDiagram() {
             <path
               d="M 0 1 L 10 5 L 0 9"
               fill="none"
-              stroke="#DC2626"
+              stroke="var(--status-danger)"
               strokeWidth="1.5"
             />
           </marker>
@@ -398,7 +398,7 @@ export function CodeDocIndexingDiagram() {
                 y1={phantomY}
                 x2={branchX + 60}
                 y2={phantomY}
-                stroke="#DC2626"
+                stroke="var(--status-danger)"
                 strokeWidth="1.5"
                 markerEnd="url(#cdiArrowDanger)"
               />
@@ -409,7 +409,7 @@ export function CodeDocIndexingDiagram() {
                 width="180"
                 height="28"
                 rx="3"
-                stroke="#DC2626"
+                stroke="var(--status-danger)"
                 strokeWidth="1.5"
                 fill="var(--bg-surface)"
               />
@@ -418,7 +418,7 @@ export function CodeDocIndexingDiagram() {
                 y={phantomY}
                 fontFamily="var(--font-mono)"
                 fontSize="10"
-                fill="#DC2626"
+                fill="var(--status-danger)"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 textDecoration="line-through"
