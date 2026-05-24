@@ -6,7 +6,7 @@ The public-facing content website for TensAI — an authoritative body of work o
 
 ## Tech Stack
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS 4 + TensAI Design System tokens
 - **Content:** MDX files in-repo with frontmatter validation
@@ -24,6 +24,12 @@ npm install
 
 # Start dev server
 npm run dev
+```
+
+If you cloned without `--recurse-submodules`, initialize the design system submodule:
+
+```bash
+git submodule update --init
 ```
 
 ## Project Structure

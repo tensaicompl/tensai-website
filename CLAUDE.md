@@ -3,7 +3,7 @@
 # CLAUDE.md — TensAI Website
 
 ## Project Overview
-TensAI public website — a content architecture site with 18 canonical AI concepts across three pillars (Groundwork, Operating Model, Craft). Built with Next.js 15 App Router, TypeScript, Tailwind CSS 4.
+TensAI public website — a content architecture site with 18 canonical AI concepts across three pillars (Groundwork, Operating Model, Craft). Built with Next.js 16 App Router, TypeScript, Tailwind CSS 4.
 
 ## Key Commands
 - `npm run dev` — Start development server
@@ -70,7 +70,7 @@ TensAI public website — a content architecture site with 18 canonical AI conce
 | `src/components/content/` | Concept page blocks: ConceptConnections, CrossAltitudeStrip, LinkedNotes |
 | `src/components/diagrams/` | DiagramSlot (placeholder) — replace with SVG components |
 | `src/components/notes/` | NoteCard, CategoryFilter |
-| `src/components/marketing/` | FractalRule, MapScrollSequence |
+| `src/components/marketing/` | TheIndex (expandable map diagram) |
 
 ## Important Patterns
 - Next.js 15: `params` is a Promise — always `await params` in dynamic routes

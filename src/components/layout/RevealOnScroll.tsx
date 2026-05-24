@@ -1,15 +1,20 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 export interface RevealOnScrollProps {
   children: React.ReactNode;
   className?: string;
-  /** Stagger delay in milliseconds (default: 0) */
   delay?: number;
-  /** IntersectionObserver threshold (default: 0.12) */
   threshold?: number;
 }
+
+function getReducedMotion() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+const subscribe = () => () => {};
 
 export function RevealOnScroll({
   children,
@@ -18,27 +23,11 @@ export function RevealOnScroll({
   threshold = 0.12,
 }: RevealOnScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
-  // Default to visible (SSR-safe) — will be overridden client-side unless reduced-motion
-  const [visible, setVisible] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const reducedMotion = useSyncExternalStore(subscribe, getReducedMotion, () => false);
 
   useEffect(() => {
-    setMounted(true);
-
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    setReducedMotion(prefersReduced);
-
-    if (prefersReduced) {
-      // No animation — stay visible
-      setVisible(true);
-      return;
-    }
-
-    // Start hidden before observing
-    setVisible(false);
+    if (reducedMotion) return;
 
     const element = ref.current;
     if (!element) return;
@@ -56,32 +45,26 @@ export function RevealOnScroll({
     );
 
     observer.observe(element);
+    return () => observer.disconnect();
+  }, [threshold, reducedMotion]);
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [threshold]);
-
-  // SSR + pre-mount: render visibly so there's no flash on reduced-motion or no-JS
-  if (!mounted || reducedMotion) {
-    return (
-      <div ref={ref} className={className}>
-        {children}
-      </div>
-    );
-  }
+  const show = visible || reducedMotion;
 
   return (
     <div
       ref={ref}
       className={className}
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(22px)",
-        transition: `opacity 900ms var(--ease-out), transform 900ms var(--ease-out)`,
-        transitionDelay: `${delay}ms`,
-        willChange: "opacity, transform",
-      }}
+      style={
+        reducedMotion
+          ? undefined
+          : {
+              opacity: show ? 1 : 0,
+              transform: show ? "translateY(0)" : "translateY(22px)",
+              transition:
+                "opacity 900ms var(--ease-out), transform 900ms var(--ease-out)",
+              transitionDelay: `${delay}ms`,
+            }
+      }
     >
       {children}
     </div>

@@ -24,19 +24,23 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const prevPathname = useRef(pathname);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 16);
     };
-    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
+    requestAnimationFrame(handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
-    setMobileOpen(false);
+    if (prevPathname.current !== pathname) {
+      prevPathname.current = pathname;
+      setMobileOpen(false);
+    }
   }, [pathname]);
 
   // Trap focus / close on Escape
