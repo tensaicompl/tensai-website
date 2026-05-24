@@ -34,7 +34,7 @@ export default function CrossAltitudeStrip({ workedExample }: CrossAltitudeStrip
   return (
     <section
       style={{
-        maxWidth: "1200px",
+        maxWidth: "1440px",
         margin: "0 auto",
         padding: "64px 24px",
       }}

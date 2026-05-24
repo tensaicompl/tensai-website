@@ -75,7 +75,7 @@ export function SiteNav() {
       >
         <div
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             padding: "0 16px",
             width: "100%",

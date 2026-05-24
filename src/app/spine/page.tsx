@@ -27,7 +27,7 @@ export default function SpinePage() {
         >
           <div
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
             }}
           >
@@ -66,7 +66,7 @@ export default function SpinePage() {
         {/* ── Diagram ────────────────────────────────────────────── */}
         <div
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -79,7 +79,7 @@ export default function SpinePage() {
         {/* ── Concept grid ───────────────────────────────────────── */}
         <section
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             padding: "0 24px 96px",
           }}

@@ -38,7 +38,7 @@ export default function Home() {
         {/* Hero */}
         <section className="relative overflow-hidden" style={{ padding: "64px 16px 96px" }}>
           <div
-            className="hero-grid mx-auto grid max-w-[1200px] items-center gap-16"
+            className="hero-grid mx-auto grid max-w-[1440px] items-center gap-16"
             style={{ gridTemplateColumns: "1.1fr 1fr" }}
           >
             <div>
@@ -159,7 +159,7 @@ export default function Home() {
         <section style={{ padding: "96px 16px" }}>
           <div
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
               textAlign: "center",
               marginBottom: "64px",
@@ -203,7 +203,7 @@ export default function Home() {
           <div
             className="fractal-grid"
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -320,7 +320,7 @@ export default function Home() {
         <section style={{ padding: "96px 16px" }}>
           <div
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
               textAlign: "center",
               marginBottom: "48px",
@@ -344,7 +344,7 @@ export default function Home() {
           <div
             className="gateway-grid"
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",

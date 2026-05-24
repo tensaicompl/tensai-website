@@ -30,7 +30,7 @@ export default function CraftPage() {
             paddingRight: "24px",
           }}
         >
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ maxWidth: "1440px", margin: "0 auto" }}>
             {/* Large numeral */}
             <div
               style={{
@@ -114,7 +114,7 @@ export default function CraftPage() {
         {/* ── Diagram ───────────────────────────────────────────── */}
         <div
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             paddingLeft: "24px",
             paddingRight: "24px",
@@ -127,7 +127,7 @@ export default function CraftPage() {
         {/* ── Concept index ─────────────────────────────────────── */}
         <section
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             padding: "0 24px 96px",
           }}

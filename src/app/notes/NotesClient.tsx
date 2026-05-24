@@ -26,7 +26,7 @@ export function NotesClient({ notes }: NotesClientProps) {
       {/* ── Category filter ──────────────────────────────────── */}
       <section
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1440px",
           margin: "0 auto",
           padding: "0 24px 40px",
         }}
@@ -41,7 +41,7 @@ export function NotesClient({ notes }: NotesClientProps) {
       {/* ── Notes grid ──────────────────────────────────────── */}
       <section
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1440px",
           margin: "0 auto",
           padding: "0 24px 96px",
         }}

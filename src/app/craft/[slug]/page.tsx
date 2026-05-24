@@ -63,7 +63,7 @@ export default async function CraftConceptPage({
       <main>
         <article
           style={{
-            maxWidth: "1200px",
+            maxWidth: "1440px",
             margin: "0 auto",
             padding: "48px 24px 96px",
           }}

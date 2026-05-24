@@ -6,7 +6,7 @@
 .stage {
   display: flex;
   flex-direction: column;
-  max-width: 1080px;
+  max-width: 1320px;
   margin: 0 auto;
   width: 100%;
   font-family: var(--font-body);

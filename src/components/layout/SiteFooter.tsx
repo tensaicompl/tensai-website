@@ -67,7 +67,7 @@ export function SiteFooter() {
     >
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1440px",
           margin: "0 auto",
           padding: "0 24px",
         }}

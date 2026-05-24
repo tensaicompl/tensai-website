@@ -111,7 +111,7 @@ export default async function NoteDetailPage({
         {relatedNotes.length > 0 && (
           <section
             style={{
-              maxWidth: "1200px",
+              maxWidth: "1440px",
               margin: "0 auto",
               padding: "0 24px 96px",
               borderTop: "1px solid var(--border)",
