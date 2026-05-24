@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * AgentsVsWorkflowsDiagram — The Autonomy Gradient
  *
@@ -5,233 +7,61 @@
  * workflow (centre), agent (right). The axis label is "who decides
  * the next step" — moving from "you, in code" to "the model, at runtime".
  * The workflow box shows a fixed path; the agent box shows a dynamic one.
+ *
+ * Animated: dots flow along defined SMIL paths when visible.
+ * Static flow lines rendered at 25% opacity as rails.
+ * Entrance: tier boxes stagger in left-to-right via CSS transitions.
  */
 
+import { useEffect, useRef, useState } from "react";
+
 export function AgentsVsWorkflowsDiagram() {
+  const figureRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    const el = figureRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const dotR = 4;
+  const dotFill = "var(--color-midnight)";
+
   return (
     <figure
+      ref={figureRef}
       role="img"
       aria-label="The autonomy gradient: single model call, workflow, and agent — from fixed control flow to model-directed"
-      style={{ margin: 0, width: "100%", maxWidth: "780px", marginInline: "auto" }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
       <svg
-        viewBox="0 0 780 380"
+        viewBox="0 0 1200 400"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
       >
-        {/* ── Gradient axis ─────────────────────────────────── */}
-        <line
-          x1="60" y1="340" x2="720" y2="340"
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          markerEnd="url(#avwArrow)"
-        />
-        <text
-          x="60" y="366"
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          letterSpacing="0.08em"
-        >
-          you decide, in code
-        </text>
-        <text
-          x="720" y="366"
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          textAnchor="end"
-          letterSpacing="0.08em"
-        >
-          the model decides, at runtime
-        </text>
-        <text
-          x="390" y="366"
-          fontFamily="var(--font-mono)"
-          fontSize="10"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          fontWeight="600"
-          letterSpacing="0.14em"
-        >
-          AUTONOMY
-        </text>
-
-        {/* ── Tier 1: Single model call ─────────────────────── */}
-        <rect
-          x="40" y="60" width="180" height="250" rx="4"
-          stroke="var(--border)"
-          strokeWidth="1"
-          fill="none"
-        />
-        <text
-          x="130" y="90"
-          fontFamily="var(--font-display)"
-          fontSize="15"
-          fontWeight="700"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-        >
-          Single Call
-        </text>
-        <text
-          x="130" y="108"
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          one step, one model
-        </text>
-
-        {/* Single call flow: input → model → output */}
-        <rect x="90" y="140" width="80" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="130" y="159" fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-2)" textAnchor="middle">input</text>
-
-        <line x1="130" y1="170" x2="130" y2="195" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-
-        <rect x="90" y="198" width="80" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1.5" />
-        <text x="130" y="217" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">model</text>
-
-        <line x1="130" y1="228" x2="130" y2="253" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-
-        <rect x="90" y="256" width="80" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="130" y="275" fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-2)" textAnchor="middle">output</text>
-
-        {/* ── Tier 2: Workflow ──────────────────────────────── */}
-        <rect
-          x="260" y="60" width="260" height="250" rx="4"
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          fill="none"
-        />
-        <text
-          x="390" y="90"
-          fontFamily="var(--font-display)"
-          fontSize="15"
-          fontWeight="700"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-        >
-          Workflow
-        </text>
-        <text
-          x="390" y="108"
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          fixed path, predefined in code
-        </text>
-
-        {/* Workflow: classify → route → draft → send (linear) */}
-        {[
-          { label: "classify", x: 300, y: 135 },
-          { label: "route", x: 380, y: 135 },
-          { label: "draft", x: 460, y: 135 },
-        ].map((step, i, arr) => (
-          <g key={step.label}>
-            <rect x={step.x} y={step.y} width="60" height="26" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
-            <text x={step.x + 30} y={step.y + 17} fontFamily="var(--font-mono)" fontSize="8" fill="var(--color-midnight)" textAnchor="middle">{step.label}</text>
-            {i < arr.length - 1 && (
-              <line x1={step.x + 60} y1={step.y + 13} x2={arr[i + 1].x} y2={arr[i + 1].y + 13} stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-            )}
-          </g>
-        ))}
-
-        {/* Route branching down */}
-        <line x1="410" y1="161" x2="410" y2="180" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="330" y1="180" x2="450" y2="180" stroke="var(--color-midnight)" strokeWidth="1" />
-
-        {/* Branch A */}
-        <line x1="330" y1="180" x2="330" y2="196" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-        <rect x="300" y="200" width="60" height="26" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="330" y="217" fontFamily="var(--font-mono)" fontSize="8" fill="var(--fg-2)" textAnchor="middle">refund</text>
-
-        {/* Branch B */}
-        <line x1="450" y1="180" x2="450" y2="196" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-        <rect x="420" y="200" width="60" height="26" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="450" y="217" fontFamily="var(--font-mono)" fontSize="8" fill="var(--fg-2)" textAnchor="middle">escalate</text>
-
-        {/* Converge to send */}
-        <line x1="330" y1="226" x2="330" y2="246" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="450" y1="226" x2="450" y2="246" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="330" y1="246" x2="450" y2="246" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="390" y1="246" x2="390" y2="260" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-        <rect x="360" y="264" width="60" height="26" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
-        <text x="390" y="281" fontFamily="var(--font-mono)" fontSize="8" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">send</text>
-
-        {/* ── Tier 3: Agent ─────────────────────────────────── */}
-        <rect
-          x="560" y="60" width="180" height="250" rx="4"
-          stroke="var(--color-midnight)"
-          strokeWidth="2"
-          fill="none"
-        />
-        <text
-          x="650" y="90"
-          fontFamily="var(--font-display)"
-          fontSize="15"
-          fontWeight="700"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-        >
-          Agent
-        </text>
-        <text
-          x="650" y="108"
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          dynamic path, model-directed
-        </text>
-
-        {/* Agent loop: think → act → observe (cycle) */}
-        <rect x="610" y="130" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1.5" />
-        <text x="650" y="148" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">think</text>
-
-        <line x1="690" y1="144" x2="710" y2="144" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="710" y1="144" x2="710" y2="195" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-
-        <rect x="610" y="200" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
-        <text x="650" y="218" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle">act</text>
-
-        <line x1="610" y1="214" x2="590" y2="214" stroke="var(--color-midnight)" strokeWidth="1" />
-        <line x1="590" y1="214" x2="590" y2="265" stroke="var(--color-midnight)" strokeWidth="1" markerEnd="url(#avwArrowSm)" />
-
-        <rect x="610" y="270" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
-        <text x="650" y="288" fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-2)" textAnchor="middle">observe</text>
-
-        {/* Loop back arrow */}
-        <path
-          d="M 610 284 L 580 284 Q 572 284 572 276 L 572 148 Q 572 140 580 140 L 606 140"
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          fill="none"
-          strokeDasharray="4 3"
-          markerEnd="url(#avwArrowSm)"
-        />
-        <text
-          x="564" y="215"
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-          transform="rotate(-90 564 215)"
-        >
-          loop
-        </text>
-
-        {/* ── Marker definitions ──────────────────────────── */}
         <defs>
+          {/* ── Markers ──────────────────────────────────────── */}
           <marker
             id="avwArrow"
             viewBox="0 0 10 10"
@@ -250,7 +80,325 @@ export function AgentsVsWorkflowsDiagram() {
           >
             <path d="M 0 2 L 10 5 L 0 8" fill="none" stroke="var(--color-midnight)" strokeWidth="1.5" />
           </marker>
+
+          {/* ── Animation paths ──────────────────────────────── */}
+
+          {/* Single Call: input center → model center → output center (downward) */}
+          <path
+            id="avwPathSingle"
+            d="M 175 170 L 175 213 L 175 255 L 175 290"
+          />
+
+          {/* Workflow: classify → route → branch(refund) → send */}
+          <path
+            id="avwPathWorkflow"
+            d="M 500 168 L 590 168 L 590 195
+               L 520 195 L 520 218
+               L 520 238 L 520 268
+               L 600 268 L 600 285"
+          />
+
+          {/* Agent: continuous loop think → act → observe → think */}
+          <path
+            id="avwPathAgent"
+            d="M 1010 165 L 1070 165 L 1070 225
+               L 1010 225 L 940 225 L 940 290
+               L 1010 290 L 1010 305
+               L 920 305 Q 910 305 910 295 L 910 155 Q 910 145 920 145 L 960 145"
+          />
         </defs>
+
+        {/* ── Gradient axis ─────────────────────────────────── */}
+        <line
+          x1="80" y1="360" x2="1120" y2="360"
+          stroke="var(--color-midnight)"
+          strokeWidth="1.5"
+          markerEnd="url(#avwArrow)"
+        />
+        <text
+          x="80" y="386"
+          fontFamily="var(--font-mono)"
+          fontSize="10"
+          fill="var(--fg-3)"
+          letterSpacing="0.08em"
+        >
+          you decide, in code
+        </text>
+        <text
+          x="1120" y="386"
+          fontFamily="var(--font-mono)"
+          fontSize="10"
+          fill="var(--fg-3)"
+          textAnchor="end"
+          letterSpacing="0.08em"
+        >
+          the model decides, at runtime
+        </text>
+        <text
+          x="600" y="386"
+          fontFamily="var(--font-mono)"
+          fontSize="11"
+          fill="var(--color-midnight)"
+          textAnchor="middle"
+          fontWeight="600"
+          letterSpacing="0.14em"
+        >
+          AUTONOMY
+        </text>
+
+        {/* ═══════════════════════════════════════════════════ */}
+        {/* ── Tier 1: Single Call ─────────────────────────── */}
+        {/* ═══════════════════════════════════════════════════ */}
+        <g
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(18px)",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
+            transitionDelay: "0s",
+          }}
+        >
+          <rect
+            x="60" y="60" width="230" height="275" rx="4"
+            stroke="var(--border)"
+            strokeWidth="1"
+            fill="none"
+          />
+          <text
+            x="175" y="92"
+            fontFamily="var(--font-display)"
+            fontSize="16"
+            fontWeight="700"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+          >
+            Single Call
+          </text>
+          <text
+            x="175" y="112"
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            one step, one model
+          </text>
+
+          {/* input */}
+          <rect x="125" y="140" width="100" height="32" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+          <text x="175" y="161" fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-2)" textAnchor="middle">input</text>
+
+          {/* Static rail: input → model */}
+          <line x1="175" y1="172" x2="175" y2="198" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+
+          {/* model */}
+          <rect x="125" y="200" width="100" height="32" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1.5" />
+          <text x="175" y="221" fontFamily="var(--font-mono)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">model</text>
+
+          {/* Static rail: model → output */}
+          <line x1="175" y1="232" x2="175" y2="258" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+
+          {/* output */}
+          <rect x="125" y="260" width="100" height="32" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+          <text x="175" y="281" fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-2)" textAnchor="middle">output</text>
+
+          {/* Animated dot */}
+          {visible && !reducedMotion && (
+            <circle r={dotR} fill={dotFill}>
+              <animateMotion
+                dur="2.4s"
+                repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
+              >
+                <mpath href="#avwPathSingle" />
+              </animateMotion>
+            </circle>
+          )}
+        </g>
+
+        {/* ═══════════════════════════════════════════════════ */}
+        {/* ── Tier 2: Workflow ────────────────────────────── */}
+        {/* ═══════════════════════════════════════════════════ */}
+        <g
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(18px)",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
+            transitionDelay: "0.15s",
+          }}
+        >
+          <rect
+            x="350" y="60" width="340" height="275" rx="4"
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <text
+            x="520" y="92"
+            fontFamily="var(--font-display)"
+            fontSize="16"
+            fontWeight="700"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+          >
+            Workflow
+          </text>
+          <text
+            x="520" y="112"
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            fixed path, predefined in code
+          </text>
+
+          {/* classify → route row */}
+          <rect x="410" y="140" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
+          <text x="450" y="159" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle">classify</text>
+
+          {/* Static rail: classify → route */}
+          <line x1="490" y1="154" x2="540" y2="154" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+
+          <rect x="542" y="140" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
+          <text x="582" y="159" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle">route</text>
+
+          {/* Route branching down */}
+          <line x1="582" y1="168" x2="582" y2="190" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="480" y1="190" x2="640" y2="190" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+
+          {/* Branch A: refund */}
+          <line x1="480" y1="190" x2="480" y2="208" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+          <rect x="440" y="210" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+          <text x="480" y="229" fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-2)" textAnchor="middle">refund</text>
+
+          {/* Branch B: escalate */}
+          <line x1="640" y1="190" x2="640" y2="208" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+          <rect x="600" y="210" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+          <text x="640" y="229" fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-2)" textAnchor="middle">escalate</text>
+
+          {/* Converge to send */}
+          <line x1="480" y1="238" x2="480" y2="260" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="640" y1="238" x2="640" y2="260" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="480" y1="260" x2="640" y2="260" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="560" y1="260" x2="560" y2="278" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+          <rect x="520" y="280" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
+          <text x="560" y="299" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">send</text>
+
+          {/* Animated dot */}
+          {visible && !reducedMotion && (
+            <circle r={dotR} fill={dotFill}>
+              <animateMotion
+                dur="3.6s"
+                repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
+              >
+                <mpath href="#avwPathWorkflow" />
+              </animateMotion>
+            </circle>
+          )}
+        </g>
+
+        {/* ═══════════════════════════════════════════════════ */}
+        {/* ── Tier 3: Agent ──────────────────────────────── */}
+        {/* ═══════════════════════════════════════════════════ */}
+        <g
+          style={{
+            opacity: visible ? 1 : 0,
+            transform: visible ? "translateY(0)" : "translateY(18px)",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
+            transitionDelay: "0.3s",
+          }}
+        >
+          <rect
+            x="750" y="60" width="280" height="275" rx="4"
+            stroke="var(--color-midnight)"
+            strokeWidth="2"
+            fill="none"
+          />
+          <text
+            x="890" y="92"
+            fontFamily="var(--font-display)"
+            fontSize="16"
+            fontWeight="700"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+          >
+            Agent
+          </text>
+          <text
+            x="890" y="112"
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            dynamic path, model-directed
+          </text>
+
+          {/* think */}
+          <rect x="845" y="140" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1.5" />
+          <text x="890" y="160" fontFamily="var(--font-mono)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">think</text>
+
+          {/* Static rail: think → act (right then down) */}
+          <line x1="935" y1="155" x2="960" y2="155" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="960" y1="155" x2="960" y2="208" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+
+          {/* act */}
+          <rect x="845" y="212" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
+          <text x="890" y="232" fontFamily="var(--font-mono)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle">act</text>
+
+          {/* Static rail: act → observe (left then down) */}
+          <line x1="845" y1="227" x2="820" y2="227" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
+          <line x1="820" y1="227" x2="820" y2="278" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+
+          {/* observe */}
+          <rect x="845" y="282" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
+          <text x="890" y="302" fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-2)" textAnchor="middle">observe</text>
+
+          {/* Static dashed loop-back rail */}
+          <path
+            d="M 845 297 L 808 297 Q 798 297 798 287 L 798 160 Q 798 150 808 150 L 842 150"
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            fill="none"
+            strokeDasharray="4 3"
+            opacity="0.25"
+            markerEnd="url(#avwArrowSm)"
+          />
+          <text
+            x="790" y="228"
+            fontFamily="var(--font-mono)"
+            fontSize="8"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+            transform="rotate(-90 790 228)"
+          >
+            loop
+          </text>
+
+          {/* Animated dot — continuous loop */}
+          {visible && !reducedMotion && (
+            <circle r={dotR} fill={dotFill}>
+              <animateMotion
+                dur="4s"
+                repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
+              >
+                <mpath href="#avwPathAgent" />
+              </animateMotion>
+            </circle>
+          )}
+        </g>
       </svg>
     </figure>
   );

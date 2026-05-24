@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * RagEvolutionsDiagram — Five-Rung Retrieval Ladder
  *
@@ -7,45 +9,93 @@
  *
  * Monochrome throughout; the single accent element is the top rung
  * (Self-correcting) highlighted in var(--accent) (violet).
+ *
+ * Animations:
+ * - Bar fill: each rung expands from 0 width to full, staggered bottom-to-top.
+ * - Feedback loop arc + SMIL dot on top rung.
+ * - Vertical arrows fade in after all bars finish.
  */
 
+import { useEffect, useRef, useState } from "react";
+
 export function RagEvolutionsDiagram() {
-  /* ── Layout constants ──────────────────────────────── */
-  const ladderX = 80; // left edge of narrowest bar
-  const barH = 28;
-  const gap = 18; // vertical gap between bars
-  const rungStep = barH + gap; // 46
+  /* ── Intersection Observer ────────────────────────── */
+  const figRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (prefersReduced) {
+      setVisible(true);
+      return;
+    }
+
+    const el = figRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* ── Layout constants (scaled to 1200-wide viewBox) ── */
+  const ladderX = 120;
+  const barH = 32;
+  const gap = 22;
+  const rungStep = barH + gap; // 54
 
   /* Five rungs, bottom to top */
   const rungs = [
-    { label: "Naive", detail: "Dense top-k", width: 300 },
-    { label: "Hybrid", detail: "Dense + sparse + reranker", width: 340 },
-    { label: "Graph / Structured", detail: "Entity graph or RAPTOR tree", width: 380 },
-    { label: "Agentic", detail: "Query decomposition + tool routing", width: 420 },
-    { label: "Self-correcting", detail: "Retrieve-grade-requery loop", width: 460 },
+    { label: "Naive", detail: "Dense top-k", width: 460 },
+    { label: "Hybrid", detail: "Dense + sparse + reranker", width: 520 },
+    { label: "Graph / Structured", detail: "Entity graph or RAPTOR tree", width: 580 },
+    { label: "Agentic", detail: "Query decomposition + tool routing", width: 640 },
+    { label: "Self-correcting", detail: "Retrieve-grade-requery loop", width: 700 },
   ];
 
-  /* Y positions: bottom rung at y=340, top rung at y=340 - 4*46 = 156 */
-  const bottomY = 340;
+  /* Y positions: bottom rung at y=360, top rung at y=360 - 4*54 = 144 */
+  const bottomY = 360;
   const rungYs = rungs.map((_, i) => bottomY - i * rungStep);
 
   /* Right-side annotation area */
-  const arrowX1 = 590; // "Cost & complexity" arrow
-  const arrowX2 = 660; // "Retrieval reliability" arrow
+  const arrowX1 = 900;
+  const arrowX2 = 1000;
   const arrowTop = rungYs[4] - 4;
   const arrowBot = rungYs[0] + barH + 4;
 
   /* Dashed "Most production systems" line between rung 1 and 2 */
   const dashY = (rungYs[0] + rungYs[1] + barH) / 2;
 
+  /* Animation timing */
+  const barDelay = 0.2; // seconds between each rung
+  const totalBarTime = barDelay * (rungs.length - 1) + 0.6; // last bar transition duration 0.6s
+  const arrowFadeDelay = totalBarTime + 0.1;
+
+  /* Feedback loop on top rung */
+  const loopCx = ladderX + rungs[4].width - 56;
+  const loopCy = rungYs[4] + barH / 2;
+  const loopR = 9;
+
   return (
     <figure
+      ref={figRef}
       role="img"
       aria-label="Five-rung retrieval ladder showing RAG evolution from naive dense top-k to self-correcting retrieve-grade-requery loops, with increasing cost, complexity, and retrieval reliability"
-      style={{ margin: 0, width: "100%", maxWidth: "780px", marginInline: "auto" }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
       <svg
-        viewBox="0 0 780 420"
+        viewBox="0 0 1200 440"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -100,6 +150,21 @@ export function RagEvolutionsDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Clip paths for bar fill animation — one per rung */}
+          {rungs.map((rung, i) => (
+            <clipPath key={`clip-${i}`} id={`ragBarClip${i}`}>
+              <rect
+                x={ladderX}
+                y={rungYs[i] - 1}
+                width={visible ? rung.width : 0}
+                height={barH + 2}
+                style={{
+                  transition: `width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${i * barDelay}s`,
+                }}
+              />
+            </clipPath>
+          ))}
         </defs>
 
         {/* ── Rung bars ───────────────────────────────────── */}
@@ -112,7 +177,7 @@ export function RagEvolutionsDiagram() {
           const detailFill = "var(--fg-3)";
 
           return (
-            <g key={rung.label}>
+            <g key={rung.label} clipPath={`url(#ragBarClip${i})`}>
               {/* Bar */}
               <rect
                 x={ladderX}
@@ -130,7 +195,7 @@ export function RagEvolutionsDiagram() {
                 x={ladderX - 16}
                 y={y + barH / 2 + 1}
                 fontFamily="var(--font-mono)"
-                fontSize="11"
+                fontSize="12"
                 fill="var(--fg-3)"
                 textAnchor="end"
                 dominantBaseline="central"
@@ -140,10 +205,10 @@ export function RagEvolutionsDiagram() {
 
               {/* Primary label */}
               <text
-                x={ladderX + 14}
+                x={ladderX + 16}
                 y={y + barH / 2 - 1}
                 fontFamily="var(--font-display)"
-                fontSize="13"
+                fontSize="14"
                 fontWeight="600"
                 fill={labelFill}
                 dominantBaseline="central"
@@ -153,10 +218,10 @@ export function RagEvolutionsDiagram() {
 
               {/* Detail label */}
               <text
-                x={ladderX + rung.width - 14}
+                x={ladderX + rung.width - 16}
                 y={y + barH / 2 - 1}
                 fontFamily="var(--font-mono)"
-                fontSize="10"
+                fontSize="11"
                 fill={detailFill}
                 textAnchor="end"
                 dominantBaseline="central"
@@ -201,7 +266,7 @@ export function RagEvolutionsDiagram() {
           x={ladderX + rungs[1].width + 32}
           y={dashY + 1}
           fontFamily="var(--font-mono)"
-          fontSize="9"
+          fontSize="10"
           fill="var(--fg-3)"
           dominantBaseline="central"
           letterSpacing="0.04em"
@@ -209,95 +274,110 @@ export function RagEvolutionsDiagram() {
           Most production systems
         </text>
 
-        {/* ── Right-side vertical arrows ──────────────────── */}
+        {/* ── Right-side vertical arrows (fade in after bars) ── */}
+        <g
+          style={{
+            opacity: visible ? 1 : 0,
+            transition: `opacity 0.5s ease ${arrowFadeDelay}s`,
+          }}
+        >
+          {/* Arrow 1: Cost & complexity */}
+          <line
+            x1={arrowX1}
+            y1={arrowBot}
+            x2={arrowX1}
+            y2={arrowTop}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            markerEnd="url(#ragArrow)"
+          />
+          <text
+            x={arrowX1}
+            y={arrowTop - 14}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fontWeight="600"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+          >
+            COST &amp;
+          </text>
+          <text
+            x={arrowX1}
+            y={arrowTop - 3}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fontWeight="600"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+          >
+            COMPLEXITY
+          </text>
 
-        {/* Arrow 1: Cost & complexity */}
-        <line
-          x1={arrowX1}
-          y1={arrowBot}
-          x2={arrowX1}
-          y2={arrowTop}
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          markerEnd="url(#ragArrow)"
-        />
-        <text
-          x={arrowX1}
-          y={arrowTop - 14}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fontWeight="600"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          letterSpacing="0.06em"
-        >
-          COST &amp;
-        </text>
-        <text
-          x={arrowX1}
-          y={arrowTop - 3}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fontWeight="600"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          letterSpacing="0.06em"
-        >
-          COMPLEXITY
-        </text>
+          {/* Arrow 2: Retrieval reliability */}
+          <line
+            x1={arrowX2}
+            y1={arrowBot}
+            x2={arrowX2}
+            y2={arrowTop}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            markerEnd="url(#ragArrow)"
+          />
+          <text
+            x={arrowX2}
+            y={arrowTop - 14}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fontWeight="600"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+          >
+            RETRIEVAL
+          </text>
+          <text
+            x={arrowX2}
+            y={arrowTop - 3}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fontWeight="600"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+          >
+            RELIABILITY
+          </text>
+        </g>
 
-        {/* Arrow 2: Retrieval reliability */}
-        <line
-          x1={arrowX2}
-          y1={arrowBot}
-          x2={arrowX2}
-          y2={arrowTop}
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          markerEnd="url(#ragArrow)"
-        />
-        <text
-          x={arrowX2}
-          y={arrowTop - 14}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fontWeight="600"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          letterSpacing="0.06em"
+        {/* ── Feedback loop arc + SMIL dot on top rung ──────── */}
+        <g
+          style={{
+            opacity: visible ? 1 : 0,
+            transition: `opacity 0.4s ease ${4 * barDelay + 0.3}s`,
+          }}
         >
-          RETRIEVAL
-        </text>
-        <text
-          x={arrowX2}
-          y={arrowTop - 3}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fontWeight="600"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          letterSpacing="0.06em"
-        >
-          RELIABILITY
-        </text>
-
-        {/* ── Feedback loop icon on top rung ───────────────── */}
-        {(() => {
-          const loopCx = ladderX + rungs[4].width - 38;
-          const loopCy = rungYs[4] + barH / 2;
-          return (
-            <g>
-              <path
-                d={`M ${loopCx + 7} ${loopCy - 3}
-                    A 7 7 0 1 0 ${loopCx + 7} ${loopCy + 3}`}
-                stroke="var(--accent)"
-                strokeWidth="1.5"
-                fill="none"
-                markerEnd="url(#ragArrowAccent)"
-              />
-            </g>
-          );
-        })()}
+          <path
+            id="ragFeedbackArc"
+            d={`M ${loopCx + loopR} ${loopCy - 3}
+                A ${loopR} ${loopR} 0 1 0 ${loopCx + loopR} ${loopCy + 3}`}
+            stroke="var(--accent)"
+            strokeWidth="1.5"
+            fill="none"
+            markerEnd="url(#ragArrowAccent)"
+          />
+          {/* Animated dot travelling along the arc */}
+          <circle r="2.5" fill="var(--accent)">
+            <animateMotion
+              dur="2s"
+              repeatCount="indefinite"
+              path={`M ${loopCx + loopR} ${loopCy - 3}
+                     A ${loopR} ${loopR} 0 1 0 ${loopCx + loopR} ${loopCy + 3}`}
+            />
+          </circle>
+        </g>
 
         {/* ── "Fixes" annotations between rungs ───────────── */}
         {[
@@ -310,10 +390,10 @@ export function RagEvolutionsDiagram() {
           return (
             <text
               key={text}
-              x={ladderX + 14}
+              x={ladderX + 16}
               y={midY + 1}
               fontFamily="var(--font-mono)"
-              fontSize="8.5"
+              fontSize="9.5"
               fill="var(--fg-3)"
               dominantBaseline="central"
               letterSpacing="0.02em"
@@ -326,9 +406,9 @@ export function RagEvolutionsDiagram() {
         {/* ── Title ───────────────────────────────────────── */}
         <text
           x={ladderX}
-          y={rungYs[4] - 32}
+          y={rungYs[4] - 36}
           fontFamily="var(--font-display)"
-          fontSize="15"
+          fontSize="16"
           fontWeight="700"
           fill="var(--color-midnight)"
           letterSpacing="0.02em"
@@ -337,9 +417,9 @@ export function RagEvolutionsDiagram() {
         </text>
         <text
           x={ladderX}
-          y={rungYs[4] - 16}
+          y={rungYs[4] - 18}
           fontFamily="var(--font-mono)"
-          fontSize="10"
+          fontSize="11"
           fill="var(--fg-3)"
           letterSpacing="0.04em"
         >
