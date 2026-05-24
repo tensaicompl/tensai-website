@@ -131,7 +131,7 @@ export default function Home() {
                 }}
               />
               <img
-                src="/logos/icon-black.svg"
+                src="/logos/icon-black-cropped.svg"
                 alt=""
                 className="relative"
                 style={{
