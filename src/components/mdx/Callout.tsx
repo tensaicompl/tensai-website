@@ -27,29 +27,26 @@ export function Callout({ type = "info", title, children }: CalloutProps) {
         margin: "var(--space-6) 0",
       }}
     >
-      <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "flex-start" }}>
-        <Icon
-          size={18}
-          style={{ color: "var(--fg-1)", flexShrink: 0, marginTop: "1px" }}
-        />
-        <div>
-          {title && (
-            <p
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 600,
-                fontSize: "var(--fs-body)",
-                color: "var(--fg-1)",
-                marginBottom: "var(--space-2)",
-              }}
-            >
-              {title}
-            </p>
-          )}
-          <div style={{ fontSize: "var(--fs-small)", color: "var(--fg-2)", lineHeight: "var(--lh-relaxed)" }}>
-            {children}
-          </div>
+      {title && (
+        <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center", marginBottom: "var(--space-2)" }}>
+          <Icon
+            size={18}
+            style={{ color: "var(--fg-1)", flexShrink: 0 }}
+          />
+          <p
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: "var(--fs-body)",
+              color: "var(--fg-1)",
+            }}
+          >
+            {title}
+          </p>
         </div>
+      )}
+      <div style={{ fontSize: "var(--fs-small)", color: "var(--fg-2)", lineHeight: "var(--lh-relaxed)", paddingLeft: title ? "30px" : "0" }}>
+        {children}
       </div>
     </aside>
   );
