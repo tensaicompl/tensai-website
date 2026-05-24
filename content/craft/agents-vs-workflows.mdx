@@ -5,8 +5,63 @@ slug: "agents-vs-workflows"
 definition: "The foundational distinction — and the discipline of choosing."
 spineConcepts: [9, 10]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 1
 ---
 
-<ContentPlaceholder title="Agents vs Workflows" />
+There are two ways to build a system out of language models, and they differ in one thing: who decides the next step. In a workflow, you decide — the sequence of steps is fixed in code ahead of time, and the model fills in each step along a route you laid out. In an agent, the model decides — it directs its own process, chooses its own tools, and works out how to reach the goal as the task unfolds. Both are real engineering, both run on the same models, and most production systems use each in different places. Choosing well between them is the first decision The Craft asks you to make — and it is the one this page exists to teach.
+
+## The distinction
+
+The distinction is precise, and the precision is what makes it useful. A workflow is a system where models and tools are orchestrated through predefined code paths. An agent is a system where the model dynamically directs its own process and tool use, holding on to control of how the task gets done. Both are agentic systems; the architectural split between them — Anthropic's distinction, and the one the field has standardised on — is what governs everything else.
+
+What the split reduces to is control flow, and nothing else. It is not about whether the system uses tools — both do. It is not about how capable the model is — both can run on the strongest model available. The only question is whether the order of steps was set by code you wrote or by the model at runtime. Cost, reliability, failure modes, how you test it, how it breaks — all of it descends from that single fact.
+
+Take a concrete task to hold on to for the rest of the page: a system that handles incoming customer support tickets. You can build it as a workflow or as an agent, and the result is two genuinely different systems — not one system tuned two ways.
+
+That makes the choice sound balanced. It isn't. The agent is the more impressive thing to build and the more natural thing to reach for — which is exactly why reaching for it too early is the most common and most expensive mistake this pillar will warn you about.
+
+## What you trade
+
+A workflow's path is fixed, and a fixed path is inspectable. You can read it, walk every branch, and reason about what it will do before it runs — and the same input takes the same route every time. The price of that predictability is rigidity. A workflow handles the cases you anticipated, and only those. Built as a workflow, the support system classifies each ticket, routes it by category, pulls the order record when the category calls for it, drafts a reply from the matching template, and sends. Every route is there to see. A ticket that is three problems at once, or one that fits no category you defined, has nowhere to go.
+
+An agent's path is decided live, and that is precisely its value. Built as an agent, the support system reads the ticket and decides for itself — whether to look up the order, whether to check the refund policy, whether to escalate to a person. Because it reasons about the ticket in front of it rather than following your map of every ticket that could arrive, the three-in-one ticket is no longer a special case. The price is the exact mirror of the workflow's. You cannot fully predict what it will do, two runs of the same ticket can diverge, and every step the model controls is a step that can fail in a way you never drew. The agent that handles the messy ticket gracefully is the same agent that can decide, on its own, to issue a refund it should never have issued.
+
+Set side by side, the trade looks like this:
+
+| | Workflow | Agent |
+|---|---|---|
+| Who sets the path | You, in code | The model, at runtime |
+| When the path is set | Before the run | During the run |
+| Same input, same route | Yes | Not guaranteed |
+| What it costs you | Rigidity — only the cases you foresaw | Unpredictability — paths you never drew |
+| Where its limits surface | In review, before you ship | In production, as behaviour |
+| Best fit | Steps known and orderable in advance | Steps unknowable until the task runs |
+
+The last row of that table is not just one trade among several. It is the one that should decide most cases.
+
+<Callout type="note" title="The asymmetry that should decide most cases">
+A workflow's limits are visible before you ship — you can see, in review, which cases its branches miss. An agent's limits surface later, in production, as behaviour nobody predicted. Finding a gap in code review is cheap. Finding the same gap in a live incident is not. Most well-defined problems never needed an agent, and the cost of overreaching is rarely paid by the person who chose it — it is paid by whoever is on call when the model's judgment goes wrong.
+</Callout>
+
+## Choose the simplest thing that works
+
+The rule here is blunt: start with the simplest thing that could work, and add complexity only when it earns its place. Agentic systems buy flexibility with latency and cost, and that trade is not always worth making. For a great many tasks, a single well-built model call — good retrieval, a few in-context examples — is the whole answer. No agent, no workflow, nothing to orchestrate.
+
+The choice resolves into three tiers, and they form a ladder you climb only as far as the task forces you:
+
+- **A single model call** — when the task is one well-scoped step: classify this, extract that, summarise the other. Most problems begin and end here.
+- **A workflow** — when the task breaks into known steps in a knowable order. The control flow is real, but you can draw it in advance.
+- **An agent** — when the steps, their count, or their order genuinely cannot be known until the task is already running.
+
+Read the ladder from the top and stop at the first rung that holds your task. The test for the final rung is the sharpest one to carry: if you can pre-map the decision tree, you do not need an agent — you need to build that tree as a workflow and tune each node. The discipline this page is teaching is not the ability to build an agent. It is the judgment to see how many tasks do not call for one — and to accept that "predictable and a little limited" beats "flexible and unpredictable" for any work that has to be relied on.
+
+## Why this is the foundational page
+
+Workflows and agents are not rival technologies, and the choice between them is not a binary. They are two points on a gradient of autonomy, and most real systems sit somewhere along it rather than at either end — an agent invoked as a single step inside a workflow, a workflow called as one tool by an agent. The skill The Craft is teaching is the placement of autonomy: granting it exactly where the task needs it, and withholding it everywhere else.
+
+That gradient is the backbone of this pillar. The Five Patterns covered next are workflow patterns — fixed structures for composing model calls. Multi-agent orchestration is the high-autonomy end of the same gradient. Steering, evaluation, and the failure taxonomy are all answers to a single question: how do you keep autonomy reliable once you have granted it. Every page after this one is a refinement of the question this page raised — how much of the decision do you hand to the model, and what do you build around the part you hand over.
+
+<Callout type="note" title="Reference implementation">
+The support-ticket system from this page is implemented twice — once as a workflow, once as an agent, from a single shared spec — at [`tensaicompl/agents-vs-workflows-reference`](https://github.com/tensaicompl/agents-vs-workflows-reference). Reading the two builds side by side is the quickest way to see where control flow actually moves.
+</Callout>
