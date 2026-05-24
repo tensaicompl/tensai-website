@@ -4,6 +4,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import DiagramSlot from "@/components/diagrams/DiagramSlot";
+import { getDiagramForSlug } from "@/components/diagrams/registry";
 import ContentPlaceholder from "@/components/mdx/ContentPlaceholder";
 import { Callout } from "@/components/mdx/Callout";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
@@ -144,10 +145,14 @@ export default async function GroundworkConceptPage({
 
           {/* ── Diagram ─────────────────────────────────────────── */}
           <div style={{ marginTop: "48px" }}>
-            <DiagramSlot
-              title={concept.frontmatter.title}
-              height={400}
-            />
+            {(() => {
+              const CustomDiagram = getDiagramForSlug(concept.frontmatter.slug);
+              return CustomDiagram ? (
+                <CustomDiagram />
+              ) : (
+                <DiagramSlot title={concept.frontmatter.title} height={400} />
+              );
+            })()}
           </div>
 
           {/* ── MDX body ─────────────────────────────────────────── */}
