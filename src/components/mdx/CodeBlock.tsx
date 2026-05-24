@@ -3,18 +3,28 @@
 import { useState } from "react";
 
 interface CodeBlockProps {
-  children: string;
+  children: React.ReactNode;
   language?: string;
   className?: string;
+}
+
+function extractText(node: React.ReactNode): string {
+  if (typeof node === "string") return node;
+  if (typeof node === "number") return String(node);
+  if (!node) return "";
+  if (Array.isArray(node)) return node.map(extractText).join("");
+  if (typeof node === "object" && "props" in node) return extractText(node.props.children);
+  return "";
 }
 
 export function CodeBlock({ children, language, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
+  const text = extractText(children);
   const lang = language || className?.replace("language-", "") || "";
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(children.trim());
+    await navigator.clipboard.writeText(text.trim());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -77,7 +87,7 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
           color: "var(--fg-1)",
         }}
       >
-        <code>{children}</code>
+        <code>{text}</code>
       </pre>
     </div>
   );
