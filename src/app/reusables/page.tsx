@@ -154,6 +154,27 @@ const DATA: PillarSection[] = [
     ],
   },
   {
+    pillar: "The Operating Model",
+    numeral: "II",
+    groups: [
+      {
+        concept: "Skills",
+        href: "/operating-model/skills",
+        repos: [
+          { name: "tensai-skills-collection", original: "addyosmani/agent-skills", subProblem: "Production-grade agent skills + SKILL.md standard", stars: "45.4k" },
+          { name: "tensai-skills-standard", original: "microsoft/skills", subProblem: "Agent skills standard and registry", stars: "2.4k" },
+        ],
+      },
+      {
+        concept: "Agent Catalog",
+        href: "/operating-model/agent-catalog",
+        repos: [
+          { name: "tensai-catalog-gateway", original: "IBM/mcp-context-forge", subProblem: "Unified discovery (MCP + A2A + REST/gRPC)", stars: "3.8k" },
+        ],
+      },
+    ],
+  },
+  {
     pillar: "The Groundwork",
     numeral: "I",
     groups: [
@@ -189,27 +210,6 @@ const DATA: PillarSection[] = [
         repos: [
           { name: "tensai-govern-pii", original: "microsoft/presidio", subProblem: "PII detection and anonymisation", stars: "8.3k" },
           { name: "tensai-govern-validate", original: "guardrails-ai/guardrails", subProblem: "LLM output validation and guardrails", stars: "6.9k" },
-        ],
-      },
-    ],
-  },
-  {
-    pillar: "The Operating Model",
-    numeral: "II",
-    groups: [
-      {
-        concept: "Skills",
-        href: "/operating-model/skills",
-        repos: [
-          { name: "tensai-skills-collection", original: "addyosmani/agent-skills", subProblem: "Production-grade agent skills + SKILL.md standard", stars: "45.4k" },
-          { name: "tensai-skills-standard", original: "microsoft/skills", subProblem: "Agent skills standard and registry", stars: "2.4k" },
-        ],
-      },
-      {
-        concept: "Agent Catalog",
-        href: "/operating-model/agent-catalog",
-        repos: [
-          { name: "tensai-catalog-gateway", original: "IBM/mcp-context-forge", subProblem: "Unified discovery (MCP + A2A + REST/gRPC)", stars: "3.8k" },
         ],
       },
     ],
@@ -263,7 +263,7 @@ export default function ReusablesPage() {
           <section key={pillar.numeral} style={{ padding: "0 24px 64px" }}>
             <div style={{ maxWidth: "1440px", margin: "0 auto" }}>
               {/* Pillar header */}
-              <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "32px", borderBottom: "1px solid var(--border)", paddingBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "32px", borderBottom: "1px solid var(--border)", paddingBottom: "16px" }}>
                 <span
                   style={{
                     fontFamily: "var(--font-display)",
