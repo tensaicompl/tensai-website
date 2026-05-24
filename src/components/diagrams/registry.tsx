@@ -9,6 +9,7 @@ import { SteeringDiagram } from "./SteeringDiagram";
 import { CodeDocIndexingDiagram } from "./CodeDocIndexingDiagram";
 import { EvalsObservabilityDiagram } from "./EvalsObservabilityDiagram";
 import { FailureTaxonomyDiagram } from "./FailureTaxonomyDiagram";
+import { AfkAutonomousDiagram } from "./AfkAutonomousDiagram";
 
 type DiagramComponent = () => React.JSX.Element;
 
@@ -24,6 +25,7 @@ const DIAGRAM_REGISTRY: Record<string, DiagramComponent> = {
   "code-doc-indexing": CodeDocIndexingDiagram,
   "evals-observability": EvalsObservabilityDiagram,
   "failure-taxonomy": FailureTaxonomyDiagram,
+  "afk-autonomous": AfkAutonomousDiagram,
 };
 
 export function getDiagramForSlug(slug: string): DiagramComponent | null {
