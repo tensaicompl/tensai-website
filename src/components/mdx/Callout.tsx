@@ -29,8 +29,8 @@ export function Callout({ type = "info", title, children }: CalloutProps) {
     >
       <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "flex-start" }}>
         <Icon
-          size={20}
-          style={{ color: "var(--fg-1)", flexShrink: 0, marginTop: "2px" }}
+          size={18}
+          style={{ color: "var(--fg-1)", flexShrink: 0, marginTop: "1px" }}
         />
         <div>
           {title && (

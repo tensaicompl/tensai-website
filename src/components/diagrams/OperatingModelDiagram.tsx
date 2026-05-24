@@ -64,13 +64,13 @@ export function OperatingModelDiagram() {
     { id: "om-flow-coe-plat", d: (() => {
       const R = 12, off = 75;
       const sx = stageX(3) - off, sy = barY;
-      const ey = coeY + usersH / 2, ex = stageX(3) - coeR;
-      return `M${sx},${sy} L${sx},${ey - R} Q${sx},${ey} ${sx + R},${ey} L${ex},${ey}`;
+      const ey = coeY, ex = stageX(3) - coeR;
+      return `M${sx},${sy} L${sx},${ey + R} Q${sx},${ey} ${sx + R},${ey} L${ex},${ey}`;
     })(), color: "var(--color-midnight)", dur: "2s", r: 2.5 },
     // report: CoE right → right → 90° elbow down → into Platform top
     { id: "om-flow-plat-coe", d: (() => {
       const R = 12, off = 75;
-      const sx = stageX(3) + coeR, sy = coeY + usersH / 2;
+      const sx = stageX(3) + coeR, sy = coeY;
       const ex = stageX(3) + off, ey = barY;
       return `M${sx},${sy} L${ex - R},${sy} Q${ex},${sy} ${ex},${sy + R} L${ex},${ey}`;
     })(), color: "var(--color-midnight)", dur: "2s", r: 2.5 },
@@ -237,10 +237,10 @@ export function OperatingModelDiagram() {
           <path d={flowPaths[6].d} stroke="var(--fg-3)" strokeWidth="1" fill="none" opacity="0.2" />
           <path d={flowPaths[7].d} stroke="var(--fg-3)" strokeWidth="1" fill="none" opacity="0.2" />
           {/* Labels on vertical segments with white background */}
-          <rect x={stageX(3) - 75 - 16} y={(barY + barH + usersY) / 2 - 5} width="32" height="10" rx="2" fill="var(--bg-surface)" />
-          <text x={stageX(3) - 75} y={(barY + barH + usersY) / 2 + 3} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="middle">deliver</text>
-          <rect x={stageX(3) + 75 - 18} y={(barY + barH + usersY) / 2 - 5} width="36" height="10" rx="2" fill="var(--bg-surface)" />
-          <text x={stageX(3) + 75} y={(barY + barH + usersY) / 2 + 3} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="middle">feedback</text>
+          <rect x={stageX(3) - 75 - 16} y={(barY + barH + usersY) / 2 + 15} width="32" height="10" rx="2" fill="var(--bg-surface)" />
+          <text x={stageX(3) - 75} y={(barY + barH + usersY) / 2 + 23} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="middle">deliver</text>
+          <rect x={stageX(3) + 75 - 18} y={(barY + barH + usersY) / 2 + 15} width="36" height="10" rx="2" fill="var(--bg-surface)" />
+          <text x={stageX(3) + 75} y={(barY + barH + usersY) / 2 + 23} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="middle">feedback</text>
 
           {/* Users box */}
           <rect x={stageX(3) - usersW / 2} y={usersY} width={usersW} height={usersH} rx={3} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />

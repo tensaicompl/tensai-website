@@ -8,6 +8,7 @@ import { getDiagramForSlug } from "@/components/diagrams/registry";
 import ContentPlaceholder from "@/components/mdx/ContentPlaceholder";
 import { Callout } from "@/components/mdx/Callout";
 import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { StageIllustration } from "@/components/diagrams/StageIllustration";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
 import ConceptConnections from "@/components/content/ConceptConnections";
@@ -17,6 +18,7 @@ const mdxComponents = {
   ContentPlaceholder,
   Callout,
   CodeBlock,
+  StageIllustration,
 };
 
 export async function generateStaticParams() {
@@ -156,7 +158,7 @@ export default async function GroundworkConceptPage({
           </div>
 
           {/* ── MDX body ─────────────────────────────────────────── */}
-          <div className="concept-body" style={{ marginTop: "48px" }}>
+          <div className="concept-body" style={{ marginTop: "48px", marginLeft: "auto", marginRight: "auto" }}>
             <MDXRemote
               source={concept.content}
               components={mdxComponents}
