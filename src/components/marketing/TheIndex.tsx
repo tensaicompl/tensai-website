@@ -104,18 +104,26 @@ export function TheIndex() {
           <span className={styles.govSep}>·</span>
           <span>Observability</span>
         </div>
-        <button
-          className={styles.expandBtn}
-          onClick={() => setExpanded((prev) => !prev)}
-          aria-expanded={expanded}
-        >
-          {expanded ? "Collapse" : "Show entire map"}
-          <span className={`${styles.expandChevron} ${expanded ? styles.expandChevronOpen : ""}`}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <button
+            className={styles.expandBtn}
+            onClick={() => setExpanded((prev) => !prev)}
+            aria-expanded={expanded}
+          >
+            {expanded ? "Collapse" : "Show entire map"}
+            <span className={`${styles.expandChevron} ${expanded ? styles.expandChevronOpen : ""}`}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+          <Link href="/reusables" className={styles.expandBtn}>
+            TensAI Reusables
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M6 9l6 6 6-6" />
+              <path d="M7 17L17 7M17 7H7M17 7V17" />
             </svg>
-          </span>
-        </button>
+          </Link>
+        </div>
       </div>
 
       {/* Main body: pillars + spine */}

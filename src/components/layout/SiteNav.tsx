@@ -31,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
       { label: "The Operating Model", subtitle: "Teams, process, and organisational design", href: "/operating-model" },
       { label: "The Craft", subtitle: "Prompt engineering, evaluation, and deployment", href: "/craft" },
       { label: "The Spine", subtitle: "All 18 concepts on one page", href: "/spine" },
+      { label: "Reusables", subtitle: "Curated reference repos for every concept", href: "/reusables" },
     ],
   },
   { label: "Blog", href: "/notes" },
