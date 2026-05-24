@@ -2,33 +2,69 @@
  * CraftOverviewDiagram — Pillar III: The Craft at a Glance
  *
  * The 12 Craft concepts arranged as a layered architecture, bottom to top:
- *   Foundation → Core → Orchestration → Quality → Frontier
+ *   Foundation -> Core -> Orchestration -> Quality -> Frontier
  *
  * Vertical arrows connect layers upward. "Harness Engineering" gets the ONE
  * accent border (it is the frame everything hangs on). A throughline quote
  * sits below the Foundation layer in display italic.
  *
- * No gradients, no shadows. Clean structural diagram.
+ * Animated: layers reveal bottom-to-top with staggered CSS transitions,
+ * flowing dots on vertical layer arrows (SMIL), triggered by
+ * IntersectionObserver.
  */
 
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export function CraftOverviewDiagram() {
-  /* ── Layout constants ───────────────────────────── */
-  const cardH = 34;
-  const cardR = 4;
-  const bandGap = 32; // vertical space between layer bands (includes arrow room)
-  const cardGap = 8; // horizontal gap between cards in a layer
-  const padX = 24;
-  const bandW = 780 - padX * 2; // usable width
+  const figRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = figRef.current;
+    if (!el) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* ── Layout constants (scaled to 1200-wide viewBox) ── */
+  const cardH = 52;
+  const cardR = 6;
+  const bandGap = 50; // vertical space between layer bands (includes arrow room)
+  const cardGap = 12; // horizontal gap between cards in a layer
+  const padX = 37;
+  const bandW = 1200 - padX * 2; // usable width
 
   /* Layer Y positions — Foundation at bottom, Frontier at top.
      SVG Y increases downward, so Foundation has the largest Y. */
-  const foundationY = 305;
-  const coreY = foundationY - bandGap - cardH; // 239
-  const orchestrationY = coreY - bandGap - cardH; // 173
-  const qualityY = orchestrationY - bandGap - cardH; // 107
-  const frontierY = qualityY - bandGap - cardH; // 41
+  const foundationY = 470;
+  const coreY = foundationY - bandGap - cardH; // 368
+  const orchestrationY = coreY - bandGap - cardH; // 266
+  const qualityY = orchestrationY - bandGap - cardH; // 164
+  const frontierY = qualityY - bandGap - cardH; // 62
 
-  const quoteY = foundationY + cardH + 28; // 367
+  const quoteY = foundationY + cardH + 40;
 
   /* ── Card layout helper ─────────────────────────── */
   function cards(count: number, y: number) {
@@ -40,18 +76,20 @@ export function CraftOverviewDiagram() {
     }));
   }
 
-  /* ── Layer data ─────────────────────────────────── */
+  /* ── Layer data (bottom-to-top reveal order) ──────── */
   const layers: {
     key: string;
     label: string;
     y: number;
     items: { text: string; accent?: boolean }[];
+    delay: number; // stagger class index (bottom-to-top: foundation=1, frontier=5)
   }[] = [
     {
       key: "frontier",
       label: "FRONTIER",
       y: frontierY,
       items: [{ text: "AFK & Autonomous" }],
+      delay: 5,
     },
     {
       key: "quality",
@@ -62,12 +100,14 @@ export function CraftOverviewDiagram() {
         { text: "Failure Taxonomy" },
         { text: "Code & Doc Indexing" },
       ],
+      delay: 4,
     },
     {
       key: "orchestration",
       label: "ORCHESTRATION",
       y: orchestrationY,
       items: [{ text: "Multi-Agent" }, { text: "Steering" }],
+      delay: 3,
     },
     {
       key: "core",
@@ -79,38 +119,56 @@ export function CraftOverviewDiagram() {
         { text: "Tools & MCP" },
         { text: "RAG Evolutions" },
       ],
+      delay: 2,
     },
     {
       key: "foundation",
       label: "FOUNDATION",
       y: foundationY,
       items: [{ text: "Agents vs Workflows" }, { text: "Five Patterns" }],
+      delay: 1,
     },
   ];
 
-  /* ── Arrow segments (bottom-of-lower → top-of-upper, pointing up) ── */
-  const arrows = [
+  /* ── Arrow segments (bottom-of-lower -> top-of-upper, pointing up) ── */
+  const arrowSegments = [
     { from: foundationY, to: coreY },
     { from: coreY, to: orchestrationY },
     { from: orchestrationY, to: qualityY },
     { from: qualityY, to: frontierY },
   ];
 
-  const cx = 390; // diagram centre x
+  const cx = 600; // diagram centre x
 
   return (
     <figure
+      ref={figRef}
       role="img"
       aria-label="Pillar III — The Craft at a Glance: 12 concepts arranged in five layers from Foundation through Frontier"
-      style={{
-        margin: 0,
-        width: "100%",
-        maxWidth: "780px",
-        marginInline: "auto",
-      }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
+      {/* Entrance transition styles — layers reveal bottom-to-top */}
+      <style>{`
+        .co-enter {
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .co-enter.co-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .co-d1 { transition-delay: 0s; }
+        .co-d2 { transition-delay: 0.14s; }
+        .co-d3 { transition-delay: 0.28s; }
+        .co-d4 { transition-delay: 0.42s; }
+        .co-d5 { transition-delay: 0.56s; }
+        .co-d6 { transition-delay: 0.70s; }
+        .co-d7 { transition-delay: 0.84s; }
+      `}</style>
+
       <svg
-        viewBox="0 0 780 380"
+        viewBox="0 0 1200 585"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -132,37 +190,52 @@ export function CraftOverviewDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Vertical motion paths for flowing dots (bottom-to-top) */}
+          {arrowSegments.map(({ from, to }, i) => (
+            <path
+              key={`coMP-${i}`}
+              id={`coFlow${i}`}
+              d={`M ${cx} ${from - 5} L ${cx} ${to + cardH + 5}`}
+            />
+          ))}
         </defs>
 
         {/* ═══════════════════════════════════════════════════
-            VERTICAL ARROWS between layers
+            VERTICAL ARROWS between layers (static rails at 25% opacity)
             ═══════════════════════════════════════════════════ */}
-        {arrows.map(({ from, to }, i) => (
-          <line
-            key={`arrow-${i}`}
-            x1={cx}
-            y1={from - 3}
-            x2={cx}
-            y2={to + cardH + 3}
-            stroke="var(--color-midnight)"
-            strokeWidth="1.5"
-            markerEnd="url(#coArrowUp)"
-          />
-        ))}
+        <g className={`co-enter co-d6 ${visible ? "co-visible" : ""}`}>
+          {arrowSegments.map(({ from, to }, i) => (
+            <line
+              key={`arrow-${i}`}
+              x1={cx}
+              y1={from - 5}
+              x2={cx}
+              y2={to + cardH + 5}
+              stroke="var(--color-midnight)"
+              strokeWidth="1.5"
+              opacity="0.25"
+              markerEnd="url(#coArrowUp)"
+            />
+          ))}
+        </g>
 
         {/* ═══════════════════════════════════════════════════
-            LAYER CARDS + LABELS
+            LAYER CARDS + LABELS (bottom-to-top stagger)
             ═══════════════════════════════════════════════════ */}
         {layers.map((layer) => {
           const rects = cards(layer.items.length, layer.y);
           return (
-            <g key={layer.key}>
+            <g
+              key={layer.key}
+              className={`co-enter co-d${layer.delay} ${visible ? "co-visible" : ""}`}
+            >
               {/* Layer label — left-aligned above band */}
               <text
                 x={padX}
-                y={layer.y - 6}
+                y={layer.y - 10}
                 fontFamily="var(--font-mono)"
-                fontSize="8"
+                fontSize="9"
                 fill="var(--fg-3)"
                 letterSpacing="0.1em"
               >
@@ -187,9 +260,9 @@ export function CraftOverviewDiagram() {
                     />
                     <text
                       x={r.x + r.w / 2}
-                      y={r.y + cardH / 2 + 4}
+                      y={r.y + cardH / 2 + 5}
                       fontFamily="var(--font-mono)"
-                      fontSize="11"
+                      fontSize="12"
                       fill={
                         isAccent ? "var(--accent)" : "var(--color-midnight)"
                       }
@@ -205,21 +278,48 @@ export function CraftOverviewDiagram() {
           );
         })}
 
+        {/* ── Flowing dots on vertical arrows (rendered only when visible) ── */}
+        {visible && (
+          <g>
+            {arrowSegments.map((_, i) => (
+              <circle
+                key={`dot-${i}`}
+                r="4"
+                fill="var(--color-midnight)"
+                opacity="0.8"
+              >
+                <animateMotion
+                  dur="2.2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin={`${i * 0.5}s`}
+                >
+                  <mpath href={`#coFlow${i}`} />
+                </animateMotion>
+              </circle>
+            ))}
+          </g>
+        )}
+
         {/* ═══════════════════════════════════════════════════
             THROUGHLINE QUOTE
             ═══════════════════════════════════════════════════ */}
-        <text
-          x={cx}
-          y={quoteY}
-          fontFamily="var(--font-display)"
-          fontSize="12"
-          fontStyle="italic"
-          fill="var(--fg-2)"
-          textAnchor="middle"
-        >
-          An agent is a model plus a harness — everything hard lives in the
-          harness.
-        </text>
+        <g className={`co-enter co-d7 ${visible ? "co-visible" : ""}`}>
+          <text
+            x={cx}
+            y={quoteY}
+            fontFamily="var(--font-display)"
+            fontSize="13"
+            fontStyle="italic"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+          >
+            An agent is a model plus a harness — everything hard lives in the
+            harness.
+          </text>
+        </g>
       </svg>
     </figure>
   );

@@ -1,28 +1,65 @@
 /**
  * GroundworkOverviewDiagram — Pillar I at a Glance
  *
- * Six concept cards in a 3×2 grid showing the Groundwork concepts
+ * Six concept cards in a 3x2 grid showing the Groundwork concepts
  * as a connected system. Dependency arrows link cards; Governance & Risk
  * sits centre-bottom as the hub node with the ONE accent border.
  *
- * Top row:  Operating Model & Maturity → Build · Buy · Boost → Token Sourcing
- * Bottom row: Security Architecture ← Governance & Risk → FinOps
+ * Top row:  Operating Model & Maturity -> Build . Buy . Boost -> Token Sourcing
+ * Bottom row: Security Architecture <- Governance & Risk -> FinOps
  *
  * Bottom throughline in display italic:
  * "AI is an operating decision before it is a technology one."
+ *
+ * Animated: flowing dots along connector paths (SMIL), staggered
+ * fade+slide entrance via IntersectionObserver + CSS transitions.
  */
 
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export function GroundworkOverviewDiagram() {
-  /* ── Layout constants ──────────────────────────────── */
-  const cardW = 200;
-  const cardH = 64;
-  const colGap = 44;
-  const rowGap = 60;
+  const figRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = figRef.current;
+    if (!el) return;
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefersReducedMotion) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* ── Layout constants (scaled to 1200-wide viewBox) ── */
+  const cardW = 308;
+  const cardH = 98;
+  const colGap = 68;
+  const rowGap = 92;
 
   const gridW = cardW * 3 + colGap * 2;
-  const offsetX = (780 - gridW) / 2;
+  const offsetX = (1200 - gridW) / 2;
 
-  const topY = 30;
+  const topY = 46;
   const botY = topY + cardH + rowGap;
 
   const col = (c: number) => offsetX + c * (cardW + colGap);
@@ -52,16 +89,15 @@ export function GroundworkOverviewDiagram() {
   ];
 
   /* ── Arrow connections ─────────────────────────────── */
-  /* Each arrow: from card index → to card index */
   const arrows: { from: number; to: number }[] = [
-    { from: 0, to: 1 }, // Operating Model → Build/Buy/Boost
-    { from: 2, to: 3 }, // Token Sourcing → Security Architecture
-    { from: 2, to: 5 }, // Token Sourcing → FinOps
-    { from: 4, to: 0 }, // Governance → Operating Model
-    { from: 4, to: 1 }, // Governance → Build/Buy/Boost
-    { from: 4, to: 2 }, // Governance → Token Sourcing
-    { from: 4, to: 3 }, // Governance → Security Architecture
-    { from: 4, to: 5 }, // Governance → FinOps
+    { from: 0, to: 1 }, // Operating Model -> Build/Buy/Boost
+    { from: 2, to: 3 }, // Token Sourcing -> Security Architecture
+    { from: 2, to: 5 }, // Token Sourcing -> FinOps
+    { from: 4, to: 0 }, // Governance -> Operating Model
+    { from: 4, to: 1 }, // Governance -> Build/Buy/Boost
+    { from: 4, to: 2 }, // Governance -> Token Sourcing
+    { from: 4, to: 3 }, // Governance -> Security Architecture
+    { from: 4, to: 5 }, // Governance -> FinOps
   ];
 
   /**
@@ -82,37 +118,58 @@ export function GroundworkOverviewDiagram() {
     const dx = tx - cx;
     const dy = ty - cy;
 
-    // Determine dominant direction
     const absX = Math.abs(dx);
     const absY = Math.abs(dy);
 
     if (absX / (cardW / 2) > absY / (cardH / 2)) {
-      // Exit left or right
       return {
         x: cx + (dx > 0 ? cardW / 2 + inset : -cardW / 2 - inset),
         y: cy,
       };
     }
-    // Exit top or bottom
     return {
       x: cx,
       y: cy + (dy > 0 ? cardH / 2 + inset : -cardH / 2 - inset),
     };
   }
 
+  /* ── Build motion-path d-strings for each arrow ────── */
+  function arrowPath(from: number, to: number): string {
+    const start = edgePoint(from, to, 3);
+    const end = edgePoint(to, from, 3);
+    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  }
+
   return (
     <figure
+      ref={figRef}
       role="img"
       aria-label="Pillar I — The Groundwork at a Glance: six interconnected concepts with Governance and Risk as the central hub"
-      style={{
-        margin: 0,
-        width: "100%",
-        maxWidth: "780px",
-        marginInline: "auto",
-      }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
+      {/* Entrance transition styles */}
+      <style>{`
+        .go-enter {
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .go-enter.go-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .go-d1 { transition-delay: 0s; }
+        .go-d2 { transition-delay: 0.10s; }
+        .go-d3 { transition-delay: 0.20s; }
+        .go-d4 { transition-delay: 0.30s; }
+        .go-d5 { transition-delay: 0.40s; }
+        .go-d6 { transition-delay: 0.50s; }
+        .go-d7 { transition-delay: 0.60s; }
+        .go-d8 { transition-delay: 0.70s; }
+      `}</style>
+
       <svg
-        viewBox="0 0 780 320"
+        viewBox="0 0 1200 492"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -172,92 +229,105 @@ export function GroundworkOverviewDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Motion paths for flowing dots */}
+          {arrows.map(({ from, to }, i) => (
+            <path key={`mp-${i}`} id={`goFlow${i}`} d={arrowPath(from, to)} />
+          ))}
         </defs>
 
         {/* ── Section title ──────────────────────────────── */}
-        <text
-          x={390}
-          y={18}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.14em"
+        <g
+          className={`go-enter go-d1 ${visible ? "go-visible" : ""}`}
         >
-          PILLAR I — THE GROUNDWORK
-        </text>
+          <text
+            x={600}
+            y={28}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.14em"
+          >
+            PILLAR I — THE GROUNDWORK
+          </text>
+        </g>
 
-        {/* ── Arrows (rendered first, behind cards) ──────── */}
-        {arrows.map(({ from, to }, i) => {
-          const isGovernance = from === 4;
-          const isCrossRow = cards[from].row !== cards[to].row;
+        {/* ── Static arrow rails (25% opacity) ──────────── */}
+        <g
+          className={`go-enter go-d7 ${visible ? "go-visible" : ""}`}
+        >
+          {arrows.map(({ from, to }, i) => {
+            const isGovernance = from === 4;
+            const isCrossRow = cards[from].row !== cards[to].row;
 
-          const start = edgePoint(from, to, 2);
-          const end = edgePoint(to, from, 2);
+            const start = edgePoint(from, to, 3);
+            const end = edgePoint(to, from, 3);
 
-          // Determine marker and style
-          let marker = "url(#goArrow)";
-          let strokeColor = "var(--color-midnight)";
-          let strokeW = 1.5;
-          let opacity = 1;
-          let dashArray: string | undefined;
+            let strokeColor = "var(--color-midnight)";
+            let strokeW = 1.5;
+            let dashArray: string | undefined;
 
-          if (isGovernance) {
-            marker = "url(#goArrowAccent)";
-            strokeColor = "var(--accent)";
-            strokeW = 1;
-            opacity = 0.35;
-            dashArray = "4 3";
-          } else if (isCrossRow) {
-            marker = "url(#goArrowMuted)";
-            strokeColor = "var(--fg-3)";
-            strokeW = 1;
-            opacity = 0.6;
-          }
+            if (isGovernance) {
+              strokeColor = "var(--accent)";
+              strokeW = 1;
+              dashArray = "4 3";
+            } else if (isCrossRow) {
+              strokeColor = "var(--fg-3)";
+              strokeW = 1;
+            }
 
-          return (
-            <line
-              key={`arrow-${i}`}
-              x1={start.x}
-              y1={start.y}
-              x2={end.x}
-              y2={end.y}
-              stroke={strokeColor}
-              strokeWidth={strokeW}
-              opacity={opacity}
-              strokeDasharray={dashArray}
-              markerEnd={marker}
-            />
-          );
-        })}
+            return (
+              <line
+                key={`rail-${i}`}
+                x1={start.x}
+                y1={start.y}
+                x2={end.x}
+                y2={end.y}
+                stroke={strokeColor}
+                strokeWidth={strokeW}
+                opacity={0.25}
+                strokeDasharray={dashArray}
+                markerEnd={
+                  isGovernance
+                    ? "url(#goArrowAccent)"
+                    : isCrossRow
+                      ? "url(#goArrowMuted)"
+                      : "url(#goArrow)"
+                }
+              />
+            );
+          })}
+        </g>
 
-        {/* ── Cards ───────────────────────────────────────── */}
+        {/* ── Cards (staggered entrance) ─────────────────── */}
         {cards.map((card, i) => {
           const x = col(card.col);
           const y = card.row === 0 ? topY : botY;
           const cx = x + cardW / 2;
           const cy = y + cardH / 2;
+          const delay = i + 2; // d2..d7
 
           return (
-            <g key={`card-${i}`}>
-              {/* Card rectangle */}
+            <g
+              key={`card-${i}`}
+              className={`go-enter go-d${delay} ${visible ? "go-visible" : ""}`}
+            >
               <rect
                 x={x}
                 y={y}
                 width={cardW}
                 height={cardH}
-                rx={4}
+                rx={6}
                 stroke={card.accent ? "var(--accent)" : "var(--border)"}
                 strokeWidth={card.accent ? 2 : 1}
                 fill="var(--bg-surface)"
               />
-
-              {/* Primary label */}
               <text
                 x={cx}
-                y={cy - 6}
+                y={cy - 8}
                 fontFamily="var(--font-display)"
-                fontSize="13"
+                fontSize="15"
                 fontWeight="600"
                 fill={
                   card.accent ? "var(--accent)" : "var(--color-midnight)"
@@ -266,13 +336,11 @@ export function GroundworkOverviewDiagram() {
               >
                 {card.label}
               </text>
-
-              {/* Subtitle */}
               <text
                 x={cx}
-                y={cy + 12}
+                y={cy + 14}
                 fontFamily="var(--font-mono)"
-                fontSize="9"
+                fontSize="10"
                 fill="var(--fg-3)"
                 textAnchor="middle"
                 letterSpacing="0.04em"
@@ -283,18 +351,50 @@ export function GroundworkOverviewDiagram() {
           );
         })}
 
+        {/* ── Flowing dots (rendered only when visible) ──── */}
+        {visible && (
+          <g>
+            {arrows.map(({ from }, i) => {
+              const isGovernance = from === 4;
+              return (
+                <circle
+                  key={`dot-${i}`}
+                  r="4"
+                  fill={isGovernance ? "var(--accent)" : "var(--color-midnight)"}
+                  opacity={isGovernance ? 0.6 : 0.8}
+                >
+                  <animateMotion
+                    dur={isGovernance ? "2.5s" : "2s"}
+                    repeatCount="indefinite"
+                    keyPoints="0;1"
+                    keyTimes="0;1"
+                    calcMode="linear"
+                    begin={`${i * 0.3}s`}
+                  >
+                    <mpath href={`#goFlow${i}`} />
+                  </animateMotion>
+                </circle>
+              );
+            })}
+          </g>
+        )}
+
         {/* ── Throughline ─────────────────────────────────── */}
-        <text
-          x={390}
-          y={botY + cardH + 48}
-          fontFamily="var(--font-display)"
-          fontSize="12"
-          fontStyle="italic"
-          fill="var(--fg-2)"
-          textAnchor="middle"
+        <g
+          className={`go-enter go-d8 ${visible ? "go-visible" : ""}`}
         >
-          AI is an operating decision before it is a technology one.
-        </text>
+          <text
+            x={600}
+            y={botY + cardH + 62}
+            fontFamily="var(--font-display)"
+            fontSize="13"
+            fontStyle="italic"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+          >
+            AI is an operating decision before it is a technology one.
+          </text>
+        </g>
       </svg>
     </figure>
   );

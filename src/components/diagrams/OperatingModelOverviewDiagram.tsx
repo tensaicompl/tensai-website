@@ -4,40 +4,76 @@
  * Five concept cards showing the operating model as a flow:
  *
  *   Left: "Skills" (the reusable unit)
- *     → Centre-top: "Agent Catalog" (the registry) — accent border
- *     ← Right-top: "Power Users" (three-tier distribution)
+ *     -> Centre-top: "Agent Catalog" (the registry) — accent border
+ *     <- Right-top: "Power Users" (three-tier distribution)
  *   Centre-bottom: "CoE & Enablement" (the governing body) connects to all above
  *   Far right: "Adoption Patterns" (the failure modes) — dashed connection
  *
  * Throughline at bottom in display italic.
  * ONE accent: Agent Catalog card border.
- * No gradients, no shadows. Clean structural diagram.
+ *
+ * Animated: flowing dots along connector paths (SMIL), staggered
+ * fade+slide entrance via IntersectionObserver + CSS transitions.
  */
 
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export function OperatingModelOverviewDiagram() {
-  /* ── Layout constants ──────────────────────────────── */
-  const svgW = 780;
-  const svgH = 320;
+  const figRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
 
-  const cardW = 140;
-  const cardH = 72;
-  const cardRx = 5;
+  useEffect(() => {
+    const el = figRef.current;
+    if (!el) return;
 
-  /* ── Card positions (centre-based) ────────────────── */
-  const skillsCx = 110;
-  const skillsCy = 90;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
-  const catalogCx = 330;
-  const catalogCy = 66;
+    if (prefersReducedMotion) {
+      setVisible(true);
+      return;
+    }
 
-  const powerCx = 530;
-  const powerCy = 66;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
 
-  const coeCx = 330;
-  const coeCy = 186;
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
-  const adoptionCx = 680;
-  const adoptionCy = 186;
+  /* ── Layout constants (scaled to 1200-wide viewBox) ── */
+  const svgW = 1200;
+  const svgH = 492;
+
+  const cardW = 216;
+  const cardH = 110;
+  const cardRx = 6;
+
+  /* Card positions (centre-based), proportionally scaled */
+  const skillsCx = 169;
+  const skillsCy = 138;
+
+  const catalogCx = 508;
+  const catalogCy = 102;
+
+  const powerCx = 815;
+  const powerCy = 102;
+
+  const coeCx = 508;
+  const coeCy = 286;
+
+  const adoptionCx = 1046;
+  const adoptionCy = 286;
 
   /* ── Card renderer ────────────────────────────────── */
   function cardRect(
@@ -48,7 +84,7 @@ export function OperatingModelOverviewDiagram() {
       sub: string;
       accent?: boolean;
       dashed?: boolean;
-    },
+    }
   ) {
     const x = cx - cardW / 2;
     const y = cy - cardH / 2;
@@ -73,9 +109,9 @@ export function OperatingModelOverviewDiagram() {
         />
         <text
           x={cx}
-          y={cy - 6}
+          y={cy - 8}
           fontFamily="var(--font-display)"
-          fontSize="13"
+          fontSize="15"
           fontWeight="600"
           fill={opts.accent ? "var(--accent)" : "var(--color-midnight)"}
           textAnchor="middle"
@@ -84,9 +120,9 @@ export function OperatingModelOverviewDiagram() {
         </text>
         <text
           x={cx}
-          y={cy + 14}
+          y={cy + 16}
           fontFamily="var(--font-mono)"
-          fontSize="9"
+          fontSize="10"
           fill="var(--fg-3)"
           textAnchor="middle"
           letterSpacing="0.02em"
@@ -97,17 +133,49 @@ export function OperatingModelOverviewDiagram() {
     );
   }
 
+  /* ── Arrow path d-strings for motion paths ─────────── */
+  // 0: Skills -> Agent Catalog
+  const p0 = `M ${skillsCx + cardW / 2 + 6} ${skillsCy - 12} L ${catalogCx - cardW / 2 - 12} ${catalogCy}`;
+  // 1: Power Users -> Agent Catalog
+  const p1 = `M ${powerCx - cardW / 2 - 6} ${powerCy} L ${catalogCx + cardW / 2 + 12} ${catalogCy}`;
+  // 2: CoE -> Skills (governs) — L-shaped path
+  const p2 = `M ${coeCx - cardW / 2 - 6} ${coeCy - 22} L ${skillsCx + 30} ${coeCy - 22} L ${skillsCx + 30} ${skillsCy + cardH / 2 + 12}`;
+  // 3: CoE -> Agent Catalog (curates) — vertical
+  const p3 = `M ${coeCx} ${coeCy - cardH / 2 - 6} L ${catalogCx} ${catalogCy + cardH / 2 + 12}`;
+  // 4: CoE -> Power Users (enables) — L-shaped path
+  const p4 = `M ${coeCx + cardW / 2 + 6} ${coeCy - 22} L ${powerCx - 30} ${coeCy - 22} L ${powerCx - 30} ${powerCy + cardH / 2 + 12}`;
+  // 5: CoE -> Adoption Patterns (mitigates)
+  const p5 = `M ${coeCx + cardW / 2 + 6} ${coeCy} L ${adoptionCx - cardW / 2 - 12} ${adoptionCy}`;
+
+  const motionPaths = [p0, p1, p2, p3, p4, p5];
+
   return (
     <figure
+      ref={figRef}
       role="img"
       aria-label="Operating model overview — five concept cards: Skills, Agent Catalog, Power Users, CoE and Enablement, and Adoption Patterns, connected by directional arrows showing the flow from reusable capability to governed, findable asset"
-      style={{
-        margin: 0,
-        width: "100%",
-        maxWidth: "780px",
-        marginInline: "auto",
-      }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
+      {/* Entrance transition styles */}
+      <style>{`
+        .omo-enter {
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .omo-enter.omo-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .omo-d1 { transition-delay: 0s; }
+        .omo-d2 { transition-delay: 0.12s; }
+        .omo-d3 { transition-delay: 0.20s; }
+        .omo-d4 { transition-delay: 0.32s; }
+        .omo-d5 { transition-delay: 0.44s; }
+        .omo-d6 { transition-delay: 0.56s; }
+        .omo-d7 { transition-delay: 0.68s; }
+      `}</style>
+
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
         fill="none"
@@ -168,198 +236,244 @@ export function OperatingModelOverviewDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Motion paths for flowing dots */}
+          {motionPaths.map((d, i) => (
+            <path key={`omoMP-${i}`} id={`omoFlow${i}`} d={d} />
+          ))}
         </defs>
 
         {/* ═══════════════════════════════════════════════════
-            CONCEPT CARDS
+            CONCEPT CARDS (staggered entrance in flow order)
             ═══════════════════════════════════════════════════ */}
 
         {/* Skills — the reusable unit */}
-        {cardRect(skillsCx, skillsCy, {
-          label: "Skills",
-          sub: "the reusable unit",
-        })}
+        <g className={`omo-enter omo-d1 ${visible ? "omo-visible" : ""}`}>
+          {cardRect(skillsCx, skillsCy, {
+            label: "Skills",
+            sub: "the reusable unit",
+          })}
+        </g>
 
         {/* Agent Catalog — the registry (ACCENT) */}
-        {cardRect(catalogCx, catalogCy, {
-          label: "Agent Catalog",
-          sub: "the registry",
-          accent: true,
-        })}
+        <g className={`omo-enter omo-d2 ${visible ? "omo-visible" : ""}`}>
+          {cardRect(catalogCx, catalogCy, {
+            label: "Agent Catalog",
+            sub: "the registry",
+            accent: true,
+          })}
+        </g>
 
         {/* Power Users — three-tier distribution */}
-        {cardRect(powerCx, powerCy, {
-          label: "Power Users",
-          sub: "three-tier distribution",
-        })}
+        <g className={`omo-enter omo-d3 ${visible ? "omo-visible" : ""}`}>
+          {cardRect(powerCx, powerCy, {
+            label: "Power Users",
+            sub: "three-tier distribution",
+          })}
+        </g>
 
         {/* CoE & Enablement — the governing body */}
-        {cardRect(coeCx, coeCy, {
-          label: "CoE & Enablement",
-          sub: "the governing body",
-        })}
+        <g className={`omo-enter omo-d4 ${visible ? "omo-visible" : ""}`}>
+          {cardRect(coeCx, coeCy, {
+            label: "CoE & Enablement",
+            sub: "the governing body",
+          })}
+        </g>
 
         {/* Adoption Patterns — the failure modes */}
-        {cardRect(adoptionCx, adoptionCy, {
-          label: "Adoption Patterns",
-          sub: "the failure modes",
-          dashed: true,
-        })}
+        <g className={`omo-enter omo-d5 ${visible ? "omo-visible" : ""}`}>
+          {cardRect(adoptionCx, adoptionCy, {
+            label: "Adoption Patterns",
+            sub: "the failure modes",
+            dashed: true,
+          })}
+        </g>
 
         {/* ═══════════════════════════════════════════════════
-            CONNECTION ARROWS
+            STATIC ARROW RAILS (25% opacity)
             ═══════════════════════════════════════════════════ */}
+        <g className={`omo-enter omo-d6 ${visible ? "omo-visible" : ""}`}>
+          {/* Skills -> Agent Catalog */}
+          <line
+            x1={skillsCx + cardW / 2 + 6}
+            y1={skillsCy - 12}
+            x2={catalogCx - cardW / 2 - 12}
+            y2={catalogCy}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            opacity="0.25"
+            markerEnd="url(#omoArrow)"
+          />
+          <text
+            x={(skillsCx + cardW / 2 + catalogCx - cardW / 2) / 2}
+            y={skillsCy - 36}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            publish
+          </text>
 
-        {/* Skills → Agent Catalog */}
-        <line
-          x1={skillsCx + cardW / 2 + 4}
-          y1={skillsCy - 8}
-          x2={catalogCx - cardW / 2 - 8}
-          y2={catalogCy}
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          markerEnd="url(#omoArrow)"
-        />
-        {/* "publish" label */}
-        <text
-          x={(skillsCx + cardW / 2 + catalogCx - cardW / 2) / 2}
-          y={skillsCy - 24}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-2)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          publish
-        </text>
+          {/* Power Users -> Agent Catalog */}
+          <line
+            x1={powerCx - cardW / 2 - 6}
+            y1={powerCy}
+            x2={catalogCx + cardW / 2 + 12}
+            y2={catalogCy}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            opacity="0.25"
+            markerEnd="url(#omoArrow)"
+          />
+          <text
+            x={(powerCx - cardW / 2 + catalogCx + cardW / 2) / 2}
+            y={powerCy - 24}
+            fontFamily="var(--font-mono)"
+            fontSize="10"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            consume
+          </text>
 
-        {/* Power Users → Agent Catalog */}
-        <line
-          x1={powerCx - cardW / 2 - 4}
-          y1={powerCy}
-          x2={catalogCx + cardW / 2 + 8}
-          y2={catalogCy}
-          stroke="var(--color-midnight)"
-          strokeWidth="1.5"
-          markerEnd="url(#omoArrow)"
-        />
-        {/* "consume" label */}
-        <text
-          x={(powerCx - cardW / 2 + catalogCx + cardW / 2) / 2}
-          y={powerCy - 16}
-          fontFamily="var(--font-mono)"
-          fontSize="9"
-          fill="var(--fg-2)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          consume
-        </text>
+          {/* CoE -> Skills (governs) — L-shaped */}
+          <path
+            d={p2}
+            stroke="var(--color-midnight)"
+            strokeWidth="1"
+            fill="none"
+            opacity="0.25"
+            markerEnd="url(#omoArrowMuted)"
+          />
+          <text
+            x={skillsCx - 16}
+            y={coeCy - 34}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="end"
+            letterSpacing="0.04em"
+          >
+            governs
+          </text>
 
-        {/* CoE & Enablement → Skills (governs) */}
-        <path
-          d={`M ${coeCx - cardW / 2 - 4} ${coeCy - 14}
-              L ${skillsCx + 20} ${coeCy - 14}
-              L ${skillsCx + 20} ${skillsCy + cardH / 2 + 8}`}
-          stroke="var(--color-midnight)"
-          strokeWidth="1"
-          fill="none"
-          markerEnd="url(#omoArrowMuted)"
-        />
-        <text
-          x={skillsCx - 10}
-          y={coeCy - 22}
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--fg-3)"
-          textAnchor="end"
-          letterSpacing="0.04em"
-        >
-          governs
-        </text>
+          {/* CoE -> Agent Catalog (curates) — vertical */}
+          <line
+            x1={coeCx}
+            y1={coeCy - cardH / 2 - 6}
+            x2={catalogCx}
+            y2={catalogCy + cardH / 2 + 12}
+            stroke="var(--color-midnight)"
+            strokeWidth="1"
+            opacity="0.25"
+            markerEnd="url(#omoArrowMuted)"
+          />
+          <text
+            x={coeCx + 18}
+            y={(coeCy - cardH / 2 + catalogCy + cardH / 2) / 2 + 2}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="start"
+            letterSpacing="0.04em"
+          >
+            curates
+          </text>
 
-        {/* CoE & Enablement → Agent Catalog (curates) */}
-        <line
-          x1={coeCx}
-          y1={coeCy - cardH / 2 - 4}
-          x2={catalogCx}
-          y2={catalogCy + cardH / 2 + 8}
-          stroke="var(--color-midnight)"
-          strokeWidth="1"
-          markerEnd="url(#omoArrowMuted)"
-        />
-        <text
-          x={coeCx + 14}
-          y={(coeCy - cardH / 2 + catalogCy + cardH / 2) / 2 + 2}
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--fg-3)"
-          textAnchor="start"
-          letterSpacing="0.04em"
-        >
-          curates
-        </text>
+          {/* CoE -> Power Users (enables) — L-shaped */}
+          <path
+            d={p4}
+            stroke="var(--color-midnight)"
+            strokeWidth="1"
+            fill="none"
+            opacity="0.25"
+            markerEnd="url(#omoArrowMuted)"
+          />
+          <text
+            x={powerCx + 16}
+            y={coeCy - 34}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="start"
+            letterSpacing="0.04em"
+          >
+            enables
+          </text>
 
-        {/* CoE & Enablement → Power Users (enables) */}
-        <path
-          d={`M ${coeCx + cardW / 2 + 4} ${coeCy - 14}
-              L ${powerCx - 20} ${coeCy - 14}
-              L ${powerCx - 20} ${powerCy + cardH / 2 + 8}`}
-          stroke="var(--color-midnight)"
-          strokeWidth="1"
-          fill="none"
-          markerEnd="url(#omoArrowMuted)"
-        />
-        <text
-          x={powerCx + 10}
-          y={coeCy - 22}
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--fg-3)"
-          textAnchor="start"
-          letterSpacing="0.04em"
-        >
-          enables
-        </text>
+          {/* CoE -> Adoption Patterns (mitigates) — dashed */}
+          <line
+            x1={coeCx + cardW / 2 + 6}
+            y1={coeCy}
+            x2={adoptionCx - cardW / 2 - 12}
+            y2={adoptionCy}
+            stroke="var(--fg-3)"
+            strokeWidth="1"
+            strokeDasharray="6 4"
+            opacity="0.25"
+            markerEnd="url(#omoArrowDashed)"
+          />
+          <text
+            x={(coeCx + cardW / 2 + adoptionCx - cardW / 2) / 2}
+            y={coeCy + 22}
+            fontFamily="var(--font-mono)"
+            fontSize="9"
+            fill="var(--fg-3)"
+            textAnchor="middle"
+            letterSpacing="0.04em"
+          >
+            mitigates
+          </text>
+        </g>
 
-        {/* Adoption Patterns — dashed connection from CoE */}
-        <line
-          x1={coeCx + cardW / 2 + 4}
-          y1={coeCy}
-          x2={adoptionCx - cardW / 2 - 8}
-          y2={adoptionCy}
-          stroke="var(--fg-3)"
-          strokeWidth="1"
-          strokeDasharray="6 4"
-          markerEnd="url(#omoArrowDashed)"
-        />
-        <text
-          x={(coeCx + cardW / 2 + adoptionCx - cardW / 2) / 2}
-          y={coeCy + 14}
-          fontFamily="var(--font-mono)"
-          fontSize="8"
-          fill="var(--fg-3)"
-          textAnchor="middle"
-          letterSpacing="0.04em"
-        >
-          mitigates
-        </text>
+        {/* ── Flowing dots (rendered only when visible) ──── */}
+        {visible && (
+          <g>
+            {motionPaths.map((_, i) => {
+              const isDashed = i === 5;
+              return (
+                <circle
+                  key={`dot-${i}`}
+                  r="4"
+                  fill={isDashed ? "var(--fg-3)" : "var(--color-midnight)"}
+                  opacity={isDashed ? 0.6 : 0.8}
+                >
+                  <animateMotion
+                    dur={i >= 2 ? "2.8s" : "2s"}
+                    repeatCount="indefinite"
+                    keyPoints="0;1"
+                    keyTimes="0;1"
+                    calcMode="linear"
+                    begin={`${i * 0.4}s`}
+                  >
+                    <mpath href={`#omoFlow${i}`} />
+                  </animateMotion>
+                </circle>
+              );
+            })}
+          </g>
+        )}
 
         {/* ═══════════════════════════════════════════════════
             THROUGHLINE
             ═══════════════════════════════════════════════════ */}
-        <text
-          x={svgW / 2}
-          y={svgH - 22}
-          fontFamily="var(--font-display)"
-          fontSize="12"
-          fontStyle="italic"
-          fill="var(--fg-2)"
-          textAnchor="middle"
-        >
-          Capability becomes an asset only when reusable, governed, and
-          findable.
-        </text>
+        <g className={`omo-enter omo-d7 ${visible ? "omo-visible" : ""}`}>
+          <text
+            x={svgW / 2}
+            y={svgH - 34}
+            fontFamily="var(--font-display)"
+            fontSize="13"
+            fontStyle="italic"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+          >
+            Capability becomes an asset only when reusable, governed, and
+            findable.
+          </text>
+        </g>
       </svg>
     </figure>
   );
