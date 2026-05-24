@@ -10,6 +10,12 @@ import { CodeDocIndexingDiagram } from "./CodeDocIndexingDiagram";
 import { EvalsObservabilityDiagram } from "./EvalsObservabilityDiagram";
 import { FailureTaxonomyDiagram } from "./FailureTaxonomyDiagram";
 import { AfkAutonomousDiagram } from "./AfkAutonomousDiagram";
+import { BuildBuyBoostDiagram } from "./BuildBuyBoostDiagram";
+import { TokenSourcingDiagram } from "./TokenSourcingDiagram";
+import { OperatingModelDiagram } from "./OperatingModelDiagram";
+import { GovernanceRiskDiagram } from "./GovernanceRiskDiagram";
+import { FinopsDiagram } from "./FinopsDiagram";
+import { SecurityArchDiagram } from "./SecurityArchDiagram";
 
 type DiagramComponent = () => React.JSX.Element;
 
@@ -26,6 +32,12 @@ const DIAGRAM_REGISTRY: Record<string, DiagramComponent> = {
   "evals-observability": EvalsObservabilityDiagram,
   "failure-taxonomy": FailureTaxonomyDiagram,
   "afk-autonomous": AfkAutonomousDiagram,
+  "build-buy-boost": BuildBuyBoostDiagram,
+  "token-sourcing": TokenSourcingDiagram,
+  "operating-model": OperatingModelDiagram,
+  "governance-risk": GovernanceRiskDiagram,
+  "finops": FinopsDiagram,
+  "security-architecture": SecurityArchDiagram,
 };
 
 export function getDiagramForSlug(slug: string): DiagramComponent | null {
