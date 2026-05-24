@@ -17,6 +17,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
   const wetRef = useRef<SVGSVGElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
   const wordmarkRef = useRef<HTMLSpanElement>(null);
+  const wordmarkNameRef = useRef<HTMLSpanElement>(null);
   const [phase, setPhase] = useState<"intro" | "flying" | "done">("intro");
   const played = useRef(false);
 
@@ -148,18 +149,19 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           }, 0.15);
         }
 
-        // Fly wordmark
-        if (wordmarkBlock) {
-          const wmRect = wordmarkBlock.getBoundingClientRect();
-          const wordScale = navWordmarkRect.height / wmRect.height;
-          const wmCX = wmRect.left + wmRect.width / 2;
-          const wmCY = wmRect.top + wmRect.height / 2;
+        // Fly just the "TensAI" name (not the full wordmark block with tagline)
+        const nameEl = wordmarkNameRef.current;
+        if (nameEl) {
+          const nameRect = nameEl.getBoundingClientRect();
+          const wordScale = navWordmarkRect.height / nameRect.height;
+          const nameCX = nameRect.left + nameRect.width / 2;
+          const nameCY = nameRect.top + nameRect.height / 2;
           const navWmCX = navWordmarkRect.left + navWordmarkRect.width / 2;
           const navWmCY = navWordmarkRect.top + navWordmarkRect.height / 2;
 
-          flyTl.to(wordmarkBlock, {
-            x: navWmCX - wmCX,
-            y: navWmCY - wmCY,
+          flyTl.to(nameEl, {
+            x: navWmCX - nameCX,
+            y: navWmCY - nameCY,
             scale: wordScale,
             duration: 1.2,
             ease: "power3.inOut",
@@ -227,7 +229,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           <span ref={dividerRef} className={styles.divider} />
 
           <span ref={wordmarkRef} className={styles.wordmark}>
-            <span className={styles.wordmarkName}>
+            <span ref={wordmarkNameRef} className={styles.wordmarkName}>
               {[...WORD].map((ch, i) => (
                 <span key={i} ref={addCharRef(i)} className={styles.ch}>
                   {ch}
