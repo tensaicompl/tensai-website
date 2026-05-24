@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteNav, SiteFooter } from "@/components/layout";
-import { DiagramSlot } from "@/components/diagrams";
+import { SpineDiagram } from "@/components/diagrams/SpineDiagram";
 import { Eyebrow } from "@/components/ui";
 import { SPINE_CONCEPTS } from "@/lib/spine-data";
 
@@ -73,7 +73,7 @@ export default function SpinePage() {
             paddingBottom: "64px",
           }}
         >
-          <DiagramSlot title="The Spine — 18 Concept Map" height={480} />
+          <SpineDiagram />
         </div>
 
         {/* ── Concept grid ───────────────────────────────────────── */}

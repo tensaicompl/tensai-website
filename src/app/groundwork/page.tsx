@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import DiagramSlot from "@/components/diagrams/DiagramSlot";
+import { GroundworkOverviewDiagram } from "@/components/diagrams/GroundworkOverviewDiagram";
 import { getConceptsByPillar } from "@/lib/content";
 import { PILLARS } from "@/lib/spine-data";
 import CrossAltitudeStrip from "@/components/content/CrossAltitudeStrip";
@@ -120,7 +120,7 @@ export default function GroundworkPage() {
             paddingBottom: "64px",
           }}
         >
-          <DiagramSlot title="Pillar I — The Groundwork" height={360} />
+          <GroundworkOverviewDiagram />
         </div>
 
         {/* ── Concept index ─────────────────────────────────────── */}

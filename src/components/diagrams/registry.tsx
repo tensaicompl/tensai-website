@@ -21,6 +21,8 @@ import { AgentCatalogDiagram } from "./AgentCatalogDiagram";
 import { PowerUsersDiagram } from "./PowerUsersDiagram";
 import { CoeEnablementDiagram } from "./CoeEnablementDiagram";
 import { AdoptionPatternsDiagram } from "./AdoptionPatternsDiagram";
+import { OperatingModelOverviewDiagram } from "./OperatingModelOverviewDiagram";
+import { SpineDiagram } from "./SpineDiagram";
 
 type DiagramComponent = () => React.JSX.Element;
 
@@ -48,6 +50,8 @@ const DIAGRAM_REGISTRY: Record<string, DiagramComponent> = {
   "power-users": PowerUsersDiagram,
   "coe-enablement": CoeEnablementDiagram,
   "adoption-patterns": AdoptionPatternsDiagram,
+  "operating-model-overview": OperatingModelOverviewDiagram,
+  "spine": SpineDiagram,
 };
 
 export function getDiagramForSlug(slug: string): DiagramComponent | null {

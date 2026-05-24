@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import DiagramSlot from "@/components/diagrams/DiagramSlot";
+import { CraftOverviewDiagram } from "@/components/diagrams/CraftOverviewDiagram";
 import { getConceptsByPillar } from "@/lib/content";
 import { PILLARS } from "@/lib/spine-data";
 import CrossAltitudeStrip from "@/components/content/CrossAltitudeStrip";
@@ -121,7 +121,7 @@ export default function CraftPage() {
             paddingBottom: "64px",
           }}
         >
-          <DiagramSlot title="Pillar III — The Craft" height={360} />
+          <CraftOverviewDiagram />
         </div>
 
         {/* ── Concept index ─────────────────────────────────────── */}
