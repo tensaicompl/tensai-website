@@ -50,7 +50,8 @@ Laid against the guide-and-sensor split, the four cells look like this:
 
 The discipline is in the ordering. Exhaust the computational controls first — they are cheap, certain, and quick to fail — and reserve the inferential controls for the judgment that genuinely needs a model. Spending a model call to check something a type checker would have caught for free is waste, and at scale it is expensive waste. In a sensor pass, that ordering is literal: the deterministic checks gate the costly one.
 
-<CodeBlock language="typescript">{`// Computational sensor — deterministic, fast, effectively free.
+```typescript
+// Computational sensor — deterministic, fast, effectively free.
 // Run it first, on every change.
 const typeErrors = typecheck(agentDiff);
 if (typeErrors.length > 0) return reject(typeErrors);
@@ -58,7 +59,8 @@ if (typeErrors.length > 0) return reject(typeErrors);
 // Inferential sensor — semantic, costs a model call.
 // Only reached once the cheap checks have passed.
 const review = await judge("Does this diff resolve the ticket?", agentDiff);
-if (review.verdict === "fail") return reject(review.reason);`}</CodeBlock>
+if (review.verdict === "fail") return reject(review.reason);
+```
 
 One control refuses to sit in a single cell. A linter message written to be read by the model — an error that not only flags the problem but tells the agent how to fix it — is a sensor and a guide at once: it judges the result, and its wording shapes the next attempt. Four cells, then, but one underlying instruction — match the cost of the check to the cost of the question.
 

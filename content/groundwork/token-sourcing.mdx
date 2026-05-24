@@ -5,8 +5,173 @@ slug: "token-sourcing"
 definition: "Multi-provider as a principle. The gateway, not the vendor, is the strategy."
 spineConcepts: [1]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 3
 ---
 
-<ContentPlaceholder title="Token Sourcing as a Commodity" />
+Tokens — the unit of model inference — are a commodity input. The price per million tokens has fallen roughly 100-fold since early 2023, multiple providers compete on price and capability at every performance tier, and the gap between the frontier and the next-best alternative compresses faster than any enterprise procurement cycle can track. The most expensive architectural decision an organisation can make today is to lock its entire AI estate into a single vendor. The answer is not to pick the right provider — it is to build the layer that makes the choice revocable. That layer is the AI gateway.
+
+## The price curve that changed the argument
+
+When GPT-4 launched in March 2023, frontier inference cost $30 per million input tokens. Within two years, equivalent capability — measured on the same benchmarks — was available at under $1 per million through a combination of distilled models, mixture-of-experts architectures, and open-weight releases from DeepSeek, Mistral, and Google. The overall price index for frontier-class output tokens fell by roughly 95% between March 2023 and early 2026. That is not a one-off correction. It is a structural dynamic: each generation of model is cheaper to serve than the last, each new entrant undercuts incumbents to win share, and open-weight releases set a floor that closed-source providers must justify a premium above.
+
+Hold on to a concrete system for the rest of this page: a customer-facing support agent that triages incoming tickets, retrieves order history, and drafts a response. In January 2023, running that agent on the best available model cost roughly $4.50 per hundred tickets. By mid-2025, the same throughput on a model of equal or better capability cost under $0.12 — a 37-fold reduction. The support agent did not change. The market beneath it did.
+
+The consequence for sourcing is direct. Any contract signed today at a fixed per-token rate will look expensive within twelve months, because the price floor is still falling. An organisation that committed its entire agent fleet to a single provider's pricing tier in 2024 is now paying multiples of the market rate for equivalent inference — and the switching cost of rewriting every integration against a new SDK is the lock-in tax that keeps them there.
+
+That tax is the problem. The price curve is the opportunity. The gateway is the mechanism that lets you capture one without paying the other.
+
+## What a gateway is — and what it replaces
+
+Without a gateway, every application that calls a model embeds a direct dependency on one provider's SDK, authentication scheme, and request format. The support agent above would import the provider's client library, format its prompts to that provider's API shape, and handle errors according to that provider's conventions. Switching providers means rewriting every integration — and when you have fifty agents across eight teams, that rewrite never happens. The dependency hardens into architecture, and architecture into vendor lock-in.
+
+A gateway is a routing layer — a single internal endpoint that every application calls, using one stable API contract. The gateway translates that request into whatever format the downstream provider expects, manages authentication, tracks cost, and returns the response in a normalised shape. The application never knows — and never needs to know — which provider served the request.
+
+```typescript
+// Without a gateway — direct provider coupling.
+// Switching from Anthropic to OpenAI means rewriting this file
+// and every file like it, across every service.
+import Anthropic from "@anthropic-ai/sdk";
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const response = await client.messages.create({
+  model: "claude-sonnet-4-20250514",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: ticket.body }],
+});
+
+// With a gateway — provider-agnostic.
+// The gateway resolves "support-triage" to whichever model
+// the routing policy currently selects.
+const response = await gateway.chat({
+  route: "support-triage",
+  messages: [{ role: "user", content: ticket.body }],
+});
+```
+
+The difference is not cosmetic. In the first case, the provider is a structural dependency — baked into imports, error handling, and deployment configuration. In the second, it is a routing decision — changeable in the gateway's configuration without touching application code. That distinction is what makes multi-provider sourcing practical rather than aspirational.
+
+The gateway pattern is not new. Organisations have been running API gateways in front of payment processors, messaging services, and cloud storage for a decade. What is new is the speed at which the AI inference market moves — price drops of 10x per year, new providers entering quarterly, model capability leapfrogging on a six-month cycle. A market that volatile makes the abstraction layer not merely useful but essential.
+
+## The five functions of the gateway
+
+A gateway earns its place by solving five problems that every multi-provider deployment encounters. Each is a cross-cutting concern that belongs in infrastructure, not in application code.
+
+| Function | What it does | Why it belongs in the gateway |
+|---|---|---|
+| **Unified routing** | Translates one internal API contract into each provider's native format | Applications stay provider-agnostic; switching is a config change |
+| **Fallback chains** | When the primary provider returns an error or breaches a latency threshold, the request re-routes to a secondary | Reliability without retry logic in every client |
+| **Rate-limit pooling** | Aggregates rate limits across multiple API keys and provider accounts; distributes traffic to stay within each | Individual teams cannot exhaust shared capacity |
+| **Cost tracking** | Logs token counts, model, provider, and cost per request; attributes spend to team, project, or use case | Finance gets per-use-case unit economics without polling each provider's dashboard |
+| **Model-tier selection** | Routes requests to the cheapest model that meets a defined quality threshold for that use case | A triage classifier does not consume frontier tokens; a complex reasoning task does |
+
+The support agent from earlier would touch all five. Its triage step — a simple classification — routes to a small, inexpensive model. Its response-drafting step — nuanced, customer-facing prose — routes to a frontier model. If the frontier provider's latency spikes, the fallback chain re-routes to a second provider offering a comparable model. The gateway tracks the cost of both steps, attributing them to the support team's budget. And the rate-limit pool ensures that a spike in ticket volume does not exhaust the organisation's shared API quota — the gateway throttles gracefully rather than returning 429 errors to every downstream service at once.
+
+<Callout type="note" title="The real unit of procurement is the route, not the model">
+Most organisations think about AI procurement as a model selection problem — which provider, which model, which contract. The gateway reframes it as a routing problem. Each use case gets a route; each route has a policy — preferred provider, fallback chain, quality threshold, cost ceiling. The route is the thing you govern, tune, and track. The model is an implementation detail behind it, swappable without a procurement cycle. Once procurement learns to think in routes rather than models, the organisation stops debating which provider to "standardise on" and starts asking a sharper question: what routing policy gives each use case the best cost-quality trade-off this quarter.
+</Callout>
+
+## Fallback chains in practice
+
+A fallback chain is an ordered list of providers that the gateway tries in sequence until one returns a successful response. The simplest chain is two deep — a primary and a secondary. A production chain is typically three: a preferred provider, a comparable alternative, and a degraded-but-available fallback that trades capability for reliability.
+
+For the support agent, a reasonable chain might look like this:
+
+```yaml
+# Gateway routing policy — support response drafting
+route: support-draft
+  primary:
+    provider: anthropic
+    model: claude-sonnet-4-20250514
+    timeout_ms: 8000
+  fallback_1:
+    provider: openai
+    model: gpt-4.1
+    timeout_ms: 8000
+  fallback_2:
+    provider: mistral
+    model: mistral-large-latest
+    timeout_ms: 10000
+  fallback_policy:
+    trigger: error | timeout | rate_limit
+    retry_on_primary: false
+    notify: ops-channel
+```
+
+When the primary returns a 429 (rate-limited), a 500 (server error), or exceeds the latency threshold, the gateway does not retry the same provider — it moves to the next in the chain. The application receives a single response and never sees the failover. The fallback policy is declarative: defined in configuration, not scattered across application code.
+
+Three design decisions matter. First, fallback providers should be comparable in capability — falling back from a frontier model to a model two tiers below it changes the quality of the output, and the application may not be designed for that variance. Second, each fallback request is a fresh request through the full gateway pipeline — authentication, rate-limit checks, cost logging — so the downstream provider sees a clean call, not a retry. Third, the notification channel matters: operations needs to know when fallbacks are firing, because sustained fallback traffic signals a capacity problem, not a transient blip.
+
+The fallback chain is also the mechanism that makes provider outages a non-event. When a provider suffers a regional outage — and every major provider has had at least one multi-hour outage in the past eighteen months — the gateway routes around it automatically. The alternative is a war room, a code change, and a deployment. The chain turns a potential incident into a monitoring alert.
+
+## Cost tracking and unit economics
+
+The gateway is the only point in the architecture where cost attribution can be both complete and accurate. Every request passes through it; every request carries metadata — which team sent it, which use case it serves, which model handled it, how many tokens it consumed. No provider's billing dashboard gives you that view, because no provider sees your internal organisational structure.
+
+A mature gateway produces a cost ledger with at least these dimensions:
+
+| Dimension | Example | Why it matters |
+|---|---|---|
+| **Use case / route** | `support-triage`, `support-draft` | Distinguishes a $0.002 classification from a $0.08 draft |
+| **Team / business unit** | Customer Support, Product | Enables chargeback or budget allocation |
+| **Provider** | Anthropic, OpenAI, Mistral | Tracks provider mix and detects drift toward a single vendor |
+| **Model tier** | Frontier, mid-tier, small | Ensures expensive tiers are used only where justified |
+| **Token breakdown** | Input: 1 240, output: 380, cached: 890 | Identifies caching efficiency and prompt bloat |
+
+For the support agent, this ledger reveals that 72% of its token spend is on response drafting (the frontier-model step), 4% on triage (the small-model step), and 24% on order-history retrieval calls that could be shortened with better context engineering. That level of granularity does not exist when cost data comes from monthly invoices grouped by API key. It exists when the gateway logs every request.
+
+The ledger also makes the price curve actionable. When a new model enters the market at half the cost of the current frontier — as happens roughly every six months — the gateway lets you run an A/B comparison on a single route, measure quality against your own evaluation criteria, and switch if the new model holds up. Without the gateway, that comparison requires a feature branch, a deployment, and a rollback plan. With it, it requires a configuration change and a monitoring window.
+
+## Model-tier selection — spend where it earns
+
+Not every token is equal, and not every task needs the most capable model. The gateway makes this explicit by mapping each route to a model tier — and enforcing that mapping in infrastructure rather than leaving it to individual developers.
+
+A three-tier scheme is sufficient for most organisations:
+
+| Tier | Characteristics | Example use cases |
+|---|---|---|
+| **Frontier** | Highest capability, highest cost, longest latency | Complex reasoning, customer-facing prose, code generation |
+| **Mid-tier** | Strong capability, moderate cost, lower latency | Summarisation, structured extraction, document processing |
+| **Small** | Adequate capability, lowest cost, fastest latency | Classification, routing, intent detection, simple extraction |
+
+The support agent uses two tiers: small for triage, frontier for drafting. If the organisation later builds an internal knowledge-base agent that summarises policy documents, that agent routes to mid-tier — strong enough for the task, a fraction of the frontier cost. The gateway enforces the mapping; a developer who wires a classification step to a frontier model will see it in the cost ledger and in the route's configuration review.
+
+The tier scheme also absorbs the market's price compression gracefully. When today's frontier model becomes next quarter's mid-tier — in both price and capability ranking — the gateway's tier definitions update, the routes stay the same, and cost falls without any application change. The tier is the abstraction; the model behind it is the variable.
+
+## Rate-limit pooling
+
+Every provider imposes rate limits — requests per minute, tokens per minute, or both. A single team hitting a provider's limit blocks every other team that shares that API key. Rate-limit pooling solves this at the gateway level: the gateway holds multiple API keys per provider, distributes requests across them, and tracks remaining capacity in real time.
+
+The pooling logic is three layers deep. The first layer is a token bucket per API key — the gateway tracks how much capacity each key has consumed in the current window and routes to the key with the most headroom. The second is a circuit breaker per provider — if a provider starts returning elevated error rates, the breaker opens and the gateway stops sending traffic until the provider recovers, rather than burning through retry budgets. The third is the fallback chain itself — if all keys for the primary provider are exhausted, the request falls through to the secondary.
+
+For the support agent, this means a sudden spike in ticket volume — a product recall, a service outage, a seasonal peak — does not result in failed requests. The gateway spreads the load across keys, across providers if needed, and degrades gracefully rather than failing hard.
+
+The alternative is what most organisations do today: each team manages its own API key, each team hits its own rate limits independently, and nobody has a view of aggregate consumption until the provider's dashboard updates — which is often minutes behind. The gateway centralises this into a single capacity-management layer, visible and tuneable in one place.
+
+## What the gateway does not do
+
+A gateway is a routing and policy layer. It is not an observability platform, not an evaluation framework, and not a prompt-management system — though many commercial products bundle those concerns together. Bundling is a vendor strategy, not an architectural principle. The gateway should do its five functions well and integrate cleanly with whatever observability and evaluation tools the organisation already runs.
+
+Specifically, the gateway does not judge the quality of model outputs — that is the evaluation layer's job, covered elsewhere in this pillar. It does not store or version prompts — that belongs in the application's own configuration or in a dedicated prompt registry. And it does not provide guardrails against prompt injection or harmful outputs — though it is the natural enforcement point for them, which is precisely why Security Architecture takes over where this page leaves off.
+
+The discipline is in keeping the gateway's scope precise. A gateway that tries to be an observability platform, an eval harness, and a prompt manager becomes the single point of failure it was designed to prevent — and the vendor lock-in it was designed to eliminate.
+
+## Building versus buying the gateway
+
+The gateway market has matured rapidly. Open-source options — LiteLLM is the most widely deployed — offer a self-hosted proxy server that translates requests across 100+ providers into a single OpenAI-compatible API, with cost tracking, rate-limit pooling, and fallback chains out of the box. Commercial platforms — Portkey (now part of Palo Alto Networks' Prisma AIRS), Helicone, Braintrust — add managed hosting, richer dashboards, and governance features.
+
+The build-versus-buy question for the gateway follows the same logic as any infrastructure component. If your organisation has the DevOps capacity to run a containerised proxy, maintain its configuration, and keep its provider integrations current, the open-source path gives you full control and no vendor dependency — which is ironic to sacrifice when the entire point of the gateway is to avoid vendor dependency. If operational overhead is a constraint, a managed gateway is a reasonable trade — provided its own lock-in cost is lower than the provider lock-in it eliminates.
+
+For the support agent, a self-hosted LiteLLM instance behind a load balancer handles the routing, fallback, and cost-tracking requirements with no commercial dependency. A team that needs richer governance — virtual keys per team, spend alerts, audit trails — may choose a commercial layer on top. Either way, the gateway is infrastructure the organisation owns, not a feature of a model provider's platform.
+
+<Callout type="note" title="Reference implementation">
+TensAI maintains a working multi-provider gateway — request routing across Anthropic, OpenAI, and Mistral with fallback chains, per-route cost tracking, rate-limit pooling, and model-tier selection — at [`tensaicompl/tensai-gateway-reference`](https://github.com/tensaicompl/tensai-gateway-reference). Clone it to see the routing layer operating before committing to a commercial platform.
+</Callout>
+
+## The gateway as strategic infrastructure
+
+The AI inference market will not consolidate around a single provider. The economics do not allow it — open-weight models set a competitive floor, mixture-of-experts architectures keep driving down serving costs, and every major cloud platform now offers its own inference endpoints. The rational response is not to bet on a winner but to build the layer that makes the bet unnecessary.
+
+The gateway is that layer. It turns provider selection from a procurement commitment into an operational parameter — tuneable per use case, revisable per quarter, reversible without a rewrite. It gives finance per-request cost attribution that no provider dashboard offers. It gives operations automatic failover that no single-provider architecture can match. And it gives security a single enforcement point for every policy the organisation needs to apply to model traffic — which is where the next page begins.
+
+The gateway is the architectural precondition for everything that follows in this pillar. Security controls, FinOps attribution, governance policies — all of them assume a single layer through which model traffic flows and can be inspected. Build it first, and the rest of the Groundwork has a surface to attach to. Skip it, and every subsequent control must be re-implemented per provider, per integration, per team — which is to say, it will not be implemented at all.

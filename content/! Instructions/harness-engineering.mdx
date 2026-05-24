@@ -1,0 +1,85 @@
+---
+title: "Harness Engineering"
+pillar: "craft"
+slug: "harness-engineering"
+definition: "Guides and sensors — the new senior discipline of the field."
+spineConcepts: [2]
+relatedNotes: ["harness-engineering-discipline"]
+status: "draft"
+order: 3
+---
+
+An agent is a model plus a harness. The model is the reasoning core — the part that actually thinks — and you choose it the way you choose any commodity input: by tier and price, not by building it yourself. The harness is everything wrapped around that core — the guides that shape what the model does before it acts, the sensors that check what it produced after, and the tools, memory, and orchestration that connect the two. The claim this page exists to make is a plain one: almost every hard problem in agent engineering, and almost every decision that separates a system you can trust from a demo that merely impresses, lives in the harness and not in the model. Every concept that follows in The Craft is a part of the harness. This page is the frame they all hang on.
+
+## The model is the part you don't control
+
+Start with what the model is, because it is easy to overestimate. The reasoning core improves on a schedule its vendors set, not one you control. A stronger model arrives every few months, and when it does, the rational move is to swap it in and inherit the gain for free. Fine-tuning your own variant is possible, but for most teams it is the wrong lever — costly to maintain, quick to fall behind the next general release, and rarely worth the effort of keeping it alive. The practical stance is to treat the model as a fixed input and design around it.
+
+That carries a consequence worth stating directly: the model is not where you compete. Two teams building on the same model begin with exactly the same raw reasoning ability — the core is available to your rival on identical terms. What separates the two — reliability, safety, cost, the standing to be trusted with real work — comes entirely from what each team built around that core. The model is the commodity. The harness is the product.
+
+## Guides and sensors
+
+The harness has a precise vocabulary, and it is worth learning exactly. Its core distinction — guides and sensors — is borrowed from control-systems theory, and is owed in its current form to Martin Fowler. Every control in a harness is one of these two kinds, and the difference between them is simply *when* they act.
+
+A guide is a feedforward control. It acts before the model does, raising the odds of a good first attempt — the system prompt, the tool definitions, a constraint document, an AGENTS.md file, the context retrieved into the window. A guide writes down what you want before the agent has a chance to get it wrong.
+
+A sensor is a feedback control. It acts after, watching what the model actually produced and signalling whether it needs correction — a test suite, a linter, a type checker, an output-schema validator, an evaluator model grading another model's work. A sensor catches what the guide failed to prevent.
+
+Picture a coding agent pointed at a bug ticket. The AGENTS.md that tells it the repository's conventions and which command runs the tests is a guide — set before the agent starts. The test suite that runs against the diff it produces is a sensor — read after. Same agent, same task; one control shapes the attempt, the other judges the result.
+
+Neither kind works on its own.
+
+<Callout type="note" title="Why a harness needs both">
+A harness with only sensors produces an agent that makes the same mistake on every run — caught each time, corrected each time, but never steered away from the error. A harness with only guides produces an agent that follows its instructions faithfully and never learns whether those instructions actually worked. Reliability lives in neither half. It lives in the loop between them: guide the attempt, sense the result, and fold what the sensor caught back into the guide.
+</Callout>
+
+## Computational and inferential
+
+Guides and sensors answer *when* a control acts. A second question — *how* a control reaches its verdict — cuts across the first, and crossing the two gives the harness a four-cell grid.
+
+A computational control is deterministic. Tests, linters, type checkers, schema validators — they run code, not judgment, and return a verdict you can trust completely. They are fast and effectively free, which means they can run on every single change the agent makes.
+
+An inferential control is semantic. An AI code review, an evaluator model judging another model's output — these reach problems no deterministic rule can express, the questions that need reading rather than parsing. The cost is real: each one is slower, spends a model call, and returns a verdict that is itself non-deterministic.
+
+Laid against the guide-and-sensor split, the four cells look like this:
+
+| | Computational — deterministic | Inferential — semantic |
+|---|---|---|
+| **Guide** (before) | A JSON schema or typed API the agent must code against | A how-to or worked example written into context by another model |
+| **Sensor** (after) | The test suite, linter, and type checker run on the diff | An evaluator model asked whether the change resolves the ticket |
+
+The discipline is in the ordering. Exhaust the computational controls first — they are cheap, certain, and quick to fail — and reserve the inferential controls for the judgment that genuinely needs a model. Spending a model call to check something a type checker would have caught for free is waste, and at scale it is expensive waste. In a sensor pass, that ordering is literal: the deterministic checks gate the costly one.
+
+```typescript
+// Computational sensor — deterministic, fast, effectively free.
+// Run it first, on every change.
+const typeErrors = typecheck(agentDiff);
+if (typeErrors.length > 0) return reject(typeErrors);
+
+// Inferential sensor — semantic, costs a model call.
+// Only reached once the cheap checks have passed.
+const review = await judge("Does this diff resolve the ticket?", agentDiff);
+if (review.verdict === "fail") return reject(review.reason);
+```
+
+One control refuses to sit in a single cell. A linter message written to be read by the model — an error that not only flags the problem but tells the agent how to fix it — is a sensor and a guide at once: it judges the result, and its wording shapes the next attempt. Four cells, then, but one underlying instruction — match the cost of the check to the cost of the question.
+
+## What a harness can and cannot regulate
+
+A harness does not regulate everything equally, and an honest account of it has to name where it fails. A harness governs three dimensions of an agent's work: maintainability, architectural fitness, and functional behaviour. The first two yield to good controls. A linter holds the line on maintainability; an architecture check holds it on fitness. Both are, in the end, questions a rule can be written for.
+
+Functional behaviour does not yield. Whether the agent did the right thing — not merely a well-formed thing, but the correct thing — is the unsolved problem of the discipline. No sensor reliably catches an output that is structured, plausible, and wrong, because being structured and plausible is exactly what a capable model is good at.
+
+This is the boundary, and it is worth understanding rather than wishing away. A harness is an attempt to write down the implicit knowledge a human engineer carries without noticing it — the sense that an overlong function is a problem, the instinct for how this particular team does things, the memory of why a past decision went badly. A great deal of that can be externalised into guides and sensors. Not all of it. The harness narrows the gap between a capable model and reliable work; it does not close it — and a system built as though it did will ship confident, well-formed errors at speed.
+
+## The harness is practised, not configured
+
+A capable model makes the first 90% of an agent easy. A mid-level engineer can wire a working agent against a strong model in an afternoon, and it will demo well. The last 10% is the actual work — idempotent tool use, evaluation pipelines that catch a regression before a user does, permission hierarchies that hold across a multi-agent chain, memory that stays coherent across a long-running task. This is systems engineering of the same kind senior engineers spent the previous decade applying to databases and distributed services, and it is the reason the harness — not the model — is now where the field's most consequential technical decisions are made.
+
+Here is the part that changes how you work: a harness is not a configuration you set once and leave. It is a discipline you practise. You steer an agent by improving its harness: you watch where it fails, you add the guide or sensor that would have caught that failure, and you run it again. Return to the bug-fixing agent — say its change passed every test but quietly broke a naming convention the AGENTS.md never mentioned. The fix is not to scold the agent. It is to add that convention to the guide, so the next run cannot make the same mistake. The sensor caught the failure once; the guide prevents it from here on. That movement — failure observed, control added, loop closed — is the whole of the practice.
+
+A harness is never finished, because the work it supervises never stops changing. Every remaining concept in The Craft — memory, tools, retrieval, evaluation, steering, multi-agent orchestration — is a component of that harness, and the pages that follow take them one at a time.
+
+<Callout type="note" title="Reference implementation">
+TensAI maintains a working reference harness — a starting `AGENTS.md`, a layered stack of computational sensors (type-check, lint, test), and an evaluator-model sensor wired into the iterate-the-harness loop — at [`tensaicompl/harness-template`](https://github.com/tensaicompl/harness-template). Clone it to see guides and sensors operating together before building your own.
+</Callout>

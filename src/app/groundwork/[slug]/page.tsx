@@ -7,7 +7,7 @@ import DiagramSlot from "@/components/diagrams/DiagramSlot";
 import { getDiagramForSlug } from "@/components/diagrams/registry";
 import ContentPlaceholder from "@/components/mdx/ContentPlaceholder";
 import { Callout } from "@/components/mdx/Callout";
-import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { CodeBlock, MdxPre, MdxCode } from "@/components/mdx/CodeBlock";
 import { StageIllustration } from "@/components/diagrams/StageIllustration";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
@@ -19,6 +19,8 @@ const mdxComponents = {
   Callout,
   CodeBlock,
   StageIllustration,
+  pre: MdxPre,
+  code: MdxCode,
 };
 
 export async function generateStaticParams() {

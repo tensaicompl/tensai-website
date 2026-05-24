@@ -5,8 +5,205 @@ slug: "rag-evolutions"
 definition: "From naive top-k to agentic, graph, and self-correcting retrieval."
 spineConcepts: [7]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 6
 ---
 
-<ContentPlaceholder title="RAG & Its Evolutions" />
+Retrieval-augmented generation is the dominant pattern for grounding a language model in knowledge it was not trained on. The idea is plain: before the model answers, retrieve the relevant evidence and place it in the context window so the model reasons over facts rather than memory. What has changed since the pattern was named is not the idea but the retrieval itself — from a single vector lookup returning the nearest five chunks, through hybrid search that fuses lexical and semantic signals, to agentic loops where the model plans its own retrieval strategy, grades what comes back, and re-queries when the evidence falls short. These are not competing techniques. They are rungs on a ladder, and a team that skips a rung pays for it in the same way a team that skips unit tests pays for it — not immediately, but reliably.
+
+## The running example
+
+Hold one task for the rest of the page: an internal compliance assistant that answers employee questions about a company's regulatory policies. The corpus is 1 200 pages of policy documents — dense, cross-referencing, updated quarterly. The questions range from the trivial ("What is the gift-acceptance threshold?") to the multi-hop ("If a subcontractor in a high-risk jurisdiction invoices above the due-diligence threshold, which approval chain applies and what documentation must be filed before payment?"). Every retrieval strategy on this page will be measured against the same corpus and the same question set. What changes is not the task but how the system finds the right evidence — and what it does when it finds the wrong evidence instead.
+
+## Naive RAG — the baseline everyone builds first
+
+The first version of any RAG system is the same. Chunk the documents, embed each chunk with a dense embedding model, store the vectors, and at query time embed the question, retrieve the top-k nearest chunks by cosine similarity, and pass them to the model as context. It works — immediately, visibly, and well enough to convince a stakeholder that the project is on track.
+
+The compliance assistant built this way answers the gift-threshold question correctly on the first try. The vector search finds the right chunk; the model reads it and responds. For questions like this — single-hop, with a clear keyword anchor — naive RAG is not merely adequate, it is the right architecture. Most RAG systems in production today are naive RAG, and most of them should be.
+
+The problems surface on the harder questions. The subcontractor question requires evidence scattered across three separate policy sections — jurisdiction classification, due-diligence thresholds, and approval-chain delegation. A top-5 retrieval returns at most two of the three, because the third section uses different vocabulary and sits in a distant region of the embedding space. The model, given incomplete evidence, does what a capable model does with partial information: it produces a confident, well-structured, wrong answer. Naive RAG pipelines fail at retrieval — returning irrelevant or incomplete context — roughly 40% of the time on multi-hop questions, and the model's confident tone makes the failure invisible to the user.
+
+The failure is not in the model. It is in the retrieval.
+
+<Callout type="note" title="The retrieval bottleneck">
+A model can only reason over what it can see. If the retrieval stage misses a critical document, no amount of prompting, chain-of-thought, or model capability will recover the answer — the model will fabricate a plausible one instead. Every evolution on this page is an attempt to fix retrieval before fixing the model, because retrieval is where the information is lost and the model is where the loss becomes invisible.
+</Callout>
+
+## Hybrid search — two signals, one result set
+
+Dense embeddings capture meaning but miss exact terms. A policy that refers to "Threshold B.2(a)" will not be found by a query about "the due-diligence limit" unless the embedding model happens to have mapped both phrases to nearby vectors — and for domain-specific nomenclature, it usually has not. Sparse retrieval — BM25, the algorithm behind every traditional search engine — finds exact lexical matches with no semantic understanding at all. Each method fails precisely where the other succeeds.
+
+Hybrid search runs both in parallel and fuses the results. The dense retriever finds documents that are semantically close to the query; the sparse retriever finds documents that share the query's exact terms. A fusion step — typically reciprocal rank fusion — merges the two ranked lists into one, and an optional reranking model (a cross-encoder that scores each query-document pair) reorders the merged list by relevance before the top-k are passed to the model.
+
+For the compliance assistant, hybrid search closes the vocabulary gap. The subcontractor question now retrieves the jurisdiction-classification section via semantic similarity and the "Threshold B.2(a)" section via exact-match BM25 — two sections that neither retriever would have found alone. Benchmarks on mixed-domain corpora show hybrid retrieval improves recall by 15 to 30% over dense-only pipelines, and adding a cross-encoder reranker on top lifts precision in the top five results by a further 20 to 28%.
+
+The architecture looks like this:
+
+```typescript
+// Hybrid retrieval: dense + sparse, fused and reranked.
+const denseHits  = await vectorStore.search(queryEmbedding, { topK: 20 });
+const sparseHits = await bm25Index.search(queryText, { topK: 20 });
+
+// Reciprocal Rank Fusion — merge two ranked lists into one.
+const fused = reciprocalRankFusion(denseHits, sparseHits, { k: 60 });
+
+// Cross-encoder reranker scores each query-document pair.
+const reranked = await reranker.rank(queryText, fused.slice(0, 20));
+
+// Top-k after reranking — these enter the context window.
+const context = reranked.slice(0, 5);
+```
+
+Hybrid search is the first upgrade every production RAG system should make, because it costs almost nothing in additional latency — the two retrievals run in parallel, and the reranker adds 50 to 200 milliseconds — and it eliminates the single most common retrieval failure: the vocabulary mismatch between the user's phrasing and the document's terminology. The system is still a pipeline, still linear, still unable to reason about what it retrieved. But the evidence it passes to the model is materially better.
+
+## What you chunk and how you embed it
+
+Before retrieval can improve, the indexing that feeds it has to be sound, and indexing is where most teams underinvest. Two decisions dominate: how the documents are chunked and which embedding model turns each chunk into a vector.
+
+**Chunking** splits a document into pieces small enough to embed and retrieve individually. Fixed-size chunking — 200 to 500 tokens with a 50-token overlap — is the simplest and, for prose-heavy corpora, often sufficient. Semantic chunking groups sentences by topic similarity, producing chunks that are conceptually coherent regardless of length. Hierarchical chunking preserves document structure — sections, subsections, paragraphs — so that a retrieved chunk carries its heading lineage as metadata. Late chunking embeds the full document first with a long-context model, then splits the resulting token embeddings into chunks; because each chunk's embedding was computed in full-document context, it carries long-range signals that independent short-chunk embeddings miss.
+
+The compliance corpus — structured, heavily cross-referenced, full of numbered clauses — benefits most from hierarchical chunking, because a clause retrieved without its parent section heading is ambiguous. But the practical finding from recent benchmarks is less dramatic than the taxonomy suggests: fixed 200-word chunks match or beat semantic chunking across many retrieval and generation tasks, and the computational cost of late chunking is rarely justified unless the corpus is dense with pronouns, cross-references, or contextual dependencies. Start with recursive character splitting at natural boundaries. Add structure-aware splitting when retrieval errors trace back to lost context.
+
+**Embedding models** matter as much as chunking strategy. A model trained on general web text will underperform on a domain-specific corpus — legal, medical, regulatory — because the token distributions diverge. Fine-tuning an embedding model on domain pairs (query, relevant passage) closes the gap, but even without fine-tuning, the choice of base model shifts recall by 5 to 15 percentage points. The current generation of open embedding models — from the E5, GTE, and Nomic families — outperforms the first-generation models that most production systems were built on, and swapping the embedding model is the single highest-leverage change most teams have not yet made.
+
+| Strategy | Best for | Watch out for |
+|---|---|---|
+| Fixed-size (200–500 tokens) | Prose-heavy, uniform documents | Splits mid-sentence at boundaries; overlap helps but does not eliminate |
+| Semantic | Topic-shifting documents, transcripts | Compute cost; marginal gain over fixed in many benchmarks |
+| Hierarchical | Structured documents with sections and clauses | Requires document-structure parsing; metadata must travel with the chunk |
+| Late chunking | Pronoun-heavy, cross-referencing text | Requires long-context embedding model; high compute at index time |
+
+The indexing layer is invisible to the user and easy to neglect. It is also the layer where a single poor decision — the wrong chunk size, an outdated embedding model — caps the performance of every retrieval strategy built on top of it.
+
+## Graph RAG — retrieval that follows relationships
+
+Vector search treats every chunk as an independent point in a high-dimensional space. Documents that are conceptually related but lexically distant — a jurisdiction classification table and the approval-chain policy that references it — sit far apart in that space and are unlikely to be co-retrieved. Graph RAG replaces — or supplements — the flat vector store with a knowledge graph: entities extracted from the corpus, relationships between them, and community summaries that capture the structure of a topic at multiple levels of abstraction.
+
+Microsoft's GraphRAG approach, the most widely referenced implementation, works in two stages. At index time, an LLM extracts entities and relationships from every chunk, resolves duplicates, and builds a graph. The graph is then partitioned into communities using the Leiden algorithm, and each community is summarised at multiple hierarchical levels — from fine-grained clusters of closely related entities to broad thematic groups. At query time, the system retrieves not just the chunks nearest the query but the community summaries that contextualise those chunks, giving the model both the specific evidence and the structural relationships between pieces of evidence.
+
+For the compliance assistant, graph RAG connects the subcontractor question's three scattered sections through their shared entities — "high-risk jurisdiction" links to the jurisdiction-classification table, which links to "due-diligence threshold", which links to the approval chain. The retrieval follows the graph rather than relying on vector proximity alone.
+
+The cost is real. Entity extraction via LLM is expensive — processing a large corpus can consume significant API tokens at index time. The architecture adds a graph database, entity resolution, and more complex retrieval logic on top of the vector store. Graph RAG is not a replacement for hybrid search; it is an addition, and one that earns its place only when the corpus contains dense relational structure — org charts, regulatory cross-references, technical specifications with numbered dependencies — that flat retrieval consistently fails to capture. For a corpus of blog posts or customer support transcripts, the overhead is unlikely to repay itself.
+
+RAPTOR — recursive abstractive processing for tree-organised retrieval — takes a different path to the same goal. Instead of extracting entities, it clusters chunks bottom-up and summarises each cluster, building a tree where leaf nodes are original chunks and higher nodes are progressively broader summaries. Retrieval can enter the tree at any level, returning either a specific chunk or a summary that captures the gist of an entire section. On multi-step reasoning benchmarks, RAPTOR retrieval coupled with a strong model improved accuracy by up to 20% over flat retrieval — a significant gain, earned by restructuring the index rather than changing the retrieval algorithm.
+
+Both approaches share a principle: the structure of the knowledge matters, and retrieval that ignores structure will eventually hit a ceiling that no amount of reranking can lift.
+
+## Agentic RAG — the model plans its own retrieval
+
+Every strategy so far treats retrieval as a single step: query in, documents out. Agentic RAG breaks that assumption. The model is no longer a passive consumer of retrieved context — it becomes the retrieval planner, deciding what to search for, which sources to query, whether the results are sufficient, and what to search for next.
+
+The architecture replaces the linear pipeline with a loop. The model receives the user's question and, instead of passing it directly to the vector store, decomposes it into sub-questions — each targeting a specific piece of evidence the full answer requires. For the subcontractor question, the decomposition might produce three sub-queries: "jurisdiction risk classification criteria", "due-diligence threshold for subcontractor invoices", and "approval chain for high-risk jurisdiction payments". Each sub-query is routed to the retrieval tool — or to different retrieval tools, if the system has access to multiple sources — and the results are assembled before the model generates its answer.
+
+```typescript
+// Agentic RAG: query decomposition + tool-based retrieval.
+const subQueries = await model.call(
+  \`Decompose this question into independent sub-queries,
+   each targeting one specific piece of evidence:
+   "\${userQuestion}"\`
+);
+
+const evidence: RetrievedChunk[] = [];
+for (const sub of subQueries) {
+  const hits = await retrievalTool.search(sub, { topK: 5 });
+  evidence.push(...hits);
+}
+
+// Deduplicate and pass assembled evidence to the model.
+const context = deduplicate(evidence);
+const answer = await model.call(
+  \`Answer the original question using only this evidence:
+   \${formatContext(context)}
+   Question: \${userQuestion}\`
+);
+```
+
+Query decomposition is the simplest form of agentic RAG, and often the most effective. But the pattern extends further. The model can choose which retrieval tool to invoke — a vector store for semantic questions, a SQL query for structured data, an API call for live information. It can decide after each retrieval step whether it has enough evidence or needs another round. It can reformulate a query that returned poor results and try again with different terms. Each of these decisions is a tool call, and the model is the agent making them.
+
+The gain is substantial for complex questions. A single-hop pipeline that decomposes the query and answers sub-questions independently already outperforms naive RAG by a wide margin on multi-hop benchmarks. A cascading pipeline — where each sub-query's answer informs the next sub-query — handles questions with sequential dependencies that decomposition alone cannot solve.
+
+The cost is latency. Every sub-query is a retrieval round trip; every decomposition and reassembly is a model call. A naive RAG query that completes in 500 milliseconds becomes an agentic RAG query that takes two to five seconds. For interactive applications, that latency is visible. The trade is worth making only when the question complexity justifies it — and most questions, even in a complex corpus, are single-hop questions that hybrid search handles well.
+
+The discipline is in the routing: use the simplest retrieval strategy that answers the question, and escalate to agentic retrieval only for the questions that need it. A well-built system classifies the incoming question's complexity and routes simple queries to the hybrid pipeline and complex queries to the agentic loop. The classification itself is a single model call — cheap, fast, and high-accuracy on the binary distinction between "one piece of evidence will suffice" and "this requires assembly".
+
+## Self-correcting retrieval — the closed loop
+
+Agentic RAG lets the model plan retrieval. Self-correcting RAG adds a second capability: the model evaluates what it retrieved and decides whether to accept it, reformulate the query, or fall back to an alternative source. The retrieval pipeline becomes a closed loop — retrieve, grade, decide, and if necessary, re-retrieve.
+
+Two research frameworks formalise this loop. Self-RAG trains the model to emit special reflection tokens — signals that indicate whether retrieval is needed, whether the retrieved passages are relevant, and whether the generated output is faithful to the evidence. The model critiques its own retrieval and generation in-line, choosing the best output from multiple candidates based on factuality and relevance scores. CRAG — Corrective Retrieval-Augmented Generation — takes a different approach: a lightweight retrieval evaluator scores the overall quality of retrieved documents and triggers different actions depending on the confidence level. If confidence is high, the documents are used directly. If confidence is low, the system falls back to web search. If confidence is ambiguous, a decompose-then-recompose algorithm strips the retrieved documents down to key information and discards the noise.
+
+For the compliance assistant, self-correction closes the last gap. The system retrieves evidence for the subcontractor question, grades each retrieved chunk for relevance to the specific sub-query, discards the chunks that scored below threshold, and — if the remaining evidence is insufficient — reformulates the query and retrieves again. The loop runs at most two or three iterations; a hard cap prevents runaway costs.
+
+```typescript
+// Self-correcting retrieval loop.
+let context = await retrieve(query);
+let grade   = await gradeRelevance(query, context);
+
+const MAX_RETRIES = 3;
+let attempt = 0;
+
+while (grade.score < RELEVANCE_THRESHOLD && attempt < MAX_RETRIES) {
+  // Reformulate the query based on what was missing.
+  const refined = await reformulateQuery(query, context, grade.feedback);
+  context = await retrieve(refined);
+  grade   = await gradeRelevance(query, context);
+  attempt++;
+}
+
+if (grade.score < RELEVANCE_THRESHOLD) {
+  // Fallback: flag low confidence to the user.
+  return { answer: await generate(query, context), confidence: "low" };
+}
+
+return { answer: await generate(query, context), confidence: "high" };
+```
+
+The self-correcting loop is the most expensive retrieval strategy on the page — each iteration adds a grading call and a retrieval round trip — and it is also the most reliable. On benchmarks that stress retrieval quality, CRAG improved performance significantly over both standard RAG and Self-RAG across short- and long-form generation tasks. The gain comes not from better retrieval on the first attempt but from the system's ability to recognise a bad retrieval and recover from it, rather than passing bad evidence to the model and hoping for the best.
+
+The pattern's deeper significance is architectural. A self-correcting retrieval loop is a sensor in the harness — it observes the quality of its own intermediate output and acts on the observation before that output reaches the model. The same feedback principle that makes a test suite valuable in a coding agent makes a retrieval grader valuable in a RAG pipeline: it catches the failure before the failure becomes an answer.
+
+## Evaluating what you built
+
+A retrieval system that cannot be measured cannot be improved, and the evaluation of RAG systems is a discipline of its own. The metrics split into two layers: retrieval quality and generation quality. Both must be measured, because a system can retrieve well and generate poorly, or retrieve poorly and generate a plausible-sounding answer from bad evidence.
+
+**Retrieval metrics** measure whether the right documents reached the context window:
+
+| Metric | What it measures |
+|---|---|
+| Recall@K | Of all relevant documents in the corpus, what fraction appeared in the top K results |
+| Precision@K | Of the top K documents retrieved, what fraction were actually relevant |
+| MRR (Mean Reciprocal Rank) | How high the first relevant document ranks, averaged across queries |
+| nDCG@K | Graded relevance — rewards placing highly relevant documents above marginally relevant ones |
+
+**Generation metrics** measure whether the model used the evidence faithfully:
+
+| Metric | What it measures |
+|---|---|
+| Faithfulness | Whether every claim in the answer is supported by the retrieved context |
+| Answer relevance | Whether the answer actually addresses the question asked |
+| Context precision | Whether the retrieved documents contained information relevant to the question |
+| Context recall | Whether the retrieved documents covered all aspects the answer needed |
+
+The RAGAS framework automates these metrics using a judge model — a second LLM that scores the primary model's output against the retrieved context and the ground-truth answer. Automated evaluation is not a substitute for human review on edge cases, but it scales in a way human review cannot, and it surfaces regressions between deployments that manual spot-checking would miss.
+
+The practical workflow is: build an evaluation set of 50 to 200 question-answer pairs with annotated relevant documents, run every retrieval strategy against it, and compare. The compliance assistant's eval set includes single-hop questions (where naive RAG should suffice), vocabulary-mismatch questions (where hybrid search earns its keep), multi-hop questions (where agentic retrieval is needed), and adversarial questions whose answers are not in the corpus at all (where the system should say "I don't know" rather than fabricate). A strategy that scores well on the first three categories but fails the fourth is not ready for production.
+
+## The ladder
+
+The evolutions on this page are not a menu — they are a ladder, and the rungs are ordered by cost, complexity, and the failure mode each rung exists to fix.
+
+| Rung | Strategy | Fixes | Add when |
+|---|---|---|---|
+| 1 | Naive (dense top-k) | No grounding at all | Always — this is the starting point |
+| 2 | Hybrid (dense + sparse + reranker) | Vocabulary mismatch, low precision | Retrieval errors trace to exact-term misses |
+| 3 | Graph / structured indexing | Relational gaps, multi-hop evidence | Corpus has dense cross-references or entity relationships |
+| 4 | Agentic (decomposition + tool routing) | Complex questions needing assembled evidence | Single-retrieval pipelines fail on multi-part questions |
+| 5 | Self-correcting (retrieve-grade-requery) | Undetected retrieval failures | System must flag or recover from bad retrieval, not pass it through |
+
+Start at rung one. Measure. Climb only when the evaluation set shows a failure that the current rung cannot fix. Most production systems belong on rung two — hybrid search with a reranker — and will stay there. A team that jumps to rung four without having measured rung two has not saved time; it has added complexity it cannot yet diagnose.
+
+<Callout type="note" title="Reference implementation">
+The retrieval ladder from this page is implemented as a single pipeline with swappable strategies — naive, hybrid, agentic, and self-correcting — at [`tensaicompl/tensai-rag-reference`](https://github.com/tensaicompl/tensai-rag-reference). Same corpus, same eval set, same metrics. Run one command to benchmark each rung against the others and see where the gains justify the cost.
+</Callout>
+
+Once retrieval is reliable — once the system consistently places the right evidence in the context window and knows when it has failed to — the next structural challenge is no longer finding information but sharing it. An agent that retrieves well is one agent with good context. A system of agents that need to act on the same retrieved knowledge — passing context across handoff boundaries, deciding which agent needs which evidence, keeping retrieval results coherent across a multi-step task — is a coordination problem, and coordination is where multi-agent orchestration begins.

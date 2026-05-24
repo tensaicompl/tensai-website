@@ -5,8 +5,120 @@ slug: "coe-enablement"
 definition: "Hub-and-spoke vs federated. The platform team as velocity engine."
 spineConcepts: [8]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 4
 ---
 
-<ContentPlaceholder title="CoE & Enablement" />
+Every organisation that gets serious about AI builds a Centre of Excellence. It is the obvious move — gather the scarce expertise, centralise the tooling, set the standards, and deploy capability outward. The CoE works. It works so well, in fact, that it becomes the only place AI gets done — and that is precisely the moment it begins to fail. The structural question this page addresses is not whether to build a CoE. It is how to evolve the CoE from a team that builds AI for the organisation into a platform that makes everyone else able to build it themselves — because a CoE that stays a builder becomes the bottleneck that stalls the entire enterprise at Stage 2.
+
+## The two models
+
+There are two ways to organise AI capability across an enterprise, and every real structure is a position on the line between them.
+
+In the **hub-and-spoke model**, a central CoE owns all AI capability — the data scientists, the ML engineers, the tooling, the governance. Business units submit requests. The CoE prioritises, builds, and delivers. The spokes are consumers, not builders. This is the natural first structure because it concentrates scarce talent where it can be supervised, and it is the right structure when the organisation has fewer than a dozen AI initiatives and the business units lack the maturity to build responsibly on their own.
+
+In the **federated model**, each business unit owns its own AI capability — its own engineers, its own models, its own delivery. A central team still exists, but it provides standards, tooling, and guardrails rather than building anything. The business units are builders. The centre is infrastructure.
+
+Hold a concrete organisation in mind for the rest of this page: a European financial services group with a central data and AI team of 40 people, five business units (retail banking, corporate banking, insurance, wealth management, payments), and roughly 60 AI initiatives in various stages of maturity. The group built its CoE three years ago. It worked. Now the queue for CoE time is nine months long, and three of the five business units have started hiring their own data scientists without telling anyone.
+
+That queue is not an accident. It is the structural consequence of a model that worked at 12 initiatives and cannot work at 60.
+
+| | Hub-and-spoke | Federated |
+|---|---|---|
+| Who builds | Central CoE | Business units |
+| Who governs | Central CoE | Central standards team |
+| What the centre provides | Delivery | Platform, standards, guardrails |
+| Where talent sits | Centre | Embedded in business units |
+| Scales to | 10–15 concurrent initiatives | Organisation-wide adoption |
+| Breaks when | Demand exceeds central capacity | Standards are too weak to hold coherence |
+| Natural fit | Early maturity (Stage 1–2) | Advanced maturity (Stage 3–4) |
+
+The last row is the one that matters most. Neither model is wrong in the abstract. Each is wrong at the wrong maturity stage — and the failure to transition from one to the other is the single most common organisational failure in enterprise AI.
+
+## Why the hub-and-spoke breaks
+
+The hub-and-spoke model breaks for a reason that is structural, not operational. It is not that the central team is badly managed. It is that the model creates a dependency that cannot scale linearly with demand.
+
+Return to the financial services group. At 12 initiatives, the CoE of 40 can field three or four concurrent projects, rotate capacity, and maintain quality. Every business unit gets served within a quarter. At 60 initiatives — which is what success looks like — the same team faces a queue that grows faster than it can deliver. The business units are not waiting because the CoE is slow. They are waiting because the architecture of the model requires every initiative to flow through a single team, and no single team scales to match organisational ambition.
+
+Three failure modes follow, and they are predictable enough to name:
+
+**The approval queue.** The CoE becomes a review and prioritisation body. Business units learn that engaging the CoE adds months, not capability. The rational response — hire your own data scientists, use a SaaS tool the CoE has not approved, build without telling anyone — is exactly what shadow AI is. The CoE created the incentive structure that produces the behaviour it was designed to prevent.
+
+**The ivory tower.** The central team, staffed with the strongest technical talent, gravitates toward technically elegant work. The gap between what the CoE builds and what the business unit needed widens. The retail banking team wanted a propensity model tuned to their customer base; the CoE delivered a general-purpose scoring framework that requires six weeks of adaptation before it fits. The business unit learns to work around the CoE rather than through it.
+
+**The governance overweight.** A CoE under pressure to justify its existence shifts from building to governing — review boards, approval gates, documentation requirements. It adds process without adding capability. The business units experience the CoE as friction. Adoption slows, not because AI does not work, but because the organisational structure made it too expensive to attempt.
+
+None of these failures require bad leadership. They are the natural consequences of a model that concentrates all capability in one place and asks the rest of the organisation to wait in line. The CoE did not fail. It succeeded, and the success outgrew the structure.
+
+<Callout type="note" title="The bottleneck test">
+There is a single question that reveals whether a CoE has become a bottleneck: can a business unit ship an AI initiative without the CoE's direct involvement? If the answer is no — if every initiative requires central team capacity — then the CoE is a dependency, not an accelerator. The structure that was built to speed things up is now the constraint that determines how fast the organisation can move. The solution is not to make the CoE faster. It is to change what the CoE does.
+</Callout>
+
+## The platform team as velocity engine
+
+The transition from hub-and-spoke to federated is not a reorganisation. It is a change in what the central team produces. In the hub-and-spoke model, the CoE produces AI solutions. In the federated model, the central team produces a platform — and the platform produces the conditions under which business units can build AI solutions themselves.
+
+This is the concept of platform-as-a-product applied to AI, and it is borrowed from the discipline that software engineering has already internalised through platform engineering and Team Topologies. The platform team exists to reduce the cognitive load on every other team. It does not build the product. It builds the thing that makes building the product faster, safer, and more consistent.
+
+For the financial services group, the transition looks like this. The CoE of 40 does not disappear. It splits. Roughly 15 people become the AI platform team — they own the shared infrastructure: the model serving layer, the feature store, the experiment tracking, the monitoring, the deployment pipelines, the evaluation harness, the governance-as-code framework. The remaining 25 redistribute into the five business units as embedded AI engineers, carrying the standards with them but reporting to the business unit, not to the centre.
+
+The platform team's product is not a model. It is a set of capabilities that make the next model easier to build:
+
+- **A self-service deployment pipeline** — a business unit can take a model from notebook to production without filing a ticket with the central team.
+- **Governance guardrails baked into the tooling** — model cards, bias checks, data lineage, and audit trails that run automatically, not as a manual review gate.
+- **Reusable components** — feature stores, evaluation harnesses, prompt libraries, RAG templates — that encode the CoE's accumulated expertise as code rather than as tribal knowledge.
+- **Observability by default** — model performance monitoring, drift detection, and cost tracking that the business unit inherits without configuring.
+
+The platform team does not approve initiatives. It does not prioritise business unit work. It does not sit in the critical path of any project. Its success is measured not by what it builds but by what it enables — the number of teams that can ship AI work independently, the time from idea to production, the fraction of initiatives that pass governance checks automatically rather than through manual review.
+
+That measurement is the key shift. A CoE measures itself by what it delivers. A platform team measures itself by what everyone else delivers. The unit of output changes from "AI solutions shipped by the central team" to "AI solutions shipped by the organisation."
+
+## What the enabling team does
+
+The platform team is one half of the federated model. The other half — less visible but equally important — is the enabling function. In Team Topologies terms, the enabling team is a temporary, high-bandwidth collaboration that helps a stream-aligned team adopt a new capability and then withdraws.
+
+For the financial services group, this means the central team maintains a small rotation of senior AI engineers — three or four people — whose job is to embed with a business unit for six to twelve weeks, help them stand up their first initiative on the platform, transfer the working patterns, and leave. They are not there to build. They are there to teach — and the explicit goal of every engagement is to make itself unnecessary.
+
+The enabling team handles three things the platform alone cannot:
+
+- **First-initiative support.** A business unit building its first model needs more than tooling. It needs someone who has done it before, sitting next to the team, showing how the platform works in practice and where the domain-specific decisions live.
+- **Pattern propagation.** When the wealth management team solves a problem the insurance team will face next quarter, the enabling rotation carries that pattern across. The platform encodes the tooling; the enabling team encodes the judgment.
+- **Maturity assessment.** Not every business unit is ready to build independently. The enabling team assesses readiness, identifies gaps, and recommends whether a unit needs more enablement before it goes autonomous.
+
+The enabling team is not a permanent fixture inside any business unit. Its defining characteristic is that it arrives, transfers capability, and leaves. A unit that still needs the enabling team after two rotations has a structural problem that enablement alone cannot solve — it needs a different hiring plan or a different scope of ambition.
+
+## The evolution path
+
+The transition from builder to enabler is not a single event. It is a staged evolution, and the stages map to the organisation's AI maturity:
+
+| Stage | CoE role | Central team produces | Business units do |
+|---|---|---|---|
+| 1 — Exploring | Builder | Proofs of concept, feasibility studies | Watch and learn |
+| 2 — Scaling | Builder + governor | Production models, governance frameworks | Consume and request |
+| 3 — Federating | Platform + enabler | Platform, standards, enablement rotations | Build on the platform with support |
+| 4 — Embedded | Platform | Platform, guardrails, observability | Build independently |
+
+Most organisations stall at the boundary between Stage 2 and Stage 3. They built a successful CoE, it delivered real value, and the very success creates the political gravity that prevents the transition. The CoE's leadership has built a team, a budget, and an identity around being the place where AI gets done. Federating that capability means giving it away — redistributing headcount, ceding control, accepting that the business units will make mistakes the central team would not have made. That is an organisational negotiation, not a technical one, and it is the reason so many enterprises have a capable CoE and an AI capability that cannot scale past 15 concurrent initiatives.
+
+The financial services group made the transition over 18 months. In the first six months, the platform team extracted the shared infrastructure from the CoE's project-specific code and published it as an internal product with documentation, SLAs, and a feedback loop. In the next six months, the enabling rotation embedded with retail banking and insurance — the two most mature business units — and helped them ship their first independent initiatives. In the final six months, the remaining three business units followed, the enabling team shifted to pattern propagation rather than first-initiative support, and the CoE's identity formally changed from "the AI team" to "the AI platform team."
+
+At the end of those 18 months, the queue was gone. Not because the central team got faster, but because 60 initiatives no longer needed to flow through 40 people. The platform served all five business units simultaneously. The governance checks ran automatically. The enabling rotation had trained enough embedded engineers to sustain the pace without central dependency.
+
+## What goes wrong in the transition
+
+The transition from builder to enabler fails in three characteristic ways, and all three are avoidable:
+
+**Building a platform nobody uses.** The platform team builds infrastructure in isolation, ships it, and discovers that the business units have already solved the same problems with their own tools. A platform is a product, and a product that does not start from its users' actual workflow is shelf-ware. The fix is to build the platform by extracting it from real projects — take the deployment pipeline that the CoE already uses, generalise it, document it, and publish it — rather than designing it from first principles.
+
+**Federating before the standards are ready.** If the governance guardrails are not baked into the platform before the business units start building independently, the result is fragmentation — five business units with five different model-serving stacks, five incompatible feature stores, and no way to audit any of them. Federate the delivery, not the standards. The central team must own the standards permanently; what it gives away is the building.
+
+**Withdrawing enablement too early.** The enabling team pulls out after the first initiative ships, and the business unit's second initiative stalls because the first one was carried more than taught. The test for withdrawal is not "did the first project succeed" but "can the team articulate what they would do differently on the next one without asking us." Capability transfer is complete when the team can teach it to a new hire, not when it can execute it once under supervision.
+
+## The CoE that scales is the one that gives itself away
+
+The argument of this page reduces to a single claim: the Centre of Excellence must evolve from builder to enabler, or it becomes the constraint that prevents the organisation from scaling past its first dozen AI initiatives. The hub-and-spoke model is the right starting point and the wrong destination. The federated model — business units building on a shared platform, governed by shared standards, supported by an enabling rotation that transfers capability and withdraws — is what Stage 3 and Stage 4 look like. The platform team is not a lesser version of the CoE. It is what the CoE becomes when it succeeds.
+
+The financial services group's CoE did not shrink. It changed what it measured. The old metric was AI solutions delivered by the central team. The new metric was AI solutions delivered by the organisation. The number went from 15 per year to 60 — not because the team got four times faster, but because the team stopped being the only place where AI could happen.
+
+Even with the right CoE model, adoption can fail in ways that are predictable and well-documented — the adoption cliff, the scaling cliff, the governance gap. Those patterns are the subject of the next page: [Adoption & Failure Patterns](/operating-model/adoption-patterns).

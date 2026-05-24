@@ -5,8 +5,164 @@ slug: "finops"
 definition: "Per-token attribution, caching, routing — unit economics that hold at scale."
 spineConcepts: [1, 5]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 6
 ---
 
-<ContentPlaceholder title="FinOps for AI" />
+Every organisation running AI at scale will, sooner or later, face the same question — not "how much did we spend on API calls last month" but "what did this agent cost per successful task, and is that number going down." The first question is an invoice. The second is a unit-economics discipline, and it is the one that determines whether AI compounds value or just compounds cost. FinOps for AI is the practice of answering the second question rigorously: attributing token spend to the teams, products, and features that consumed it; applying the optimisation levers — caching, routing, context management — that reduce spend without reducing capability; and framing the result not as cost-per-token but as cost-per-outcome, the metric that connects engineering decisions to business arithmetic.
+
+## Why AI costs are structurally different
+
+Cloud FinOps matured around a simple model: compute hours, storage gigabytes, network egress. The units are coarse, the prices are published, and the relationship between usage and cost is close to linear. AI costs break that model in three ways, and each break demands a different response.
+
+First, the unit of consumption is the token — a fragment of language roughly four characters long — and the price varies by model tier, by direction (input tokens cost less than output tokens), and by whether the tokens were cached, batched, or processed at standard priority. A single provider's price card can list a dozen distinct per-million-token rates for the same model family. Anthropic's Claude Opus charges $5 per million input tokens and $25 per million output tokens at standard rates; a cache hit on the same model costs $0.50 per million — a 90% reduction on the cached portion. OpenAI's pricing spans from $0.10 per million input tokens for GPT-4.1 Nano to $30 per million for frontier reasoning models. Google's Gemini 2.5 Flash sits at $0.30 per million input tokens. The spread across providers and tiers is two orders of magnitude, which means model selection is not a technical preference — it is a cost decision with a 100x range.
+
+Second, AI cost scales with usage in a way that is harder to predict than compute. A server running at steady state costs roughly the same hour to hour. An AI system's cost depends on prompt length, response length, tool-call depth, retry count, and whether the task succeeded or failed — and a failed task that triggers an agentic retry loop can cost more than a successful one. The variance is not noise; it is structural.
+
+Third — and this is the part most organisations discover too late — the cost is invisible until you instrument it. A cloud bill itemises compute by service, region, and instance type. An AI provider's bill itemises by API key and model, with no native breakdown by team, product, feature, or task. Without explicit attribution infrastructure, the bill is a single number that nobody can act on.
+
+To make this concrete, follow one organisation through the rest of the page: a European insurer — call it Argenta — with 6,000 employees, fourteen AI-powered processes in production, and a monthly API spend that crossed EUR 180,000 before anyone could explain where the money went.
+
+The structural difference is not that AI is expensive. Prices have fallen roughly 10x in two years, and they will fall further. The difference is that AI cost is *granular, variable, and unattributed by default* — and managing it requires infrastructure that most organisations have not built.
+
+## Attribution — knowing where the money goes
+
+Argenta's EUR 180,000 monthly bill arrived as a single line item from each of its two providers. The CTO could see that Anthropic usage was growing faster than OpenAI usage. She could not see which of the fourteen production systems drove the growth, which team owned the fastest-growing system, or whether the growth correlated with more tasks completed or with longer prompts nobody had reviewed.
+
+Attribution is the foundation. Without it, every other optimisation lever operates blind. The practice has three layers, and each adds resolution to the picture.
+
+**Provider-level attribution** is what arrives by default — total spend per API key, per model, per billing period. It answers "how much did we spend" but not "on what." Most organisations start and stop here, which is why most organisations cannot manage AI cost.
+
+**System-level attribution** tags every API call with metadata — the system that made it, the team that owns it, the environment it ran in. This is the layer that turns a single line item into a cost-per-system breakdown, and it requires nothing more than a proxy or gateway that injects headers before the call reaches the provider.
+
+**Task-level attribution** connects token spend to the business action that consumed it — not "the claims-processing system used 4.2 million tokens" but "processing claim #41927 cost EUR 0.83 and took three model calls." This is the layer that makes unit economics possible, and it requires tracing infrastructure: a correlation ID that follows a task from initiation through every model call, tool invocation, and retry, with token counts and costs recorded at each step.
+
+```yaml
+# AI gateway attribution config — three layers
+attribution:
+  # Layer 1: Provider-level (default from billing)
+  provider_keys:
+    anthropic: "sk-ant-..."
+    openai: "sk-..."
+
+  # Layer 2: System-level — injected headers on every call
+  system_tags:
+    - header: "x-ai-system"
+      source: "env:AI_SYSTEM_NAME"
+    - header: "x-ai-team"
+      source: "env:TEAM_ID"
+    - header: "x-ai-environment"
+      source: "env:DEPLOY_ENV"
+
+  # Layer 3: Task-level — correlation across the full trace
+  task_tracing:
+    correlation_id_header: "x-task-id"
+    record_per_call:
+      - input_tokens
+      - output_tokens
+      - cache_read_tokens
+      - cache_write_tokens
+      - model
+      - latency_ms
+      - status  # success | error | retry
+    aggregate_to: "cost_per_task"
+
+  # Cost calculation
+  pricing:
+    source: "provider_api"    # or "manual" with a local rate card
+    refresh_interval: "daily"
+    include_cache_discount: true
+    include_batch_discount: true
+```
+
+Argenta built system-level attribution first — a lightweight gateway proxy that tagged every outbound API call with the originating system and team. Within two weeks, the picture sharpened: one system, the claims-triage agent, accounted for 41% of total spend. It was not the highest-volume system; it was the one with the longest prompts. Nobody had reviewed its system prompt since it was first deployed, and over eight months of incremental additions, the prompt had grown to 14,000 tokens — most of which were duplicated instructions and legacy examples that no longer matched the current policy.
+
+Attribution did not reduce cost. It told Argenta where to look.
+
+## Optimisation levers — the mechanisms that bend the curve
+
+Once attribution shows where the spend concentrates, four levers can reduce it. They are ordered here by effort-to-impact ratio: prompt caching requires the least engineering and delivers the largest typical saving; model routing requires the most design work but offers the widest structural reduction.
+
+### Prompt caching
+
+Every major provider now offers prompt caching — the ability to reuse previously processed input tokens across requests, paying a fraction of the standard input price for cached reads. The mechanism varies by provider, but the economics are consistent: if a significant portion of your prompt is the same across requests, caching converts that portion from full-price input to near-free reuse.
+
+Anthropic's implementation caches the prompt prefix — system instructions, tool definitions, and any content blocks marked with a `cache_control` field. A cache hit costs 10% of the standard input price. Cache writes cost 1.25x the standard price for a five-minute TTL, or 2x for a one-hour TTL. The arithmetic is simple: if the cached prefix is read more than once within the TTL window, the cache pays for itself. OpenAI's implementation is automatic — no markup required — and offers cached reads at 50% of the standard input price, with caching activating on prefixes of 1,024 tokens or longer. Google's Gemini applies similar mechanics across its model family.
+
+Argenta's claims-triage agent sent the same 14,000-token system prompt with every request. Before caching, that prompt cost roughly $0.07 per call at Sonnet rates. After enabling Anthropic's prompt caching, the first call in each five-minute window cost $0.088 (the 1.25x write premium), and every subsequent call within that window cost $0.007. The system handled an average of 23 claims per five-minute window. The monthly saving on that one system — from caching alone, before any prompt reduction — was EUR 28,400. The engineering effort was adding a single `cache_control` field to the system prompt.
+
+### Semantic caching
+
+Prompt caching operates at the provider level and requires exact prefix matches. Semantic caching operates at the application level and catches a different class of redundancy: requests that are phrased differently but ask the same question. A vector embedding of each incoming prompt is compared against a cache of previous prompt-response pairs; if the similarity exceeds a configurable threshold, the cached response is returned without making a model call at all.
+
+The savings can be substantial — AWS-published research on 63,796 real queries showed 86% cost reduction on cached responses — but the risk is equally real. A semantic cache that returns a stale or slightly-wrong answer because the similarity threshold was set too low is a reliability problem masquerading as a cost optimisation. The lever is powerful and requires careful tuning: high thresholds (0.95+) for factual queries where precision matters, lower thresholds (0.85-0.90) for informational queries where approximate answers are acceptable, and no semantic caching at all for tasks where every input is genuinely unique.
+
+Argenta deployed semantic caching on its customer-facing FAQ agent — a system where 31% of incoming questions were paraphrases of questions already answered that week. The cache hit rate stabilised at 34%, eliminating roughly a third of the system's model calls. They did not deploy it on the claims-triage agent, where every claim is different and a cached answer from a previous claim would be a compliance failure. The distinction matters: semantic caching is a lever, not a default.
+
+### Context-window management
+
+Every token in the prompt costs money, and not every token earns its place. Context-window management is the discipline of reviewing what enters the prompt and removing what does not contribute to the output — a discipline that sounds obvious and is practised almost nowhere.
+
+The common patterns of waste are predictable. System prompts that accumulate instructions over months without pruning. Retrieved documents stuffed into context at full length when a summary would suffice. Conversation histories carried forward verbatim when only the last three turns matter. Tool definitions included for tools the model will never call in this particular task.
+
+| Source of waste | Typical bloat | Fix | Effort |
+|---|---|---|---|
+| Unpruned system prompts | 2-5x original length after six months | Quarterly prompt audit | Low |
+| Full-document retrieval | 3-10x what the model needs | Chunk-level retrieval with relevance filtering | Medium |
+| Unbounded conversation history | Grows linearly with session length | Sliding window or summarisation | Medium |
+| Unused tool definitions | 500-2,000 tokens per unused tool | Conditional tool injection based on task type | Low |
+
+Argenta's claims-triage prompt audit — triggered by the attribution data — reduced the system prompt from 14,000 tokens to 5,200 tokens. The removed content included three duplicated instruction blocks, a section of examples from a policy version that had been superseded, and definitions for four tools the agent had never once invoked in production. Combined with prompt caching on the reduced prompt, the per-call cost dropped from $0.07 to $0.005 — a 93% reduction.
+
+### Model routing
+
+The most structurally powerful lever is also the one that requires the most design: routing each task to the cheapest model that can handle it, rather than sending everything to the same tier.
+
+The pricing spread across model tiers is not incremental — it is multiplicative. Within Anthropic's lineup alone, Haiku costs $1 per million input tokens, Sonnet costs $3, and Opus costs $5. Across providers, the range widens further: a simple classification task that runs acceptably on Gemini 2.5 Flash at $0.30 per million input tokens does not need Opus at $5. The task determines the tier, not the other way around.
+
+Research from RouteLLM, published at ICLR 2025, demonstrated that a model router achieved 95% of GPT-4-class quality while routing only 26% of requests to the expensive model — a 48% cost reduction with negligible quality loss. In practice, 50-70% of enterprise AI requests can be handled by the cheapest model tier, while only 5-15% require frontier reasoning. The distribution is not uniform, and the savings come from respecting that non-uniformity.
+
+Argenta implemented a three-tier routing strategy across its fourteen production systems:
+
+| Tier | Model | Use case | Share of traffic | Cost per MTok (input) |
+|---|---|---|---|---|
+| Budget | Haiku / GPT-4.1 Nano | Classification, extraction, simple Q&A | 62% | $0.10-1.00 |
+| Standard | Sonnet / GPT-4.1 | Drafting, summarisation, moderate reasoning | 28% | $1.50-3.00 |
+| Frontier | Opus / GPT-5.2 | Complex claims analysis, multi-step reasoning | 10% | $5.00-15.00 |
+
+The weighted average cost per million input tokens dropped from $3.00 (everything on Sonnet) to $1.14 — a 62% reduction. The quality metrics on the tasks routed to budget models showed no statistically significant degradation, because those tasks had never needed Sonnet-class reasoning in the first place.
+
+<Callout type="note" title="The optimisation that compounds">
+Each lever is valuable alone. Together, they compound multiplicatively, not additively. Prompt caching reduces the cost of the tokens you send. Context management reduces the number of tokens you send. Model routing reduces the price-per-token you pay. Semantic caching eliminates calls entirely. Applied in sequence to the same system, the four levers can reduce cost by 90% or more — not through any single dramatic intervention but through four modest ones that multiply. The discipline is applying all four, systematically, to every system that crosses a spend threshold.
+</Callout>
+
+## Unit economics — the metric that matters
+
+The four levers reduce cost. Unit economics answers a harder question: is the reduced cost *worth it* — and for whom?
+
+Cost-per-token is a supply metric. It tells you what the provider charges. Cost-per-task is an operational metric. It tells you what a single unit of work costs your system. Cost-per-outcome is a business metric. It tells you what a successful result costs, including the cost of the unsuccessful attempts that preceded it. The three are related but not interchangeable, and the one that matters for scaling decisions is the last.
+
+Return to Argenta. The claims-triage agent processes incoming insurance claims and routes them to the correct department with a preliminary assessment. After applying all four optimisation levers, the cost per triage was EUR 0.12. That number was satisfying — down from EUR 0.83 before optimisation — but it was incomplete. The agent's accuracy rate was 87%. The 13% of claims it triaged incorrectly had to be re-triaged by a human analyst at a fully loaded cost of EUR 14 per claim. The true cost per successful triage was not EUR 0.12. It was:
+
+(0.87 x EUR 0.12) + (0.13 x EUR 14.00) = EUR 1.92
+
+That number reframed every subsequent decision. Improving the agent's accuracy from 87% to 92% — a five-percentage-point gain — would reduce the cost per successful triage from EUR 1.92 to EUR 1.02. The saving per claim from that accuracy improvement (EUR 0.90) dwarfed the saving from all four cost-optimisation levers combined on the agent's own spend (EUR 0.71). The most powerful cost lever was not caching, routing, or prompt reduction. It was making the agent better at its job.
+
+| Metric | Formula | What it tells you | Who acts on it |
+|---|---|---|---|
+| Cost per token | Provider rate x tokens consumed | What inference costs | Platform team |
+| Cost per task | Sum of all token costs for one task execution | What a unit of work costs | Engineering team |
+| Cost per outcome | Cost per task / success rate | What a successful result costs, including failures | Product and business |
+| Cost to serve | Cost per outcome x volume per user | What one user costs you | Finance and pricing |
+
+The progression from left to right in that table is the progression from engineering visibility to business decision-making. An organisation that tracks only cost-per-token can optimise its API spend but cannot answer "should we invest in improving this agent's accuracy or in reducing its token consumption?" An organisation that tracks cost-per-outcome can answer that question — and the answer, more often than not, is that accuracy improvements yield larger cost reductions than infrastructure optimisations, because the cost of human fallback on failed tasks dominates the cost of the tokens the agent consumed.
+
+## What holds at scale
+
+Argenta's optimisation journey — attribution, caching, routing, context management, and the unit-economics reframing — reduced its monthly AI spend from EUR 180,000 to EUR 61,000. But the number the CTO presented to the board was not the saving. It was the cost-per-successful-outcome for each of the fourteen production systems, plotted over time, with a trend line. Three systems were improving — cost per outcome falling as accuracy rose. Four were stable. Seven had never been measured at the outcome level and could not demonstrate whether they were creating value or merely consuming budget.
+
+The seven unmeasured systems were not failures. They were the norm. Most organisations operating AI at scale today can report total API spend and cannot report cost-per-outcome for any individual system. The gap is not technical — the instrumentation described on this page is straightforward engineering. The gap is disciplinary. Cost-per-token is a metric the provider gives you for free. Cost-per-outcome is a metric you have to build, and building it requires the attribution, tracing, and success-rate measurement that most teams skip because the system "works" and the bill is not yet large enough to force the question.
+
+It will be. Token prices fall every quarter, but usage grows faster than prices fall — LLM API spending roughly doubled between late 2024 and mid-2025, from $3.5 billion to $8.4 billion, and the growth has not slowed. The organisations that scale AI sustainably are not the ones that negotiate the best per-token rate. They are the ones that can answer, for every system in their portfolio, what it costs to produce a successful outcome — and whether that cost is trending in the right direction.
+
+FinOps for AI is the discipline that makes every other Groundwork decision economically sustainable. The operating model, the build-buy-boost decision, token sourcing, security architecture, governance — each of those pages describes a structural choice. This page describes how you know whether that choice is paying for itself. Without attribution, you cannot allocate cost. Without optimisation levers, you cannot reduce it. Without unit economics, you cannot connect it to value. Together, they form the financial layer beneath the entire Groundwork pillar — the layer that turns strategic decisions into numbers a board can act on, and an engineering team can improve.

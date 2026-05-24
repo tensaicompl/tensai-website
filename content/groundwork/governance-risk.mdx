@@ -5,8 +5,125 @@ slug: "governance-risk"
 definition: "A scaffold that survives the EU AI Act, NIST AI RMF, and a real incident."
 spineConcepts: [14, 15]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 5
 ---
 
-<ContentPlaceholder title="Governance & Risk" />
+AI governance is the organisational machinery that ensures every AI system you operate is inventoried, risk-assessed, monitored, and accountable to a named human being. It is not a compliance exercise bolted on after the engineering is done — it is a scaffold erected before the first model reaches production, and it either holds weight or it does not. The test is simple: run a tabletop incident, and see whether your policies route to a real person who can act, or to a shared inbox nobody checks.
+
+The scaffold has three pillars — risk classification, a policy framework, and operational governance — and the rest of this page builds them in that order. To keep the argument concrete, we will follow one system throughout: a credit-scoring model that an EU-based lender deploys to assess consumer loan applications. It sits squarely in Annex III of the EU AI Act, it touches NIST AI RMF's highest-impact profiles, and it is exactly the kind of system where governance failures become front-page incidents.
+
+## Risk classification — tiering by potential for harm
+
+The starting point of any governance scaffold is a risk register, and the starting point of a risk register is a classification scheme. You need a shared language for saying "this system can cause serious harm and that one cannot" — a language precise enough to drive different treatment for different tiers, and coarse enough that a product manager can apply it without a lawyer in the room.
+
+The EU AI Act provides one such scheme. It defines four tiers — unacceptable, high, limited, and minimal risk — and the tiers are not advisory. Unacceptable-risk systems are banned outright: social scoring, subliminal manipulation, exploitation of vulnerable groups, untargeted facial-recognition scraping, emotion recognition in workplaces and schools. These prohibitions took effect on 2 February 2025. High-risk systems — enumerated in Annex III across eight domains including biometric identification, critical infrastructure, education, employment, creditworthiness assessment, law enforcement, migration, and administration of justice — face mandatory conformity assessments, technical documentation, human oversight, and post-market monitoring. The bulk of these obligations land on 2 August 2026.
+
+NIST's AI Risk Management Framework provides a complementary structure — voluntary rather than statutory, but more operationally detailed. Its four core functions — Govern, Map, Measure, Manage — give you a verb for each stage of the risk lifecycle. Govern sets organisational accountability and culture. Map identifies the context and risks of a specific system. Measure tracks those risks with quantitative and qualitative methods. Manage allocates resources to treat them. The Govern function is the one that spans the entire organisation; Map, Measure, and Manage apply per system.
+
+Our credit-scoring model maps to both frameworks simultaneously. Under the EU AI Act, it is a high-risk system in Annex III category 5(b) — creditworthiness assessment. Under NIST AI RMF, it touches trustworthiness characteristics including fairness (bias in lending is well-documented), accountability (a denied applicant has a right to explanation), and validity (the model's predictive accuracy must be demonstrably maintained). The risk tier is not a label you apply once and file. It is a classification that determines what documentation you produce, what monitoring you run, and who must sign off before the system goes live.
+
+ISO/IEC 42001, the first international standard for AI management systems, adds a third lens. Modelled on ISO 27001 for information security, it requires an AI Management System covering the full lifecycle — data sourcing, training, evaluation, deployment, monitoring, and retirement — with event logging for traceability and explainability requirements baked in. It is certifiable, which means it gives you an auditable structure rather than just a set of principles.
+
+The point of layering these frameworks is not to triple the paperwork. It is to recognise that each one covers a gap the others leave. The EU AI Act tells you what is mandatory and what is banned. NIST AI RMF tells you how to operationalise risk management. ISO 42001 tells you how to build a management system that an auditor can verify. A mature governance scaffold draws from all three and implements one coherent register — not three competing ones.
+
+| Tier | EU AI Act treatment | NIST AI RMF equivalent | What it means in practice |
+|---|---|---|---|
+| Unacceptable | Banned (Article 5) | N/A — outside scope | Do not build it. If you have it, decommission it. |
+| High | Conformity assessment, documentation, monitoring, human oversight | High-impact profile across all four functions | Full governance treatment: risk assessment, model card, monitoring, incident response, named accountable owner |
+| Limited | Transparency obligations (Article 50) | Moderate-impact profile | Disclose that the user is interacting with AI; document the system |
+| Minimal | No specific obligations | Low-impact profile | Inventory it; apply organisational baseline policies |
+
+The risk register itself is a living artefact — not a spreadsheet filled in during a compliance sprint and never reopened. Every AI system in the organisation gets an entry. Each entry records the system's purpose, its risk tier, its data sources, its owner, its last review date, and its current status. The schema below is a starting point.
+
+```yaml
+# risk-register entry — one per AI system
+- system_id: "credit-score-v3"
+  name: "Consumer Credit Scoring Model"
+  owner: "Head of Credit Risk"
+  business_unit: "Retail Lending"
+  purpose: "Assess creditworthiness of consumer loan applicants"
+  risk_tier: "high"
+  regulatory_basis: "EU AI Act Annex III, category 5(b)"
+  nist_profile: "high-impact"
+  data_sources:
+    - "applicant financial history (internal)"
+    - "credit bureau records (external)"
+    - "application form fields"
+  deployment_status: "production"
+  last_risk_assessment: "2026-01-15"
+  next_review_due: "2026-07-15"
+  human_oversight: "loan officer reviews all rejections above threshold"
+  incident_contact: "credit-risk-oncall@lender.example"
+  model_card_url: "/docs/model-cards/credit-score-v3.md"
+```
+
+A register without a review cadence is decoration. The classification is only as current as its last assessment — and a model retrained on new data, or deployed to a new market segment, may shift tiers without anyone noticing unless the review cycle catches it.
+
+## Policy framework — the rules that bind
+
+Classification tells you which systems need governance. Policy tells you what governance looks like. A policy framework for AI is not a single document — it is a set of interlocking policies, each scoped to a specific domain, each enforceable, each reviewed on a schedule.
+
+Five policies form the minimum viable set:
+
+**Acceptable use policy.** Defines what the organisation will and will not use AI for. Names the prohibited use cases explicitly — not just the EU AI Act's banned practices, but any use case the organisation has decided is outside its risk appetite. For our lender, this means stating plainly: "We do not use AI to make fully automated lending decisions without human review for any application above a defined threshold."
+
+**Model inventory policy.** Requires every AI system to be registered in the central inventory before it reaches production. Each entry includes a model card — a structured document describing the model's purpose, training data, performance metrics, known limitations, and intended use. Model cards are no longer a voluntary best practice. Under the EU AI Act's technical documentation requirements and the Colorado AI Act (effective early 2026), they are a regulatory expectation for high-risk systems.
+
+**Data governance policy.** Specifies how training and inference data is sourced, validated, stored, and retired. For the credit-scoring model, this means documenting the provenance of every feature — which fields come from the applicant, which from credit bureaus, which are derived — and establishing quality checks that run before every retraining cycle.
+
+**Human oversight policy.** Defines where human review is required, what form it takes, and what authority the human reviewer has. The EU AI Act mandates human oversight for high-risk systems, but the policy must be more specific than the statute. It must say who reviews, how often, and what power they have to override the model's output. A human-in-the-loop who cannot override is not oversight — it is observation.
+
+**Incident response policy.** Specifies what happens when an AI system produces harm — who is notified, what the escalation path is, what the remediation steps are, and how the incident is recorded for future learning. This is the policy most likely to be missing entirely, and the one whose absence is felt most sharply when something goes wrong.
+
+These five policies are not independent documents living in separate folders. They form a dependency chain: the acceptable use policy constrains what enters the inventory; the inventory policy ensures each system has a model card; the data governance policy ensures the model card's data provenance section is accurate; the human oversight policy ensures the model card's oversight section is enforceable; and the incident response policy ensures there is a defined path when any of the above controls fail.
+
+<Callout type="note" title="The policy that reveals the scaffold's strength">
+The incident response policy is the one that tests whether governance is real or performative. Draft one, then run a tabletop exercise: "The credit-scoring model has been denying applications from a specific postcode at twice the expected rate for three weeks. A journalist has the data. You have two hours." Walk the room through your policy. If the escalation path leads to a named person with authority to act — pull the model, notify the regulator, brief the board — the scaffold holds. If it leads to a committee that meets monthly, or to a generic compliance inbox, the scaffold is theatre. Governance that cannot survive a tabletop will not survive a real incident.
+</Callout>
+
+## Operational governance — who acts when it matters
+
+Policies are necessary and insufficient. The third pillar — operational governance — is the machinery that turns policies into decisions. It answers the questions that policies deliberately leave abstract: who reviews a new AI system before deployment, who approves a model retrained on new data, who is accountable when the model causes harm, and how fast each of these things happens.
+
+The operating structure has three layers, and the distinction between them is the distinction between strategy, oversight, and execution.
+
+**Executive sponsor or board-level accountability.** A named individual — not a committee — who is accountable for AI risk to the board. This is the person the regulator asks to see. In practice, this is often the Chief Risk Officer, the Chief Technology Officer, or a dedicated Chief AI Officer. The title matters less than the authority: this person must have the standing to halt a deployment.
+
+**AI governance function.** A cross-functional team — sometimes called a centre of excellence, sometimes an AI governance board — that sets standards, reviews high-risk deployments, maintains the risk register, and owns the policy framework. This is not an ethics board. Ethics boards advise; governance functions decide. The distinction is critical. An ethics board that produces recommendations nobody is obliged to follow is a reputational shield, not a governance mechanism. A governance function that owns the approval gate for high-risk systems is an operational control.
+
+**System-level owners.** Each AI system in the inventory has a named owner — a person, not a team — who is responsible for that system's compliance, monitoring, and incident response. The owner maintains the model card, ensures the monitoring is running, and is the first point of contact when something goes wrong. For our credit-scoring model, this is the Head of Credit Risk — not the data science team that built it, not the IT department that hosts it.
+
+The interaction between these layers follows a pattern. The governance function maintains the risk register and the policy framework. When a new AI system is proposed, the system-level owner submits a risk assessment. The governance function reviews the assessment, assigns a risk tier, and — for high-risk systems — imposes conditions: monitoring requirements, human oversight specifications, review cadence. The executive sponsor is briefed on high-risk approvals and is the escalation point when the governance function and a business unit disagree.
+
+This is where most governance frameworks fail — not in the design, but in the tempo. A governance function that meets quarterly cannot review a model that is retrained weekly. The cadence of governance must match the cadence of the systems it governs. For systems that change frequently, this means automated checks gated into the deployment pipeline — not manual reviews scheduled on a calendar.
+
+## The incident that tests the scaffold
+
+The AI Incident Database — maintained by the Partnership on AI — catalogues over 3,000 reports of AI systems causing real-world harm. Facial recognition misidentifications. Hiring algorithms that systematically disadvantaged women. Content recommendation systems that steered minors toward harmful material. These are not hypothetical scenarios. They are things that happened, in production, at organisations that had governance policies on paper.
+
+Return to the credit-scoring model. Suppose the monitoring dashboard shows a drift: applications from a specific demographic segment are being rejected at a rate significantly higher than the historical baseline. The model has not been retrained recently. The data pipeline has not changed. The drift is real, and it has been building for six weeks.
+
+Here is what a functioning governance scaffold does, and how fast it does it:
+
+The monitoring alert triggers an incident ticket — automatically, not after someone notices the dashboard. The incident ticket routes to the system owner — the Head of Credit Risk — within the hour. The system owner invokes the incident response policy: the model is flagged, affected decisions from the drift period are queued for manual review, and the governance function is notified. The governance function escalates to the executive sponsor, who decides whether to pull the model from production pending investigation. The regulator is notified within the statutory timeframe. The root-cause analysis runs in parallel with the remediation, and the findings are fed back into the risk register as an updated risk assessment.
+
+Here is what a governance scaffold that exists only on paper does: the drift is noticed three months later, during a scheduled quarterly review. By then, the harm is compounded, the regulator has been contacted by an affected applicant, and the organisation's response is reactive, slow, and unconvincing.
+
+The difference between these two outcomes is not the quality of the policies. It is the operational machinery beneath them — the monitoring, the alerting, the escalation path, the authority to act, and the tempo at which all of it runs.
+
+<Callout type="note" title="Reference implementation">
+TensAI maintains a governance scaffold starter — risk-tier classification templates, policy document starters, a risk-register schema, and a tabletop exercise script — at [`tensaicompl/tensai-governance-scaffold`](https://github.com/tensaicompl/tensai-governance-scaffold). Clone it to see how the three pillars connect before building your own.
+</Callout>
+
+## The scaffold is tested, not written
+
+A governance framework is not a document you produce. It is a system you operate — and like any system, it must be tested under conditions that resemble the ones it will face.
+
+The tabletop exercise is the minimum viable test. Gather the governance function, the system owners for your highest-risk systems, and the executive sponsor in a room. Present a scenario — the credit-scoring drift, a data breach that exposes training data, a model that produces a harmful output picked up by the press. Walk the escalation path. Time it. See whether the right people are in the room, whether they have the authority they need, and whether the policies they are following actually lead to a decision.
+
+The things you will discover in a tabletop are the things that would otherwise surface in a real incident: the incident response policy routes to a team that was reorganised six months ago; the system owner listed in the risk register left the company; the escalation path requires a sign-off from someone who does not know the system exists. These are not edge cases. They are the normal state of any governance scaffold that has not been exercised recently.
+
+Run the tabletop annually at minimum — quarterly for high-risk systems. Update the policies, the register, and the escalation paths based on what you find. The scaffold is not the documentation. The scaffold is the habit of testing the documentation and fixing what breaks.
+
+Governance sets the rules — who is accountable, what is permitted, how risk is classified and managed. But rules without economic sustainability are rules that get bypassed the moment budgets tighten. The next page — FinOps for AI — picks up where governance leaves off: making the controls economically viable so they survive contact with a quarterly budget review.

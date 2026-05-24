@@ -5,8 +5,246 @@ slug: "evals-observability"
 definition: "Three evaluation surfaces. Traces with bodies. The issue lifecycle."
 spineConcepts: [14]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 10
 ---
 
-<ContentPlaceholder title="Evals & Observability" />
+An evaluation is a test that tells you whether your agent did the right thing — not just a well-formed thing. Observability is the instrumentation that tells you *why* it did what it did, step by step, when the eval says it didn't. Together they form the quality and reliability layer of agent engineering — the part that turns a demo into a system you can run unsupervised and wake up to find still working. Without evals you are guessing; without observability you are guessing in the dark.
+
+## Three evaluation surfaces
+
+Agent work plays out at three altitudes, and each altitude needs its own kind of eval. The three surfaces are not a taxonomy invented for neatness — they are the three places where a failure actually shows up, and they need different instrumentation, different grading, and different cadences.
+
+Take a concrete system and hold on to it for the rest of the page: a coding agent that receives a bug ticket, reads the repository, writes a fix, and opens a pull request. This is the running example; every concept that follows will be grounded in it.
+
+**Unit evals** are single-turn. One prompt, one completion, one assertion. Does the model, given a function and a bug description, correctly identify the root-cause line? Does it produce a syntactically valid diff? Unit evals are fast — milliseconds each — and you run hundreds of them on every change to the prompt, the model, or the retrieval layer. They are the computational sensors of the eval stack: deterministic where possible, cheap always, and the first gate that must pass before anything heavier runs.
+
+**Task evals** are multi-step. The agent receives the ticket, enters the agentic loop — tool calls, file reads, reasoning, edits — and arrives at a final artefact. Grading is against success criteria, not a single assertion: did the diff apply cleanly, do the existing tests still pass, does a new test covering the reported bug now exist? Task evals are slower — seconds to minutes — and they exercise the full trajectory of the agent, not just a single turn. The trajectory itself carries signal: an agent that arrives at the right answer through twelve confused tool calls is less reliable than one that arrives in four decisive ones, even when both pass.
+
+**System evals** are statistical. You run the same task — or a representative sample of tasks — N times and measure the distribution. What percentage of runs succeed? What is the variance in cost and latency? Does a prompt change that lifts accuracy on one class of tickets degrade it on another? System evals answer the question that task evals cannot: not "did this run work" but "does this system work, reliably, at the rate you need it to." A system eval that reports 92% pass rate over 200 runs is a statement about the system. A single task eval that passed is a statement about one run.
+
+Set side by side:
+
+| | Unit eval | Task eval | System eval |
+|---|---|---|---|
+| Scope | Single turn | Full agentic trajectory | N runs of the same task |
+| What it tests | One model response | End-to-end task completion | Aggregate reliability |
+| Speed | Milliseconds | Seconds to minutes | Minutes to hours |
+| Grading | Assertion or exact match | Success criteria + trajectory | Distribution and variance |
+| Cadence | Every prompt or model change | Every harness or tool change | Before every release or model swap |
+| Signal | "Can the model do this step?" | "Can the agent complete this task?" | "Can the system be trusted with this class of work?" |
+
+The three surfaces are not independent. A unit eval failure is a precise, localised signal — you know what broke and roughly where to fix it. A system eval failure is a diffuse, statistical signal — you know something degraded, but not what. The practical workflow moves top-down: a system eval flags a regression; you drill into the failing task evals to find which tasks broke; you drill further into unit evals to isolate the failing step. Each surface feeds the one below it.
+
+The discipline is in knowing which surface to add next. Most teams start with unit evals because they are easy, plateau there, and wonder why their agent still fails unpredictably in production. The answer is almost always that they are testing the model's ability to produce good outputs and never testing the system's ability to complete work. Task evals and system evals are where reliability lives — and they are the surfaces most teams underinvest in.
+
+## Grading: outcomes and trajectories
+
+A grading function takes the result of an eval run and returns a verdict. The design of that function is where most eval efforts go wrong, because it is easy to grade the wrong thing.
+
+There are two things to grade, and they are not interchangeable. The *outcome* is the final state of the environment after the agent finishes — the pull request that was opened, the file that was changed, the database row that was written. The *trajectory* is the sequence of steps the agent took to get there — every tool call, every reasoning step, every intermediate decision recorded in the transcript.
+
+For the coding agent: the outcome is whether the diff fixes the bug and the tests pass. The trajectory is whether the agent read the right files, identified the root cause before editing, ran the tests before committing, and avoided unnecessary changes. An agent that produces the correct diff by luck — trying four wrong patches, reverting each, and stumbling on the right one — passes on outcome and fails on trajectory. Both matter. The outcome tells you whether the work was done; the trajectory tells you whether the process can be trusted at scale.
+
+<Callout type="note" title="Grade the environment, not the transcript">
+The most common grading mistake is checking what the agent *said* it did rather than what actually happened. An agent that reports "I've fixed the bug and all tests pass" has produced a claim. The eval must verify the claim against the environment — run the tests, inspect the diff, check the file system. Anthropic's eval guidance makes this the first principle: grade the outcome in the environment, not the agent's description of it. An agent that says it booked the flight is not the same as a reservation existing in the database. This sounds obvious. In practice, the majority of hand-written evals check the transcript.
+</Callout>
+
+The grading function itself can be computational or inferential — the same split from Harness Engineering. A computational grader runs the test suite against the agent's diff and returns pass or fail: deterministic, free, and certain. An inferential grader asks a judge model whether the agent's approach was reasonable: semantic, costly, and non-deterministic. The ordering rule from the harness applies here unchanged — exhaust the computational graders first, and reach for the inferential ones only for the questions that genuinely need judgment.
+
+```typescript
+// Unit eval — computational grader.
+// Fast, deterministic, runs on every prompt change.
+const result = await model.complete(bugDescription);
+assert(result.rootCauseLine === expected.rootCauseLine);
+
+// Task eval — computational outcome grader + inferential trajectory grader.
+// The outcome check is cheap and must pass first.
+const { diff, transcript } = await agent.run(ticket);
+const testResult = await runTests(applyDiff(repo, diff));
+if (!testResult.allPassed) return { verdict: "fail", reason: "tests_failed" };
+
+// Only now spend a model call on the trajectory.
+const trajectoryReview = await judge(
+  "Did the agent identify the root cause before editing, " +
+  "and avoid unnecessary file changes?",
+  transcript
+);
+return { verdict: trajectoryReview.verdict, outcome: "pass", trajectory: trajectoryReview };
+```
+
+The inferential grader — the LLM-as-judge — deserves a direct account of its limits. A judge model's agreement with human evaluators sits at roughly 80% for well-scoped, rubric-guided questions and drops below 70% for domain-specific judgment. It is sensitive to answer order, output length, and formatting in ways that have nothing to do with quality. It is, in short, a useful sensor and a fallible one. The practical stance is to use it where no computational check can reach — "is this explanation clear?" or "did the agent take a reasonable approach?" — and never where a test suite or a schema validator could have answered for free. Calibrate it against human labels on a sample before trusting it on the full set. And run it with a rubric, not an open-ended question — the rubric is the guide that makes the inferential sensor reliable enough to use.
+
+## Observability: traces with bodies
+
+Traditional observability — latency percentiles, error rates, throughput — tells you that something went wrong. Agent observability tells you *what* went wrong and *why*, because it records not just the timing of each step but the content: the prompt that was sent, the completion that came back, the tool call that was made, the reasoning the model produced. This is what "traces with bodies" means — distributed traces where every span carries the actual payloads, not just metadata.
+
+For the coding agent, a trace without bodies tells you that the agent made seven tool calls in 34 seconds and the final step returned an error. A trace with bodies tells you that the third tool call was a file read that returned an empty result because the path was wrong, that the agent's next reasoning step acknowledged the empty result and decided to guess the file contents, and that the resulting diff was applied to a function that does not exist. The difference between those two traces is the difference between "something failed" and "here is exactly what happened and where the reasoning went off the rails."
+
+The industry has converged on OpenTelemetry as the instrumentation standard for this. The GenAI semantic conventions — covering LLM client spans, agent spans, token-usage metrics, and events for prompt and completion content — reached stability in early 2026. The practical shape of an instrumented agent is a trace tree: the root span is the task, child spans are the agentic loop iterations, and each iteration's children are the individual model calls and tool invocations. Every span carries attributes — model name, token counts, finish reason — and events carry the bodies.
+
+```typescript
+import { trace, SpanKind } from "@opentelemetry/api";
+
+const tracer = trace.getTracer("coding-agent");
+
+async function runAgent(ticket: Ticket) {
+  return tracer.startActiveSpan("agent.task", { kind: SpanKind.INTERNAL }, async (taskSpan) => {
+    taskSpan.setAttribute("ticket.id", ticket.id);
+    taskSpan.setAttribute("ticket.severity", ticket.severity);
+
+    for (let step = 0; step < maxSteps; step++) {
+      await tracer.startActiveSpan("agent.step", async (stepSpan) => {
+        stepSpan.setAttribute("step.number", step);
+
+        // The model call — its span captures prompt, completion, tokens.
+        const completion = await tracer.startActiveSpan("gen_ai.chat", async (llmSpan) => {
+          llmSpan.setAttribute("gen_ai.system", "anthropic");
+          llmSpan.setAttribute("gen_ai.request.model", "claude-sonnet-4-5");
+
+          const response = await client.messages.create({ model, messages, tools });
+
+          llmSpan.setAttribute("gen_ai.response.finish_reason", response.stop_reason);
+          llmSpan.setAttribute("gen_ai.usage.input_tokens", response.usage.input_tokens);
+          llmSpan.setAttribute("gen_ai.usage.output_tokens", response.usage.output_tokens);
+          // Event carries the body — this is what makes the trace useful.
+          llmSpan.addEvent("gen_ai.completion", { body: JSON.stringify(response.content) });
+          llmSpan.end();
+          return response;
+        });
+
+        // Tool calls get their own child spans.
+        for (const toolUse of completion.toolCalls) {
+          await tracer.startActiveSpan("agent.tool_call", async (toolSpan) => {
+            toolSpan.setAttribute("tool.name", toolUse.name);
+            toolSpan.addEvent("tool.input", { body: JSON.stringify(toolUse.input) });
+            const result = await executeTool(toolUse);
+            toolSpan.addEvent("tool.output", { body: JSON.stringify(result) });
+            toolSpan.end();
+          });
+        }
+        stepSpan.end();
+      });
+    }
+    taskSpan.end();
+  });
+}
+```
+
+A production concern: you do not log every body at full fidelity in perpetuity. The prompt and completion bodies of every call across every user can be enormous, and they carry privacy and compliance weight. The practical pattern is tiered sampling — 100% of metadata (tokens, latency, model, finish reason) on every call, full bodies on a configurable sample (10–20% in steady state, 100% when an eval flags a regression or when you are actively debugging). The sampling rate is a dial, not a constant, and the ability to turn it to 100% on demand is worth more than having it at 100% by default.
+
+What observability gives you, in the end, is the ability to answer a question that evals alone cannot: not just "did it fail?" but "what was it thinking when it failed?" The trace is the transcript of the agent's reasoning, and the transcript is the raw material from which every eval improvement, every guide refinement, and every new sensor originates. Observability without evals is surveillance. Evals without observability is testing blind.
+
+## The issue lifecycle
+
+An eval failure is not the end of the process — it is the beginning. The issue lifecycle is the path from a detected failure to a resolved improvement, and it is the mechanism that turns evaluation from a quality gate into a quality ratchet.
+
+The lifecycle has five stages:
+
+1. **Detection.** An eval fails — a unit assertion breaks, a task eval reports a new failure mode, or a system eval's pass rate drops below threshold. The failure is captured with its full context: the inputs, the transcript, the grading result, and the trace.
+
+2. **Triage.** Not every failure is a regression. Some are flaky — the non-determinism of model output means that a task which passes 95% of the time will fail 5% of the time without anything changing. Triage separates the signal from the noise: run the failing case N times, check whether the failure is reproducible, and classify it as a regression (new and consistent), a flake (intermittent and pre-existing), or an environment issue (nothing to do with the agent).
+
+3. **Root-cause analysis.** For confirmed regressions, the trace is the primary investigative tool. Walk the trace of the failing run, compare it against the trace of a passing run of the same task, and identify where the trajectories diverge. The divergence point is rarely the final error — it is usually an earlier step where the agent made a subtly wrong decision that compounded through the remaining steps. For the coding agent: the final error is a test failure, but the root cause is that the agent read the wrong source file three steps earlier because the retrieval query was under-specified.
+
+4. **Harness improvement.** The fix is almost never "change the model" or "rewrite the prompt from scratch." It is a targeted harness improvement: a new guide that prevents the mistake (add the file-path convention to the AGENTS.md), a new sensor that catches it earlier (add a unit eval that asserts the agent reads the correct file before editing), or a new retrieval rule that grounds the agent's file selection. The improvement is committed alongside the eval that would have caught the original failure — the eval is the regression test for the fix.
+
+5. **Verification.** Run the full eval suite — not just the case that failed, but the system eval across the representative sample. The fix for one failure must not degrade the system's performance on others. This is where system evals earn their cost: they are the only surface that can tell you whether a targeted fix had an unintended global effect.
+
+The lifecycle is a loop, not a line. Every pass through it leaves the harness with one more guide, one more sensor, or one more eval case — and the next failure starts the loop again with a stronger baseline. Over time, the eval suite becomes a detailed map of every failure the system has encountered and resolved, and the harness carries the accumulated knowledge of every fix. This is the mechanism by which an agent system improves: not by training a better model, but by building a better harness around the same one.
+
+| Stage | Input | Output | Who acts |
+|---|---|---|---|
+| Detection | Eval run | Failure report with context | CI pipeline or scheduled run |
+| Triage | Failure report | Classification: regression, flake, or environment | Engineer or automated re-run |
+| Root-cause analysis | Confirmed regression + trace | Divergence point and causal chain | Engineer, using trace viewer |
+| Harness improvement | Root cause | New guide, sensor, or eval case | Engineer |
+| Verification | Updated harness + full eval suite | Pass/fail across the system | CI pipeline |
+
+The lifecycle connects evals to observability in the way that matters most: the eval tells you *that* something broke, the trace tells you *why*, and the harness improvement ensures it stays fixed. Without the lifecycle, evals are a dashboard — interesting to look at, disconnected from the work of making the system better.
+
+## Evals in CI
+
+Evals belong in the continuous integration pipeline for the same reason tests do — a regression caught before merge is cheaper than one caught in production by a factor that does not need quantifying. The practical question is which evals run where, because the three surfaces have very different speed profiles.
+
+Unit evals run on every pull request. They are fast enough — milliseconds each, hundreds in a few seconds — that there is no reason not to. They gate the merge: if a prompt change breaks a unit eval, the PR does not merge until the eval passes or is updated.
+
+Task evals run on every pull request that changes the harness, the tools, or the agentic loop — the components that affect the agent's trajectory, not just a single completion. They are slower, and running the full task eval suite on every commit is wasteful, so the trigger is scoped: changes to the prompt run unit evals; changes to the orchestration run task evals.
+
+System evals run on a schedule — nightly, or before a release, or when the model is swapped. They are too slow and too expensive for per-PR gating, but they are the only surface that catches distributional regressions: the kind of degradation where no single task fails but the overall pass rate drops by three points. A nightly system eval that posts its results to a dashboard is the minimum viable early-warning system for an agent in production.
+
+```yaml
+# .github/workflows/evals.yml
+name: Agent Evals
+on:
+  pull_request:
+    paths:
+      - "src/prompts/**"
+      - "src/agent/**"
+      - "src/tools/**"
+  schedule:
+    - cron: "0 3 * * *"  # Nightly system evals
+
+jobs:
+  unit-evals:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run eval:unit
+      - uses: braintrust/eval-action@v1
+        with:
+          report: "pr-comment"
+
+  task-evals:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run eval:task
+        timeout-minutes: 15
+
+  system-evals:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm run eval:system -- --runs 200
+      - run: npm run eval:report -- --post-to-dashboard
+```
+
+The CI pipeline is also where the issue lifecycle begins. A failing eval in CI produces a failure report with the inputs, the grading result, and — if observability is wired in — the trace. That report is the starting point for triage. The teams that close the loop between CI eval failure and harness improvement fastest are the teams whose agents improve fastest. The teams that treat a red eval as "flaky, re-run it" are the teams whose agents stay unreliable.
+
+## Eval-driven development
+
+The phrase "eval-driven development" invites a comparison to test-driven development, and the comparison is instructive precisely because it breaks down.
+
+In test-driven development, you write the test before the code, and the test specifies the correct behaviour. In eval-driven development, the temptation is to do the same — write the eval before the prompt, and let the eval specify what the agent should do. Hamel Husain's practical objection is worth carrying: unlike traditional software, where failure modes are predictable enough to specify in advance, an LLM's failure surface is effectively unbounded. You cannot anticipate what will break before you have seen it break. Writing evals for errors you imagine, rather than errors you have observed, produces a test suite that is thorough about the wrong things and blind to the failures that actually occur.
+
+The practical alternative is eval-driven *iteration*, not eval-driven *specification*. Start the agent. Watch it work — manually, on 20 to 50 cases, reading the outputs yourself. When you see a failure, write the eval that catches it. When you see a pattern of failures, write the system eval that measures the rate. The eval suite grows from observed reality, not from imagination, and it is shaped by the failures the system actually produces rather than the failures you guessed it might.
+
+This is the same loop as the issue lifecycle, compressed into the development cycle. Observe, evaluate, improve, verify. The eval suite is not a specification written before the work begins — it is a record of every failure the system has encountered, encoded as a regression test, growing denser with each iteration. The best eval suites are not the largest. They are the ones where every case traces back to a real failure that once reached production — or, better, one that was caught in CI before it could.
+
+## What the tooling landscape actually looks like
+
+The tooling landscape for evals and observability is maturing quickly and fragmenting at the same speed. A practical account of the current state, without endorsing any single tool:
+
+**Eval frameworks.** Braintrust offers CI-integrated eval workflows with PR-comment reporting and dataset management — its strength is the developer-experience loop of "change prompt, run eval, see diff." Arize Phoenix is open-source, strong on production observability and tracing, with 50-plus instrumentation integrations. Promptfoo — acquired by OpenAI in early 2026 — focuses on red-teaming and security evals with OWASP-aligned presets. DeepEval provides a pytest-like interface for CI pipelines. The choice depends on where your bottleneck sits: if it is in CI regression detection, Braintrust; if it is in production debugging, Arize; if it is in security validation, Promptfoo.
+
+**Observability platforms.** The convergence on OpenTelemetry means the choice of backend is increasingly a commodity decision. Arize Phoenix, Langsmith, and Jaeger all ingest OTel-format traces. The differentiator is the trace viewer — specifically, whether it renders the bodies (prompts, completions, tool calls) in a way that makes the agent's reasoning legible. A trace viewer that shows spans and latency but hides the content is a traditional APM tool wearing an AI label. The viewer you need is the one that lets you read the agent's transcript as a narrative, step by step, with the model's reasoning visible at every turn.
+
+**Benchmarks.** SWE-bench, GAIA, and TAU-bench are the public benchmarks most commonly cited for agent evaluation. They are useful as coarse signals — a new model or harness change that moves the SWE-bench score by five points is worth investigating — but they are not substitutes for your own eval suite. A benchmark tests a fixed, public task set; your eval suite tests the tasks your agent actually does, in the environment it actually operates in, with the failure modes that actually matter to your users. Benchmark scores are for model selection. Your eval suite is for system reliability.
+
+The tooling will keep changing. The principle will not: instrument everything, grade at all three surfaces, and close the loop from failure to improvement. The tools are replaceable; the practice is not.
+
+## The connection between evals and the harness
+
+Evals and the harness are not separate systems — they are two views of the same loop. The harness provides the guides and sensors that shape and check the agent's work. The eval suite measures whether those guides and sensors are actually working. When an eval fails, the fix is a harness improvement — a new guide, a tighter sensor, a better tool definition. When the harness improves, the eval suite grows to cover the failure that prompted the improvement. The eval suite is, in the end, the test suite for the harness itself.
+
+This is the reframing the page exists to deliver: evals are not a quality gate you bolt on at the end. They are the feedback signal that drives the harness's evolution. A harness without evals is a harness that cannot learn. An eval suite without a harness to improve is a dashboard that reports problems it cannot fix. The two are designed together, maintained together, and improved in the same loop — the loop that is the central discipline of this entire pillar.
+
+<Callout type="note" title="Reference implementation">
+The three-surface eval structure, the OpenTelemetry trace instrumentation, and the issue-lifecycle tracker described on this page are implemented as a working starter at [`tensaicompl/tensai-eval-harness`](https://github.com/tensaicompl/tensai-eval-harness). It includes unit evals with assertion graders, task evals with outcome-plus-trajectory grading, system evals with statistical aggregation over N runs, and a CI workflow that gates PRs on unit and task evals while running system evals nightly.
+</Callout>
+
+Everything on this page — the three surfaces, the traces, the lifecycle, the CI pipeline — exists to answer one question: can this agent be trusted to work without someone watching it? That question is the bridge to the next concept. AFK and autonomous agents are systems that run unsupervised for hours or days, making decisions with real consequences and no human in the loop. Without evals, AFK is reckless — you are granting autonomy to a system whose reliability you have never measured. With evals, AFK is an engineering decision: you know the pass rate, you know the failure modes, you know what the harness catches and what it misses, and you choose the autonomy level that the evidence supports. Evaluation is what makes unsupervised operation possible. The next page takes up what that operation looks like.

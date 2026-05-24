@@ -5,8 +5,162 @@ slug: "memory-context"
 definition: "The four memory types and the four operations of context engineering."
 spineConcepts: [4, 5, 6]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 4
 ---
 
-<ContentPlaceholder title="Memory & Context" />
+An agent that cannot remember is an agent that starts from zero on every turn. An agent that remembers everything but loads it all at once is an agent that drowns in its own history. Memory is persistent state that survives across turns and sessions — what the agent has learned, what has happened, what it knows how to do. Context engineering is the discipline of deciding what enters the model's context window and when — a runtime problem, not an authoring problem. The two are distinct systems, and a production agent needs both: memory to accumulate knowledge over time, and context engineering to make that knowledge usable in the moment the model actually reasons.
+
+## The running example
+
+Hold on to one system for the rest of this page: a coding agent that maintains a large monorepo. It runs across dozens of sessions, each lasting hundreds of turns. It needs to recall that a naming convention was agreed three weeks ago (memory), surface the right file's dependencies before editing it (context engineering), and forget the 400 lines of test output from a passing run ten turns back (also context engineering). Every concept below maps to a concrete decision this agent forces you to make.
+
+## The four memory types
+
+Memory in an agent system borrows its vocabulary from cognitive science — not as metaphor, but because the categories map cleanly to engineering concerns. Four types cover the space.
+
+**Episodic memory** stores specific past interactions. The coding agent's episodic memory holds the conversation where the team decided to migrate from REST to gRPC, the session where a deployment failed and was rolled back, the exchange where the user corrected its approach to error handling. Each entry is a dated, situated record — not a fact, but an event. Episodic memory answers the question "what happened?"
+
+**Semantic memory** stores facts and relationships. The coding agent's semantic memory holds that the repository uses TypeScript 5.4, that the `auth` module depends on `crypto-utils`, that the user prefers explicit error types over union returns. These are durable truths — extracted from episodes, but abstracted away from the session that produced them. Semantic memory answers the question "what is true?"
+
+**Procedural memory** stores learned behaviours and rules. The coding agent's procedural memory holds that it should run `tsc --noEmit` before committing, that test files in this repository follow the `*.spec.ts` convention, that when it encounters a circular dependency it should refactor the shared type into a separate module. Procedural memory is the agent's acquired skill set — often encoded as updated system instructions or tool-use patterns. It answers the question "how do I do this?"
+
+**Working memory** is the context window itself. It is not persistent — it exists only for the duration of the current reasoning step, holding whatever the other three memory types and the current task have loaded into it. Working memory is where the model actually thinks. Its size is fixed by the model's context limit, and everything the model cannot see in working memory does not exist for that step, regardless of what is stored elsewhere.
+
+| Memory type | What it stores | Lifespan | Agent question |
+|---|---|---|---|
+| Episodic | Past interactions, events, outcomes | Persistent across sessions | What happened? |
+| Semantic | Facts, preferences, relationships | Persistent, updated over time | What is true? |
+| Procedural | Learned rules, behaviours, skills | Persistent, refined with use | How do I do this? |
+| Working | Current reasoning context | Single turn or step | What am I looking at right now? |
+
+The first three types live outside the context window — in databases, vector stores, files, or structured registries. They are the agent's long-term state. Working memory is the window. The entire challenge of context engineering is deciding which parts of the first three make it into the fourth, and in what form.
+
+## Memory is not context
+
+Here is the distinction that most implementations get wrong, and the one this page exists to draw sharply: memory is what the agent knows; context is what the agent can see right now. A fact stored in semantic memory but never loaded into the context window has no effect on the model's reasoning — it is invisible. A fact loaded into context but never persisted will vanish when the window resets. The two systems operate on different timescales, serve different purposes, and fail in different ways.
+
+<Callout type="note" title="The provocation worth earning">
+The term "prompt engineering" spent two years describing the real work of this field, until it was diluted into a label for typing clever sentences into a chatbot. Context engineering — the term Karpathy named and the discipline the field has now adopted — is not a rebrand. It is a scope correction. Prompt engineering concerns a single input string. Context engineering concerns the entire information architecture that surrounds the model at every step: system prompts, retrieved documents, conversation history, tool outputs, memory loads, and the logic that assembles them. The prompt is one component of the context. The context is the whole engineering surface.
+</Callout>
+
+The coding agent makes the distinction concrete. Its semantic memory holds 2,000 facts about the repository. Its episodic memory holds 300 past sessions. Its procedural memory holds 40 learned rules. On any given turn, working memory can hold perhaps 50,000 tokens of useful material after the system prompt and tool definitions have taken their share. Context engineering is the system that selects the right 50,000 tokens from the 2,300 stored records — and the quality of that selection is the single largest determinant of whether the agent's next action is correct.
+
+## The four operations of context engineering
+
+Context engineering resolves into four operations. Each one answers a different question about the relationship between stored state and the live context window. The framework — formalised by the LangChain team and now standard across the field — provides the complete vocabulary.
+
+**Write** is the operation of saving information outside the context window so it is available later. When the coding agent finishes a session and extracts the three key decisions that were made — "use Zod for runtime validation", "the `payments` module owns all Stripe types", "never import from `internal/`" — it is writing to semantic memory. When it logs the full conversation to a store, it is writing to episodic memory. Writing is how memory accumulates. Without it, every session starts empty.
+
+**Select** is the operation of pulling the right information into the context window for the current step. When the coding agent is about to edit `auth/session.ts`, and the harness retrieves that file's dependency graph, its recent change history, and the three semantic facts most relevant to authentication — that is selection. Selection is retrieval in the broadest sense: vector search, graph queries, recency filters, keyword matching, or simply reading a file from disk. The quality of selection determines whether the model reasons with the right facts or hallucinates its own.
+
+**Compress** is the operation of reducing token count while preserving meaning. When the coding agent's conversation reaches 150,000 tokens and the harness summarises the first 80 turns into a 2,000-token digest — retaining decisions and outcomes, discarding the back-and-forth — that is compression. Compression also applies to tool outputs: a test run that produces 400 lines of passing output can be compressed to "all 47 tests passed" without semantic loss. Compression is how a long-running agent stays within its context budget.
+
+**Isolate** is the operation of scoping context so that each agent or sub-task sees only what it needs. When the coding agent spawns a sub-agent to handle linting, that sub-agent does not need the full conversation history, the deployment credentials, or the architectural decisions about database migration. Isolation splits context across agents, preventing contamination and reducing token waste. In a multi-agent system, isolation is also a safety boundary — an agent that cannot see a credential cannot leak it.
+
+| Operation | Direction | What it does | Coding agent example |
+|---|---|---|---|
+| Write | Window to store | Persists information for future use | Saves "use Zod for validation" to semantic memory |
+| Select | Store to window | Retrieves relevant information into context | Loads `auth/session.ts` dependency graph before editing |
+| Compress | Within window | Reduces tokens, preserves meaning | Summarises 80 turns into a 2,000-token digest |
+| Isolate | Across agents | Scopes context per agent or sub-task | Linting sub-agent sees only the diff and lint config |
+
+The four operations are not independent — they form a cycle. The agent acts, write persists what matters, select retrieves what is needed for the next step, compress keeps the window within budget, and isolate ensures each agent reasons cleanly. A system that does all four well is a system whose context window is always relevant, always within limits, and never contaminated.
+
+## Context budgeting in practice
+
+A context window is not a bucket you fill to the brim. It is a budget you allocate. The coding agent's model has a 200,000-token window. Here is a realistic allocation:
+
+```yaml
+# Context budget — coding agent, 200K window
+system_prompt:        3,000 tokens   #  1.5%
+tool_definitions:     8,000 tokens   #  4.0%
+procedural_memory:    2,000 tokens   #  1.0%  — loaded rules and conventions
+semantic_memory:      4,000 tokens   #  2.0%  — relevant facts for current file
+retrieved_context:   12,000 tokens   #  6.0%  — file contents, dependencies, tests
+conversation_recent: 40,000 tokens   # 20.0%  — last ~30 turns uncompressed
+conversation_summary: 3,000 tokens   #  1.5%  — compressed history of older turns
+tool_outputs:        20,000 tokens   # 10.0%  — recent tool results
+reserved_for_output:  8,000 tokens   #  4.0%  — model's own generation
+─────────────────────────────────────────────
+allocated:          100,000 tokens   # 50.0%
+headroom:           100,000 tokens   # 50.0%  — absorbs spikes, long outputs
+```
+
+The headroom is not waste — it is engineering margin. A single large file read can consume 15,000 tokens. A test failure's stack trace can consume 8,000. Without headroom, one unexpected tool output forces an emergency compression pass that degrades the quality of everything else in the window. The discipline is to allocate conservatively and let the headroom absorb variance, rather than packing the window tight and paying for it in degraded reasoning when the context drifts.
+
+## Compaction — the operation most systems get wrong
+
+Compression has a specific, high-stakes variant that deserves its own treatment: compaction. Compaction is what happens when the conversation history grows too long and must be condensed in place — not appended to, not archived, but rewritten shorter while the agent continues working.
+
+The coding agent has been running for 200 turns. The raw conversation is 180,000 tokens. The harness triggers compaction: it takes the oldest 150 turns, passes them to a summarisation call, and replaces them with a 3,000-token summary. The agent continues with the summary plus the 50 most recent turns.
+
+What can go wrong is precise and predictable. The summarisation model decides that a decision made on turn 12 — "we agreed to use path aliases instead of relative imports" — is low-salience detail and drops it. Forty turns later, the agent introduces a relative import. The error is invisible: the agent is not ignoring the decision, it genuinely does not know the decision was made. The information was not forgotten — it was evicted.
+
+Three strategies reduce this failure mode:
+
+- **Anchor extraction before summarisation.** Before compacting, scan for decisions, corrections, and user preferences. Extract them into semantic or procedural memory as standalone facts. The summary can then lose them without consequence — they survive in a more durable store.
+- **Structured summaries over narrative ones.** A bulleted list of decisions, outcomes, and unresolved questions compresses better and loses less than a paragraph of prose. Narrative summaries are lossy in unpredictable ways; structured ones are lossy in ways you can audit.
+- **Tiered eviction.** Not all turns are equal. Tool outputs from passing tests carry almost no information after the fact — evict them first. Turns where the user corrected the agent carry high information — evict them last or not at all.
+
+```typescript
+// Tiered compaction — evict cheap tokens first, protect high-value ones
+interface Turn {
+  role: "user" | "assistant" | "tool";
+  content: string;
+  tokens: number;
+  tags: ("decision" | "correction" | "tool_output" | "routine")[];
+}
+
+function compact(turns: Turn[], budget: number): Turn[] {
+  const sorted = [...turns].sort((a, b) => priority(a) - priority(b));
+  let total = sorted.reduce((sum, t) => sum + t.tokens, 0);
+
+  const evicted: Turn[] = [];
+  while (total > budget && sorted.length > 0) {
+    const lowest = sorted.shift()!;
+    total -= lowest.tokens;
+    evicted.push(lowest);
+  }
+
+  // Extract decisions from evicted turns before discarding
+  const decisions = evicted
+    .filter(t => t.tags.includes("decision") || t.tags.includes("correction"))
+    .map(t => summarise(t));
+
+  // Return surviving turns + a summary preamble of evicted decisions
+  return [{ role: "system", content: decisions.join("\\n"), tokens: estimateTokens(decisions), tags: [] }, ...sorted];
+}
+
+function priority(turn: Turn): number {
+  if (turn.tags.includes("correction")) return 100;  // evict last
+  if (turn.tags.includes("decision")) return 80;
+  if (turn.role === "user") return 60;
+  if (turn.role === "assistant") return 40;
+  if (turn.tags.includes("tool_output")) return 10;   // evict first
+  return 30;
+}
+```
+
+Compaction is not a failure of the system — it is a designed operation. The failure is compacting without a strategy for what must survive.
+
+## Wiring memory to context — the complete loop
+
+The four memory types and the four context-engineering operations are not parallel lists. They are two dimensions of a single system. Every memory type interacts with every operation, and the wiring between them is the architecture of an agent's information layer.
+
+| | Write | Select | Compress | Isolate |
+|---|---|---|---|---|
+| **Episodic** | Log full conversation to session store | Retrieve similar past sessions by embedding search | Summarise old sessions into condensed episode records | Sub-agents see only their own session history |
+| **Semantic** | Extract facts from conversations and tool outputs | Query fact store by relevance to current file or task | Deduplicate and merge overlapping facts | Each agent scope gets only domain-relevant facts |
+| **Procedural** | Update system instructions when new rules are learned | Load rules relevant to current file type or module | Consolidate overlapping rules into fewer, broader ones | Linting agent gets lint rules; testing agent gets test conventions |
+| **Working** | N/A — working memory is not persisted | All selection targets working memory | Compaction operates directly on working memory | Each agent's working memory is inherently isolated |
+
+The coding agent's full loop, end to end: it begins a session. The harness selects the 20 most relevant semantic facts and the five procedural rules that apply to TypeScript files (select). It loads them alongside the system prompt into working memory. The agent works for 100 turns. At turn 60, the harness compresses the first 40 turns into a structured summary (compress). At turn 100, the session ends. The harness extracts two new facts and one new rule from the conversation and writes them to semantic and procedural memory (write). When a sub-agent is spawned to run tests, it receives only the diff and the test configuration — not the full conversation (isolate). The loop closes. The next session begins with richer memory and the same disciplined selection.
+
+<Callout type="note" title="Reference implementation">
+The four memory types and four context-engineering operations — including a context-window budget calculator and a working compaction demo — are implemented at [`tensaicompl/tensai-context-examples`](https://github.com/tensaicompl/tensai-context-examples). Clone it to see write, select, compress, and isolate operating as a single system.
+</Callout>
+
+## The forward bridge
+
+Memory and context are what the agent thinks with. The next page covers what the agent acts with — tools and the Model Context Protocol. Tools extend the agent's capabilities beyond text generation; MCP standardises how those tools are discovered, described, and invoked. But a tool call is only as good as the context that informed it — an agent that selects the wrong file into its window will pass the wrong file to its editing tool, and no amount of tool sophistication will recover from reasoning on the wrong information. Context engineering is upstream of everything else the agent does.

@@ -5,8 +5,169 @@ slug: "failure-taxonomy"
 definition: "A field guide — memory, reflection, planning, action, system faults."
 spineConcepts: [14]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 12
 ---
 
-<ContentPlaceholder title="The Failure Taxonomy" />
+Every agent that does real work will fail. The question that separates a reliable system from a fragile one is not whether it fails — it is whether you can name the failure precisely enough to build the right response. Failures in agentic systems are not random; they fall into five classes, each with its own characteristic symptoms, its own diagnostic signatures, and its own harness responses. This page is a field guide to those five classes — memory, reflection, planning, action, and system — and the claim it makes is that learning to classify a failure correctly is more than half the work of fixing it.
+
+The taxonomy matters because the wrong diagnosis produces the wrong fix. An agent stuck in a loop looks, from the outside, like a planning failure — but the root cause may be a memory failure that wiped the record of what it already tried. An agent that calls the wrong tool looks like an action failure — but the root cause may be a reflection failure where the agent misjudged the state of its own work and chose the tool that matched its incorrect self-assessment. Every class is distinct, but they cascade into one another, and a harness that cannot tell them apart will spend its budget on repairs that never reach the actual break.
+
+Hold one concrete example through the entire page: a refactoring agent tasked with extracting a shared utility module from three service files in a TypeScript codebase. The task requires reading three files, identifying the common logic, creating the new module, updating all three imports, and verifying that the build passes. It is a contained, well-defined job — and it can fail in every one of the five ways this taxonomy describes.
+
+## Class 1 — Memory failures
+
+A memory failure is a failure of state. The agent loses track of what it has done, what it has seen, or what it decided — and acts on a picture of the world that is no longer true. The refactoring agent reads the first two service files, begins drafting the shared module, and by the time it reaches the third file, the content of the first file has been evicted from its working context. It extracts a function signature from memory — but the signature it remembers is wrong, because the tokens that held it were compacted away three turns ago. The shared module it produces compiles against a function that does not exist.
+
+Memory failures have three characteristic shapes. The first is context decay — information entered the window but was lost to truncation, compaction, or simple distance. The model's attention weakens over long contexts; a fact stated 40,000 tokens ago is, for practical purposes, a fact the agent no longer has. The second is stale state — the agent acts on a cached version of a resource that has since changed. The refactoring agent reads a file, plans its changes, and by the time it writes the diff, another process — or an earlier step of its own plan — has already modified that file. The third is cross-turn amnesia — the agent completes a step, reports success, and on the next turn has no record that the step happened. It re-reads the same file, re-plans the same extraction, and enters a loop not because it cannot plan, but because it cannot remember.
+
+| Symptom | What you observe | Typical root cause |
+|---|---|---|
+| Repeated work | The agent re-reads a file it already processed | Cross-turn amnesia — no durable record of completed steps |
+| Contradictory output | Later steps contradict decisions made in earlier steps | Context decay — the earlier decision fell out of the window |
+| Phantom references | The agent refers to code, variables, or files that do not exist | Stale state or decayed context — acting on a memory that has drifted from reality |
+| Regression after success | A previously passing check starts failing after more work | The agent overwrote its own earlier fix because it forgot making it |
+
+The harness response to a memory failure is not to make the model remember better — you cannot. It is to externalise the memory the model needs. A scratchpad file that records completed steps and their outcomes. A state object passed into every turn that lists what has changed since the last turn. A checkpoint mechanism that writes intermediate results to disk so they survive context compaction. The refactoring agent should not need to remember the first file's function signatures — it should be able to read them from a structured record it wrote after processing that file.
+
+Memory failures are the quietest class. They rarely produce errors or exceptions. They produce work that looks correct but is built on premises the agent no longer holds — and the gap between the premise and reality is invisible until a downstream check catches the mismatch. A harness that treats memory as the model's problem will chase symptoms forever. A harness that externalises state catches the class at its root.
+
+## Class 2 — Reflection failures
+
+A reflection failure is a failure of self-assessment. The agent cannot accurately judge the quality of its own output, the state of its own progress, or whether it has actually accomplished what it set out to do. The refactoring agent extracts the shared module, updates two of the three import sites, and reports the task complete. It is not lying — it genuinely believes the work is done. It failed to notice the third file, or it noticed and judged that the third file did not need updating, or it updated the third file with the wrong import path and assessed the result as correct. In each case the failure is not in the action but in the judgment about the action.
+
+This is the class where the model's fluency works against it. A capable model produces plausible self-assessments with the same facility it produces plausible code — and a plausible self-assessment that happens to be wrong is harder to catch than a plausible function that happens to be wrong, because the function has a type checker and the self-assessment does not.
+
+<Callout type="note" title="The confidence trap">
+Reflection failures are uniquely dangerous because they terminate the agent's own correction loop. Every other failure class leaves a signal the agent might notice on its next step — an error message, a failing test, a tool that returns unexpected output. A reflection failure produces no signal at all, because the agent has already concluded that everything is fine. The only reliable detector of a reflection failure is a sensor that does not trust the agent's own verdict — an external check that re-evaluates the work independently of the agent's self-report.
+</Callout>
+
+Reflection failures take three forms. The first is premature completion — the agent declares a task done when it is not. This is the most common form, and it scales with task complexity: the more steps a task requires, the more likely the agent is to lose count. The second is quality blindness — the agent produces work that meets the letter of the requirement but misses its intent. The shared module compiles, the imports resolve, but the extraction duplicated a side effect that should have been called once. The agent checked its own work and saw no problem, because checking for semantic correctness requires judgment the agent applied to producing the code but did not apply again when reviewing it. The third is false diagnosis — the agent encounters an error, misidentifies its cause, and applies a fix that addresses the wrong problem. The build fails because of a circular import, but the agent diagnoses a missing export and adds one, which makes the error message change without making the error go away.
+
+| Symptom | What you observe | Typical root cause |
+|---|---|---|
+| "Task complete" with gaps | The agent reports success but acceptance criteria are unmet | Premature completion — incomplete self-checklist |
+| Confident wrong output | The output is well-formed but semantically incorrect | Quality blindness — the agent reviewed structure, not meaning |
+| Fix churn | The agent applies successive fixes without progress | False diagnosis — each fix addresses the wrong root cause |
+| Declining quality in later steps | Early work is strong, later work degrades | Self-assessment fatigue — the agent stops checking as carefully as the task lengthens |
+
+The harness response is to never let the agent be the sole judge of its own work. An external verification step — a test suite, a type checker, a second model reviewing the first model's output — is the only reliable counter to reflection failures. The critical design principle is separation: the system that evaluates the work must not be the same system that produced it. For the refactoring agent, this means running the build and the test suite after every extraction step, not after the agent reports completion — because the agent's report of completion is precisely the thing you cannot trust.
+
+## Class 3 — Planning failures
+
+A planning failure is a failure of decomposition. The agent breaks the task into the wrong steps, orders them badly, chooses an approach that cannot succeed, or fails to recognise when its current approach has stalled. The refactoring agent decides to create the shared module first, then update the three import sites — a reasonable plan. But it writes the module with a public API that does not match the call sites, because it planned the extraction before fully reading all three source files. Now it has a module that two files can use and one file cannot, and it must either redesign the module or force the third file to adapt to an interface that was never designed for it.
+
+Planning failures are the class most people think of when they think of agent failures, and for good reason — they are the most visible. A memory failure is silent. A reflection failure looks like success. A planning failure produces an agent that visibly thrashes: trying one approach, abandoning it, trying another, circling back to the first.
+
+The characteristic forms are these. Task decomposition errors — the agent breaks a task into subtasks that do not, in aggregate, accomplish the original goal. One subtask is missing, or two subtasks overlap and produce conflicting changes, or the subtasks are correct individually but ordered in a way that makes each one undo the previous one's work. Approach selection errors — the agent chooses a strategy that is locally reasonable but globally wrong. It decides to refactor by copy-and-modify rather than extract-and-import, producing code that compiles but doubles the maintenance surface. And the one that draws the most attention: loops. The agent enters a cycle — try, fail, retry the same way, fail again — and cannot escape because it lacks the ability to step back and reconsider its approach from a higher level.
+
+```text
+# A planning loop — the agent's own log
+
+Step 1: Create shared module with function extractCommon()
+Step 2: Update service-a.ts → import extractCommon → build fails (type mismatch)
+Step 3: Fix extractCommon() signature → build fails (service-b.ts now broken)
+Step 4: Fix extractCommon() signature → build fails (service-a.ts broken again)
+Step 5: Fix extractCommon() signature → build fails (service-b.ts broken again)
+Step 6: Fix extractCommon() signature → ...
+
+The agent is not making progress. Each fix undoes the previous fix.
+A planning failure — it needed to read all three call sites before
+designing the interface, not after.
+```
+
+Loop detection is a harness problem, not a model problem. The agent inside the loop cannot see the loop — from its perspective, each step is a fresh attempt to fix a new error. The harness sees the pattern: the same files changing, the same error categories recurring, the diff size oscillating rather than converging. A well-built harness tracks three signals — patch hash repetition (the same diff appearing twice), error category recurrence (the same type of failure on consecutive attempts), and progress stall (the number of passing checks not increasing over N steps). Any two of the three is sufficient to diagnose a loop and intervene.
+
+| Symptom | What you observe | Typical root cause |
+|---|---|---|
+| Thrashing between fixes | The agent alternates between two states without converging | Loop — no higher-level reassessment of the approach |
+| Missing subtask | The final output is missing an entire dimension of the requirement | Decomposition error — the plan omitted a necessary step |
+| Correct parts, broken whole | Each file change is reasonable; together they conflict | Ordering error — subtasks interfere because they ran in the wrong sequence |
+| Strategy mismatch | The approach produces technically valid but practically wrong output | Approach selection error — the agent chose a path that cannot reach the goal |
+
+The harness response to a planning failure has two tiers. The first is detection — the loop detector, the progress tracker, the budget monitor that notices when an agent has spent 80% of its step allowance on 20% of the task. The second is intervention — and the intervention is not "try harder." It is escalation: stop the current approach, surface the trajectory to a supervisor (human or model), and restart with a revised plan. A harness that retries a failed plan with the same decomposition is not recovering from a planning failure. It is compounding one.
+
+## Class 4 — Action failures
+
+An action failure is a failure of execution. The agent knows what to do and chooses to do it — but the doing goes wrong. It calls the wrong tool, passes the right tool the wrong arguments, misreads a tool's output, or applies a correct result to the wrong target. The refactoring agent needs to create a new file. It calls the file-write tool — but passes the path of an existing service file instead of the new module path, overwriting production code with the extracted utility. The plan was correct. The intent was correct. The action was wrong.
+
+Action failures are the most mechanical class, and for that reason they are the most amenable to harness prevention. Every action an agent takes passes through a tool interface — a typed function with defined parameters and a defined return schema. Each of those surfaces is a place where a guide or a sensor can intervene.
+
+The forms divide along the tool-call boundary. Pre-call failures are errors in selecting or parameterising the tool: the agent calls `file_read` when it needs `file_write`, or calls `file_write` with a relative path that resolves to the wrong directory. Post-call failures are errors in interpreting the tool's result: the tool returns a truncated output that the agent treats as complete, or returns an error wrapped in a success envelope that the agent reads as a success. And there is a third, subtler form — side-effect blindness — where the tool call succeeds at its stated purpose but produces a side effect the agent does not account for. The file-write succeeds, but it also triggered a file-watcher that kicked off a build, and the agent's next step assumes no build is running.
+
+| Symptom | What you observe | Typical root cause |
+|---|---|---|
+| Wrong target | A correct operation applied to the wrong file, record, or resource | Argument error — the agent passed an incorrect identifier |
+| Silent data loss | A file or resource is overwritten or deleted without the agent noticing | Side-effect blindness — the tool did more than the agent expected |
+| Misread result | The agent's next step is inconsistent with what the tool actually returned | Output parsing error — the agent misinterpreted the tool's response |
+| Tool not found | The agent attempts to call a tool that does not exist or is misspelled | Selection error — the agent hallucinated a tool name or capability |
+
+```typescript
+// Action-failure prevention — a guard layer around tool calls
+
+// 1. Pre-call validation: catch argument errors before execution
+function guardedWrite(path: string, content: string) {
+  // Does the path resolve inside the workspace?
+  if (!path.startsWith(WORKSPACE_ROOT)) {
+    throw new ActionGuardError("Path escapes workspace: " + path);
+  }
+  // Is this an overwrite? Require explicit confirmation.
+  if (existsSync(path)) {
+    throw new ActionGuardError("File exists — use overwrite tool: " + path);
+  }
+  return writeFile(path, content);
+}
+
+// 2. Post-call validation: catch output misreads after execution
+function guardedRead(path: string): FileContent {
+  const result = readFile(path);
+  // Was the output truncated?
+  if (result.truncated) {
+    return { ...result, warning: "Output was truncated at " + result.bytes + " bytes" };
+  }
+  return result;
+}
+```
+
+The harness response to action failures is defence in depth across the tool boundary. Before the call: typed schemas that reject malformed arguments, path validators that prevent workspace escapes, confirmation gates on destructive operations. After the call: output validators that flag truncation, error-envelope parsers that distinguish real success from wrapped failure, and — for the most critical operations — a diff review that compares the state before and after the tool call against what the agent said it intended. The refactoring agent should not be able to overwrite a source file by accident, because the tool interface should require a different call for "create new file" and "modify existing file" — and the harness should enforce that distinction even when the agent does not.
+
+Action failures are the class where good tool design prevents more failures than good prompting does. A tool with a clear name, a typed schema, an honest error contract, and no silent side effects is a tool that an agent can use correctly. A tool with ambiguous semantics and overloaded parameters is an invitation to action failures, no matter how capable the model is. The quality of the tool surface is a harness decision, and it is one of the highest-leverage decisions a builder makes.
+
+## Class 5 — System failures
+
+A system failure is a failure of infrastructure. The agent's reasoning is sound, its plan is correct, its actions are well-formed — and it fails anyway, because the ground shifted beneath it. The refactoring agent is midway through its third file update when the API returns a rate-limit error. The agent retries — and the retry pushes its context window past the budget, triggering a compaction that drops the content of the first two files it already processed. Now it has a system failure layered on top of a memory failure, and the harness has to untangle both.
+
+System failures are the only class that originates entirely outside the model. They are infrastructure events — and they are the class that production systems encounter most often and demos encounter least, which is why they receive the least attention in the literature and cause the most damage in deployment.
+
+The characteristic forms are: context overflow — the accumulated history of tool calls, observations, reasoning traces, and prior outputs exceeds the model's context window, forcing truncation or rejection. Rate limits — the provider throttles requests, and the agent stalls or retries into a degraded state. Timeouts — a tool call, an API request, or the agent's own reasoning step exceeds a time boundary and is killed mid-execution. Tool unavailability — a tool the agent depends on is down, returns errors, or has changed its interface since the agent's prompt was written. And cost runaway — the agent enters an expensive loop (often a planning failure masked as a system failure) and exhausts its token budget before completing the task.
+
+| Symptom | What you observe | Typical root cause |
+|---|---|---|
+| Mid-task degradation | Output quality drops sharply partway through a long task | Context overflow — earlier context was silently truncated |
+| Stalled execution | The agent stops producing output for an extended period | Rate limit or timeout — the infrastructure is blocking progress |
+| Sudden tool errors | A tool that worked three steps ago now returns errors | Tool unavailability — infrastructure or API change |
+| Budget exhaustion | The agent runs out of tokens or API calls before finishing | Cost runaway — often a loop or an overly verbose reasoning trace |
+| Partial completion | The agent completes some steps correctly and then stops | Timeout — the execution was killed by a time boundary |
+
+The harness response to system failures is operational engineering — the same discipline that keeps databases and distributed services running. For context overflow: token budgets per phase, proactive compaction before the window fills, and chunked processing that breaks large tasks into segments that each fit within the budget. For rate limits: exponential backoff with jitter, request queuing, and provider failover when the primary is throttled. For timeouts: checkpointing intermediate state so the agent can resume rather than restart. For tool unavailability: health checks before the agent begins, graceful degradation paths when a non-critical tool is down, and explicit failure — not silent swallowing — when a critical tool is unreachable.
+
+System failures are the class where the harness earns its name most literally. The model cannot handle a rate limit — it has no concept of one. The model cannot manage its own context window — it does not know how large it is. The model cannot checkpoint its own state — it has no persistence. Every one of these responses is harness infrastructure, and every one of them is invisible in a demo and indispensable in production. A system that works on a five-minute task in a test environment and fails on a forty-minute task in production is almost certainly failing in this class — and the fix is never in the prompt.
+
+## The cascade
+
+The five classes are distinct, but they do not occur in isolation. The most difficult failures in practice are cascades — a failure in one class that triggers a failure in another, producing a symptom that points to the wrong root cause. The refactoring agent hits a rate limit (system), retries and overflows its context (system), loses its record of completed steps (memory), re-processes a file it already handled (memory), produces a conflicting change (planning), and reports the task complete with confidence (reflection). The observable symptom is a broken build. The root cause is a rate-limit retry policy that did not account for context growth. Four classes deep, and the only one that matters for the fix is the first.
+
+A harness that classifies failures correctly handles cascades by tracing backward. The symptom is the last class in the chain; the fix belongs to the first. This is why the taxonomy is not academic — it is operational. A team that names failures precisely builds responses that reach the root. A team that treats every failure as "the agent got confused" builds responses that address nothing.
+
+| Cascade pattern | What you see | What actually happened |
+|---|---|---|
+| System → Memory → Planning | Agent loops on a task it already completed | Rate limit caused retry, retry caused context overflow, overflow erased progress record |
+| Reflection → Action | Agent applies a well-formed fix to the wrong file | Agent misjudged which file contained the bug, then executed perfectly on the wrong target |
+| Planning → Reflection | Agent declares success on a partial solution | Bad decomposition omitted a subtask, agent's self-check did not catch the gap |
+| Memory → Planning → Action | Agent calls a tool with stale arguments | Earlier context decayed, plan used outdated state, tool received wrong parameters |
+
+## Why this is the capstone
+
+The failure taxonomy is the last page in The Craft, and it is here for a reason. Read backward through the pillar and every concept resolves into a defence against one or more of these five classes. Harness engineering — guides and sensors — is the discipline of building the controls that prevent and detect failures across all five classes. Memory and context engineering exist to prevent Class 1. Evals and observability exist to prevent Class 2. The five workflow patterns and multi-agent orchestration exist to prevent Class 3. Tool design and MCP exist to prevent Class 4. And the operational infrastructure that a production harness requires — budgets, checkpoints, backoff, health checks — exists to prevent Class 5.
+
+Every concept in The Craft exists to prevent or recover from these failures. The taxonomy is the frame that makes that visible — and it is the lens a practitioner carries into every system they build, every incident they diagnose, and every harness they improve. The discipline is not building agents that do not fail. It is building harnesses that know how they fail — and that respond to each class with the response that class actually needs.

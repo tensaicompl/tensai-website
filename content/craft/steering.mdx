@@ -5,8 +5,168 @@ slug: "steering"
 definition: "Mechanistic activation control and operational instruction-fidelity."
 spineConcepts: [13]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 8
 ---
 
-<ContentPlaceholder title="Steering" />
+Steering is the discipline of making a model do what you meant — not approximately, not most of the time, but reliably and for the right internal reasons. It operates on two planes. The first is mechanistic: research-grade interventions on a model's internal activations — steering vectors, representation engineering, sparse-autoencoder feature clamping — that alter what the model computes, not merely what it is told. The second is operational: the practical craft of system prompts, constraint documents, structured outputs, temperature control, and tool-forcing that practitioners use every day to keep agents on task. Most production work lives entirely in the operational plane. The mechanistic plane is the research frontier that explains why those operational techniques work when they do — and why they fail when they don't.
+
+## A running example: the compliant agent
+
+Hold one example for the rest of the page. You are building a coding agent that must follow a repository's conventions — naming, test coverage, import ordering — reliably enough that its output passes review without human correction. The conventions are written in an `AGENTS.md` file. The agent reads it. Sometimes it follows every rule. Sometimes it ignores one. Sometimes it invents a convention that was never there. The question this page answers is: what actually determines whether the agent complies, and what can you do about it — at the surface and beneath it.
+
+That question has two halves, and they live at different altitudes.
+
+## The mechanistic plane
+
+Inside a transformer, every token the model produces is the result of a high-dimensional activation vector flowing through layers of attention and feedforward computation. Mechanistic steering intervenes directly on those activations — changing not what the model reads but what it computes. Three families of technique define the current frontier.
+
+### Activation patching
+
+Activation patching — also called causal tracing or interchange intervention — is the surgical tool. You run the model on two inputs: a clean run where it behaves correctly and a corrupted run where it does not. Then you replace specific activations from the clean run into the corrupted run, one component at a time, and observe which replacements restore correct behaviour. The component whose activation is sufficient to flip the output is the one causally responsible for the behaviour.
+
+For the coding agent, imagine two runs of the same prompt: one where the agent follows the naming convention and one where it does not. Activation patching would identify which attention heads or MLP layers encode the convention-following behaviour — the internal locus of compliance. This is not a practical tool for production systems today. It is the diagnostic that tells you where steering happens inside the model, which in turn tells you why surface-level instructions sometimes fail to reach the computation that matters.
+
+The technique has a known blind spot: self-repair. When you ablate one component, later layers can partially compensate, masking the true causal structure. Best practice is to patch at multiple granularities — individual heads, full layers, residual-stream positions — and cross-reference the results.
+
+### Steering vectors and representation engineering
+
+Representation engineering, formalised by Andy Zou and collaborators, treats high-level behaviours — honesty, helpfulness, harmlessness — as linear directions in the model's activation space. The method is straightforward: run the model on contrastive prompt pairs ("You are truthful" versus "You are deceptive"), record the activations at a chosen layer, and take the difference. That difference vector — the steering vector — is a direction in activation space that encodes the behavioural contrast.
+
+Add the vector during inference and the model shifts toward the target behaviour. Subtract it and the model shifts away. No retraining, no fine-tuning — a linear intervention on the forward pass.
+
+Anthropic's persona-vector work extended this to a systematic pipeline. Researchers identified directions for traits like sycophancy, power-seeking, and hallucination, then demonstrated three applications: monitoring a model's drift along those directions over training, subtracting an unwanted persona vector at inference to correct behaviour, and adding persona vectors during fine-tuning to steer training itself. The key finding was that steering during training — not just at inference — limits undesirable trait acquisition while better preserving general capabilities.
+
+The limitations are real and well-documented. A study across multiple models found that steering-vector effectiveness is highly variable across inputs and that steerability is mostly a property of the dataset rather than the model. Spurious biases — correlations in the contrastive data that are not the concept you intended — can dominate the vector. A steering vector that works on the prompts used to derive it may fail on distribution-shifted inputs. This is not a solved technique. It is a research tool with demonstrated power and demonstrated fragility.
+
+### Sparse autoencoders and feature-level control
+
+Sparse autoencoders (SAEs) decompose a model's dense activation vectors into interpretable features — individual directions that correspond to recognisable concepts. Anthropic's landmark work on Claude 3 Sonnet extracted millions of such features, each activating on semantically coherent inputs: one for the Golden Gate Bridge, one for sycophantic praise, one for code formatting conventions.
+
+Feature steering — clamping a specific SAE feature to a high activation value during inference — produces dramatic, targeted behavioural shifts. The Golden Gate Claude demonstration made this visceral: with the bridge feature clamped, the model mentioned the Golden Gate Bridge in every response, wove it into love stories, recommended driving across it as financial advice. The demonstration was entertaining. The underlying technique is serious — it shows that individual behavioural dimensions can be isolated and amplified or suppressed with surgical precision.
+
+The mechanism works by passing the model's mid-layer activations through the SAE, overriding a specific latent dimension, then passing the modified activations back through the remaining layers. The decoder translates the clamped feature into a distributed activation pattern that propagates through the rest of the network.
+
+| Technique | What it does | Granularity | Production-ready |
+|---|---|---|---|
+| Activation patching | Identifies which components cause a behaviour | Per head, per layer | Diagnostic only |
+| Steering vectors | Shifts behaviour along a linear direction | Per layer, per forward pass | Research; fragile OOD |
+| SAE feature clamping | Amplifies or suppresses a specific concept | Per feature, per forward pass | Research; brittle on structured output |
+
+The production-readiness column is the honest part of that table. SAE steering on structured output — JSON, code, formatted text — remains unreliable. A study found that clamping features degrades format compliance, producing broken JSON and malformed output even when the semantic steering succeeds. The technique that can make a model obsess over bridges cannot yet make it reliably follow a coding convention without corrupting the syntax around the compliance.
+
+What mechanistic steering gives the practitioner today is not a set of production tools but a causal account of why operational techniques work. When your system prompt succeeds in making the agent follow a convention, it is because the prompt's tokens activated the right internal representations — the same representations a steering vector would target directly. When the prompt fails, it is because the relevant computation lives in a part of the activation space the prompt's tokens did not reach. The mechanistic plane is the explanation; the operational plane is the practice.
+
+<Callout type="note" title="The gap between explanation and control">
+Mechanistic interpretability can now identify the internal features responsible for a behaviour, and in controlled settings it can amplify or suppress them. What it cannot yet do reliably is compose multiple steerings — enforce a naming convention and a test-coverage requirement and an import-ordering rule simultaneously — without the interventions interfering with each other or degrading output quality. Operational steering handles composition through the blunter but more robust mechanism of natural-language instruction. The research frontier is closing this gap; the practice, for now, lives on the other side of it.
+</Callout>
+
+## The operational plane
+
+Operational steering is what practitioners actually do. It is the set of techniques — all applied at the surface, none touching model internals — that raise the probability of an agent following its instructions. The coding agent's `AGENTS.md` is an operational steering mechanism. So is the system prompt, the temperature setting, the structured-output schema, and the decision to force a tool call rather than let the model choose. Each is a lever; none is sufficient alone; and the discipline is in knowing which lever governs which failure mode.
+
+### The instruction hierarchy
+
+Every model provider implements a priority hierarchy for instructions, and understanding it is the first operational skill. Anthropic's architecture is explicit: the model's trained values sit at the top and cannot be overridden; the operator's system prompt sits below and defines the product's constraints; the user's messages sit below that and operate within whatever space the operator allows.
+
+In Claude Code, the practical hierarchy is: the built-in system prompt (Anthropic-controlled), session-level injected context, then `CLAUDE.md` and runtime inputs. Instructions injected at the system-prompt level carry stronger positional weight during attention than instructions arriving later as user context. This is not an implementation detail — it is the mechanism that determines which instruction wins when two conflict.
+
+For the coding agent, this means: a convention written into the system prompt is more likely to be followed than the same convention written into a user message that retrieves the `AGENTS.md` content. Position in the context window is a steering lever, and it is one most practitioners underuse.
+
+### System prompts and constraint documents
+
+A system prompt is the primary operational guide — the feedforward control, in the harness-engineering vocabulary, that shapes the model's attempt before it begins. The discipline of writing one well is not prompt engineering in the casual sense. It is specification writing.
+
+The effective patterns are consistent across providers and well-documented:
+
+- **Be specific, not aspirational.** "Follow the naming convention in the project's AGENTS.md" is weaker than "All function names must use camelCase. All React components must use PascalCase. All test files must be named `*.test.ts`." The model cannot follow a pointer to a convention it has not internalised; it can follow the convention stated directly.
+- **State constraints as rules, not preferences.** "Try to keep functions short" is a suggestion the model will weigh against other pressures. "No function may exceed 30 lines" is a constraint it can verify against.
+- **Front-load the critical instructions.** Attention decays over long contexts. The instructions that matter most belong in the first few hundred tokens of the system prompt, not buried after a page of background.
+- **Separate concerns.** Group instructions by kind — formatting rules, behavioural constraints, domain knowledge, tool-use rules — so the model can attend to the relevant cluster when a specific kind of decision arises.
+
+The `AGENTS.md` and `CLAUDE.md` convention — now adopted across 60,000+ open-source projects — is a constraint document that sits at the repository level. It is a guide in the harness sense: read before the agent acts, shaping the attempt. Its effectiveness depends on two things: whether the model's context window actually contains the document's content at decision time, and whether the instructions are stated with enough precision to survive the model's tendency to generalise and approximate.
+
+Research across 256 models found that provider training methodology — not model size or architecture — is the dominant factor in instruction-adherence performance. The best models achieve above 85% strict compliance on verifiable instructions; the median is substantially lower. The gap between providers ranges from 33% to 79% average adherence, which means the choice of model is itself an operational steering decision.
+
+### Structured outputs and constrained decoding
+
+When the agent's output must conform to a schema — JSON, a typed function call, a specific format — structured-output enforcement is the strongest operational lever available. It works at the decoding level: a logit processor sits between the model's raw output probabilities and the sampling step, masking every token that would violate the schema by setting its probability to zero. The model literally cannot produce invalid output, because the invalid tokens are removed from the vocabulary at each generation step.
+
+```typescript
+// Constrained decoding in practice.
+// The schema is the steering mechanism — not a suggestion, a constraint.
+const result = await client.messages.create({
+  model: "claude-opus-4-6-20250514",
+  max_tokens: 1024,
+  system: "You are a code reviewer. Analyse the diff and return structured feedback.",
+  messages: [{ role: "user", content: diff }],
+  // The tool schema forces the output shape.
+  // The model cannot return free-form text — only valid JSON
+  // matching this structure.
+  tools: [{
+    name: "review_result",
+    description: "Structured code review output",
+    input_schema: {
+      type: "object",
+      properties: {
+        compliant: { type: "boolean" },
+        violations: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              rule: { type: "string" },
+              file: { type: "string" },
+              line: { type: "number" },
+              fix: { type: "string" }
+            },
+            required: ["rule", "file", "line", "fix"]
+          }
+        }
+      },
+      required: ["compliant", "violations"]
+    }
+  }],
+  tool_choice: { type: "tool", name: "review_result" }
+});
+```
+
+The critical distinction: constrained decoding guarantees syntactic conformance, not semantic correctness. The model will produce valid JSON that matches the schema. Whether the content of that JSON is accurate — whether the violation it reports is real, whether the line number is correct — is a question no schema can answer. Structured output eliminates format failures entirely and has no effect on judgment failures. It is the strongest lever for the narrowest problem.
+
+### Tool forcing
+
+Tool forcing — requiring the model to call a specific tool rather than choosing freely — is constrained decoding applied to the action space. Instead of letting the agent decide whether to run the test suite, you force the tool call. The agent's autonomy over what to do is removed; its autonomy over how to use the tool's output remains.
+
+For the coding agent, forcing a lint check after every edit is a steering mechanism. The agent cannot skip the check, cannot decide the code "looks fine" without running it. The lint output then feeds back as context for the next step — a sensor output that becomes a guide, in the harness vocabulary. Tool forcing is the operational equivalent of removing a degree of freedom from the agent's action space, and it is the single most reliable way to ensure a specific step always happens.
+
+### Temperature as a steering lever
+
+Temperature controls the entropy of the model's token sampling. At temperature zero, the model always selects the highest-probability token — deterministic, repeatable, conservative. As temperature rises, lower-probability tokens gain a larger share of the sampling distribution, producing more diverse and less predictable output.
+
+For steering, the implication is direct: lower temperature means higher instruction fidelity. When the model is forced toward its highest-confidence tokens, it is more likely to follow the patterns most strongly represented in its training and in the current context — which includes the system prompt's instructions. Higher temperature introduces variation that can override those patterns.
+
+The practical guidance is simple. For tasks where compliance matters more than creativity — convention-following, format adherence, rule application — use temperature zero or near-zero. For tasks where diversity matters — brainstorming, creative writing, generating test cases — raise it. Temperature is not a tuning knob for quality. It is a steering lever for the tradeoff between conformity and exploration.
+
+One caveat: even at temperature zero, model outputs are not fully deterministic across all providers. Implementation details — floating-point arithmetic order, batching, hardware variation — can produce different outputs from identical inputs. "Deterministic" in practice means "highly reproducible," not "guaranteed identical."
+
+## The composition problem
+
+The hardest operational steering problem is not making an agent follow one instruction. It is making it follow twenty. The coding agent's `AGENTS.md` contains a naming convention, a test-coverage rule, an import-ordering standard, a maximum function length, a ban on certain library functions, and a requirement to add JSDoc comments to public APIs. Each rule, stated alone, the model follows with high reliability. Stated together, compliance degrades — not because the model rejects the rules, but because attending to all of them simultaneously exceeds the model's ability to hold every constraint active during generation.
+
+This is the composition problem, and it is the reason operational steering is a discipline rather than a configuration. The mitigations are structural:
+
+- **Decompose the task.** Instead of one agent following twenty rules in a single pass, use a workflow: one step generates the code, a second step checks the naming convention, a third checks test coverage. Each step follows fewer rules, and each follows them better. The workflow patterns from earlier in The Craft are, in this light, steering architectures — structures that reduce the instruction load per step.
+- **Layer computational sensors.** A linter enforces formatting rules deterministically. A type checker enforces interface contracts. Every rule that can be checked computationally should be — removing it from the instruction set the model must hold in attention and placing it in a sensor that catches violations after the fact. The fewer soft constraints the model must juggle, the more reliably it follows the ones that remain.
+- **Prioritise within the prompt.** When twenty rules cannot be decomposed or offloaded, order them by consequence. The rules whose violation is costliest belong first. The model's attention to instructions decays with position; match the importance gradient to the attention gradient.
+
+The composition problem is also the bridge between the two planes. Mechanistic research shows that different behaviours are encoded in different directions in activation space — and that steering multiple directions simultaneously produces interference, degrading all of them. The operational observation that an agent follows each rule well in isolation but poorly in combination is the surface expression of the same geometric fact. The constraint document that lists twenty rules is, at the mechanistic level, asking the model to maintain activation along twenty directions at once. The research frontier is learning how those directions interact; the practice, for now, is to reduce the number the model must hold simultaneously.
+
+## What the two planes teach each other
+
+The operational practitioner asks: "How do I make the agent follow this instruction?" The mechanistic researcher asks: "Why does this instruction sometimes fail to reach the computation that produces the output?" They are asking the same question at different altitudes, and each answer informs the other.
+
+Mechanistic work explains why system-prompt position matters — early tokens shape the residual stream that later computation reads, and instructions that arrive after the model's internal representations have already formed are competing against established activation patterns rather than shaping new ones. It explains why specific, rule-like instructions outperform vague ones — a precise rule activates a narrower, more coherent region of the representation space, while a vague instruction activates a diffuse cloud of partially relevant features. It explains why structured-output enforcement is so much more reliable than instructed formatting — constrained decoding operates on the logits directly, bypassing the entire activation pathway that might or might not encode the format instruction.
+
+Operational experience, in turn, tells mechanistic researchers which behaviours matter. The failure modes that practitioners encounter — an agent that follows nine rules and ignores the tenth, an agent that invents a convention the document never mentioned, an agent that follows the letter of an instruction while violating its intent — are the phenomena the mechanistic programme must eventually explain at the circuit level. The gap between the two planes is real, but it is closing, and the practitioners and researchers who work across it are producing the most consequential results in either domain.
+
+The next concept — Code and Doc Indexing — takes up the grounding problem that sits underneath everything this page described. Steering an agent toward compliance with a codebase's conventions requires the agent to have accurate, current knowledge of what those conventions are and what the code actually looks like. That is not a steering problem. It is an indexing problem — and it is the subject of the page that follows.

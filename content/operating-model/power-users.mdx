@@ -5,8 +5,66 @@ slug: "power-users"
 definition: "The three-tier distribution — and where governance most often fails."
 spineConcepts: [8, 15]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 2
 ---
 
-<ContentPlaceholder title="Power Users vs Consumers" />
+Every organisation that adopts AI at scale ends up with three tiers of people using it — builders who create the capability, power users who compose it into workflows for their teams, and consumers who interact with whatever those two groups produced. The tiers are not a policy choice. They emerge on their own, the way shadow IT emerged before them, whether or not anyone drew the org chart that way. The question that matters is not whether your organisation has all three tiers — it does — but whether your governance framework accounts for all three. In most enterprises, it accounts for two and leaves the most dangerous one ungoverned.
+
+## The three tiers
+
+The distinction is about what each tier can do, not about seniority or title. A principal engineer and a regional sales director can both be power users; a junior analyst and a board member can both be consumers. The tiers are defined by the permissions the platform grants and the autonomy those permissions create.
+
+Hold one example through the rest of the page: a large insurer deploying AI across claims processing. The same organisation, the same models, three entirely different relationships with the technology.
+
+**Builders** are the platform team and the Centre of Excellence engineers. They write the skills, train the evaluation pipelines, set the guardrails, and publish tested components to an internal registry. In the insurer, the builders create a claims-assessment skill — a packaged capability that reads a policy document, cross-references it against a loss report, and produces a structured coverage recommendation. The skill ships with an evaluation suite, a data-handling policy, and a defined contract for what it accepts and returns. Builders operate inside engineering standards: code review, CI pipelines, version control, security scanning. Their work is governed by the same disciplines that govern any production software.
+
+**Power users** are the domain experts — underwriting managers, claims supervisors, operations leads — who take the skills the builders published and compose them into workflows for their teams. They do not write code. They configure. In the insurer, a claims supervisor connects the claims-assessment skill to an email-ingestion trigger and a Slack notification step, building a workflow that automatically triages incoming claims overnight and flags the ones that need human review by morning. She built nothing from scratch. She assembled published components — but the assembly itself is new, untested, and running against live policyholder data.
+
+**Consumers** are end users who interact with a finished product through a simple interface. In the insurer, a junior claims handler opens the morning queue, sees the overnight triage results, and clicks through each flagged claim. He never chose which model to use, never decided what data to feed it, never configured a trigger. His interaction is bounded by a surface someone else designed. He can misread an output, but he cannot wire a model to a data source it was never meant to see.
+
+| | Builders | Power Users | Consumers |
+|---|---|---|---|
+| What they do | Create skills, agents, tools | Compose existing skills into workflows | Use finished products |
+| How they work | Write code, build evaluation pipelines | Configure, connect, assemble — no code | Click, read, respond |
+| What they can access | Full platform, all data sources | Published skills, approved connectors, team data | A single interface, pre-filtered outputs |
+| Governed by | Engineering standards, CI/CD, code review | Usually nothing | The interface itself |
+| Risk they create | Known — same as any software | High and invisible | Low — bounded by design |
+
+The last two rows of that table are the whole problem.
+
+## The governance gap
+
+Builders are governed because they are engineers, and engineering has spent decades building the machinery of accountability — pull requests, test suites, deployment gates, incident review. Consumers are governed because they have no meaningful permissions; the interface constrains them the way a form constrains a user who can only fill in the fields provided. Power users sit between the two, and governance frameworks — almost without exception — treat them as one or the other: either as builders who should follow engineering process (which they cannot, because they do not write code and do not live in the development toolchain) or as consumers who pose no risk (which they are not, because the platform gave them real autonomy over real data).
+
+This is where it breaks. Return to the insurer. The claims supervisor who built the overnight triage workflow is operating with meaningful power: she chose which data source to connect, which trigger condition to set, which team channel receives the output. If she connects the claims-assessment skill to a data source that includes sensitive medical records the skill was never evaluated against, the model will process them anyway — it has no opinion about what it should not see. If she sets the trigger too broadly, hundreds of claims run through the model overnight and the results land in a Slack channel visible to staff who lack the clearance to see them. If she chains two skills together — claims assessment followed by a summarisation skill that was built for internal memos, not policyholder communications — the output might reach a customer in a tone and format nobody reviewed.
+
+None of these failures require malice or incompetence. They require only a capable person doing reasonable work without the guardrails that would have caught the problem. The claims supervisor is not breaking policy. There is no policy. She is not bypassing a gate. There is no gate. She is doing exactly what the platform was designed to let her do — and no one designed the governance to match.
+
+The numbers confirm the pattern. Enterprises average 12 AI agents today and are projected to reach 20 within two years, with half of those agents operating in isolated silos with no shared context or unified governance. Organisations without formal governance for citizen-built applications experience security violations and compliance breaches at rates three to four times higher than those with established structures. Shadow AI — the use of unsanctioned or ungoverned AI tools — already accounts for 20% of all data breaches, at an average cost of $4.63 million per incident, a premium over the $3.96 million average for standard breaches. The gap is not theoretical. It is being measured in audit findings and incident reports.
+
+The instinct is to respond by restricting power users — locking down the platform until only builders can do anything meaningful. That instinct is wrong, and it is wrong for the same reason that banning spreadsheets never worked: the value power users create is real, and if the sanctioned platform will not let them create it, they will find an unsanctioned one. The 65% of employees who bypass IT to use unauthorised AI tools are not acting out of defiance. They are acting because the governed path does not serve them.
+
+## What governance for power users actually requires
+
+The right response is not restriction. It is structure — governance designed specifically for the tier that has autonomy without engineering process. Three controls, together, close most of the gap.
+
+**Scoped permissions, not open access.** A power user should be able to compose any published skill — but only with data sources, triggers, and output channels that have been pre-approved for that skill's risk tier. The claims supervisor can connect the claims-assessment skill to the claims database, because that pairing was evaluated and cleared. She cannot connect it to the medical-records store, because that pairing was not. The platform enforces this, not a policy document she is expected to have read. Microsoft's Copilot Studio calls this a zoned governance model — three zones of increasing autonomy, each with different permissions and review requirements. The principle is the same regardless of the platform: the permission boundary is infrastructure, not instruction.
+
+**Workflow review before production.** A builder's code goes through review before it ships. A power user's workflow should go through an equivalent gate — lighter, faster, but present. When the claims supervisor finishes assembling her triage workflow, it enters a staging state visible to the Centre of Excellence. A reviewer — human or automated — checks what data it touches, what outputs it produces, and where those outputs go. The review need not be deep engineering inspection. It is a compatibility check: do the components she connected belong together, and do the outputs land where they should. Salesforce's Agentforce enforces this by requiring that agents operate within the deploying user's permission model — field-level security, object access, and sharing rules all carry through — so the review is partly structural. But structural enforcement alone is not enough when the composition itself is novel.
+
+**Visibility and audit.** Every workflow a power user creates is registered, versioned, and observable. Not as a punitive measure — as infrastructure. When the overnight triage workflow produces a coverage recommendation a policyholder disputes, the insurer needs to trace which skills ran, what data they consumed, which version of each skill was active, and who assembled the workflow. Without that trail, the dispute is unanswerable. The agent catalog — covered on the next page — is the infrastructure that makes this possible: a registry where every skill, workflow, and agent is listed with its owner, its risk tier, its data permissions, and its usage history.
+
+<Callout type="note" title="The test for power-user governance">
+A governance framework that works for power users passes one test: a domain expert can assemble a useful workflow from published components, in an afternoon, without writing code — and the organisation can trace every decision that workflow made, with the same confidence it traces a decision made by production software. If the framework cannot pass both halves of that test — the speed half and the traceability half — it will fail. Restrict too much and the power users leave for ungoverned tools. Trace too little and the organisation cannot answer for what they built.
+</Callout>
+
+## Why the tiers are not a hierarchy
+
+It is tempting to read the three tiers as a ladder — consumers at the bottom, builders at the top, power users somewhere in between. That reading is wrong, and it leads to the wrong organisational design. The tiers are not levels of skill or seniority. They are roles in a distribution system, and they depend on each other the way a supply chain depends on every link.
+
+Builders without power users produce capability that never reaches the business. The claims-assessment skill sits in a registry, technically excellent and entirely unused, because no one in underwriting knows it exists or can wire it into their daily work. Power users without builders produce ungoverned improvisation — workflows assembled from whatever tools are available, with no evaluation, no guardrails, and no audit trail. Consumers without either produce nothing at all; they wait for someone to hand them a finished product, and while they wait, the organisation's competitors ship.
+
+The three tiers, governed together, form a distribution system for AI capability. Builders create and certify. Power users distribute and adapt. Consumers use and feed back. The system works when all three are supported and governed in proportion to the autonomy each holds — and it fails, reliably, when governance is designed for only two of the three.
+
+The infrastructure that makes this distribution system governable — the registry, the risk tiers, the ownership model — is the agent catalog, and it is the subject of the next page.

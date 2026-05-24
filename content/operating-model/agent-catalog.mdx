@@ -5,8 +5,160 @@ slug: "agent-catalog"
 definition: "Internal registries for agents, skills, and tools — owned, scored, risk-tiered."
 spineConcepts: [8, 10, 14]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 3
 ---
 
-<ContentPlaceholder title="The Agent Catalog" />
+An agent catalog is a single, structured registry of every AI capability an organisation operates — every agent, every published skill, every tool — with an owner, a risk tier, a score history, and a current operational status attached to each entry. It is the infrastructure that makes AI capability discoverable, governed, and reusable at scale. Without one, the organisation cannot answer questions that sound trivially simple and turn out to be structurally impossible: how many agents do we have, who owns this one, what breaks if this model is deprecated, and which of our systems would the EU AI Act classify as high-risk.
+
+## The problem the catalog solves
+
+Start with a concrete situation and hold on to it for the rest of the page. A mid-sized financial-services firm has been building with AI for two years. The fraud-detection team runs an agent that monitors transactions. The customer-support team runs an agent that drafts replies to complaints. The compliance team built a document-review agent six months ago and handed it to a contractor who has since left. Marketing has three chatbots nobody can quite account for. The CTO's office knows about some of these. Nobody knows about all of them.
+
+This is not negligence — it is the natural consequence of building AI the way organisations built SaaS five years ago: team by team, use case by use case, with no central record. The industry has a name for it now — agent sprawl — and the pattern is universal. Gartner projects the average Fortune 500 company will operate over 150,000 agents by 2028. At that density, the absence of an inventory is not a gap in process. It is a structural failure in governance.
+
+The catalog is the fix. Not a dashboard, not a monitoring tool, not an observability layer — those come later and depend on this. The catalog is the foundational data structure: a registry that records what exists, who owns it, how risky it is, and whether it is working. Everything else — governance reviews, deprecation planning, compliance reporting, cost attribution — queries the catalog. Without it, those functions have nothing to query.
+
+<Callout type="note" title="The question that reveals the gap">
+Ask any leadership team: "If the model provider deprecated GPT-4o tomorrow, which of our production systems would break?" If the answer takes longer than a minute — or if it requires someone to walk the building asking teams what they built — the organisation does not have a catalog. It has a collection of things it cannot see.
+</Callout>
+
+## Three registries, one catalog
+
+The catalog is not a single flat list. It is three registries, each tracking a different kind of AI asset, linked by cross-references that make the relationships between them explicit.
+
+**The agent registry** is the primary registry. Every deployed agent — the fraud monitor, the support drafter, the compliance reviewer — gets an entry. That entry records the agent's owner (a named person, not a team), its capability description, the model it runs on, its risk tier, its upstream and downstream dependencies, its evaluation score history, and its current operational status. The entry is not documentation in the informal sense. It is a governed record with a schema, a last-reviewed date, and a promotion workflow that gates deployment.
+
+**The skill registry** tracks reusable skills — packaged capabilities that agents consume. A retrieval-augmented-generation pipeline, a structured-output formatter, a domain-specific classifier — each is published with a version, usage metrics, and governance metadata. Skills are the unit of reuse. When two teams independently build the same retrieval pattern, the skill registry is where the duplication becomes visible and the consolidation becomes possible.
+
+**The tool registry** tracks the tools agents can call — APIs, databases, file systems, external services — with their schemas, providers, access policies, and data-sensitivity classifications. A tool entry answers the question the security team will eventually ask: what can this agent actually touch, and who approved that access.
+
+The three registries compose into a dependency graph. The fraud-monitoring agent (agent registry) consumes a transaction-scoring skill (skill registry) that calls a payment-processor API (tool registry). When the payment processor changes its schema, the catalog traces the impact from tool to skill to agent in seconds. Without the catalog, that trace is a series of meetings.
+
+## The anatomy of a catalog entry
+
+A catalog entry is a structured record, not a free-text description. The schema enforces completeness — an entry missing its owner or risk tier cannot be promoted to production. Return to the financial-services firm. Here is what the fraud-monitoring agent's entry looks like:
+
+```yaml
+# Agent Registry Entry
+id: agent-fraud-monitor
+name: Transaction Fraud Monitor
+version: 2.4.1
+status: active            # active | staging | deprecated | archived
+
+owner:
+  name: Priya Mehta
+  team: Financial Crime
+  contact: p.mehta@example.com
+
+description: >
+  Monitors real-time transaction streams for fraud indicators.
+  Flags suspicious transactions for human review. Does not
+  block transactions autonomously.
+
+model:
+  provider: anthropic
+  model_id: claude-sonnet-4-20250514
+  fallback: claude-haiku-4-20250514
+
+risk_tier: high            # critical | high | medium | low
+risk_rationale: >
+  Processes PII and financial data. False negatives have
+  direct monetary impact. Regulatory reporting dependency.
+
+dependencies:
+  skills:
+    - skill-transaction-scoring@3.1.0
+    - skill-pii-redactor@1.2.0
+  tools:
+    - tool-payment-processor-api
+    - tool-fraud-rules-db
+  upstream:
+    - service-transaction-ingest
+  downstream:
+    - agent-case-manager
+    - dashboard-fraud-ops
+
+eval_scores:
+  - date: 2026-05-01
+    precision: 0.94
+    recall: 0.89
+    f1: 0.91
+    eval_set: fraud-bench-v3
+  - date: 2026-04-01
+    precision: 0.93
+    recall: 0.87
+    f1: 0.90
+    eval_set: fraud-bench-v3
+
+governance:
+  last_review: 2026-04-15
+  next_review: 2026-07-15
+  approved_by: AI Governance Board
+  eu_ai_act_class: high-risk    # Annex III, credit scoring
+  data_classification: confidential
+  human_oversight: human-in-the-loop
+```
+
+Every field in that schema earns its place. The `owner` field is a named person because accountability that points at a team points at nobody. The `risk_tier` is mandatory because without it the governance function cannot prioritise reviews — and the `risk_rationale` forces the owner to justify the classification in prose, not just pick from a dropdown. The `eval_scores` array is a history, not a snapshot, because a single score tells you where the agent is; a trend tells you where it is heading. The `dependencies` block is what makes impact analysis possible — the structured proof that this agent depends on these skills and these tools, and that these downstream systems depend on it.
+
+The same schema pattern applies to skill and tool entries, adjusted for what each asset type needs. A skill entry carries version history, usage counts, and the list of agents that consume it. A tool entry carries its API schema, data-sensitivity classification, rate limits, and the access policy that governs which agents may call it.
+
+## Risk tiering
+
+Risk classification is the field that does the most work. It drives review cadence, approval gates, monitoring intensity, and — in jurisdictions covered by the EU AI Act — regulatory reporting obligations.
+
+The catalog uses four tiers:
+
+| Tier | Review cadence | Approval gate | Monitoring | Examples |
+|---|---|---|---|---|
+| Critical | Monthly | Board-level sign-off | Real-time alerting, full audit trail | Autonomous trading, medical diagnosis |
+| High | Quarterly | AI Governance Board | Continuous eval, drift detection | Fraud detection, credit scoring, HR screening |
+| Medium | Biannually | Team lead + CoE review | Periodic eval, usage dashboards | Customer support drafting, document summarisation |
+| Low | Annually | Team lead sign-off | Usage metrics only | Internal search, code formatting |
+
+The tier is not static. The fraud-monitoring agent started as medium-risk when it only flagged transactions for review. When the roadmap proposed letting it block transactions autonomously, the risk tier moved to critical before the feature was built — because the catalog entry is updated at design time, not after deployment. The governance review triggered by the tier change is what surfaced the regulatory implications the team had not considered.
+
+This is the pattern the catalog enforces: risk classification is a living assessment, not a one-time label. An agent's tier changes when its capabilities change, when its data access changes, when regulation changes, or when an incident reveals that the original classification was wrong. The catalog's review-date field and the CoE's review cadence table are the mechanism that keeps the classification current.
+
+## What the catalog makes possible
+
+With the three registries populated and the dependency graph in place, the catalog unlocks five capabilities that are structurally impossible without it.
+
+**Deprecation planning.** When a model provider announces end-of-life for a model version, the catalog answers the question immediately: which agents run on that model, what skills do they consume, who owns each one, and what is the downstream blast radius. The financial-services firm discovers that 14 agents across four teams depend on the model being deprecated. Without the catalog, that discovery takes weeks of archaeology. With it, the query returns in seconds and the migration plan starts the same day.
+
+**Compliance reporting.** The EU AI Act requires providers and deployers of high-risk AI systems to register them in a public database (Article 71) with structured metadata — capability description, risk classification, human oversight measures. The catalog's `governance` block already holds this data in a machine-readable format. Compliance reporting becomes an export, not a research project.
+
+**Reuse and consolidation.** The skill registry reveals that three teams independently built near-identical retrieval pipelines. The CoE consolidates them into a single published skill, versioned and maintained centrally. The three agents that consumed the originals now point at the shared skill. Maintenance cost drops by two-thirds. Quality improves because evaluation runs once, not three times.
+
+**Impact analysis.** A tool's API schema changes. The catalog traces the impact: this tool is consumed by these two skills, which are consumed by these five agents, which feed these three downstream services. The owners are notified automatically. The agents whose eval scores are closest to their minimum thresholds are flagged for priority re-evaluation.
+
+**Cost attribution.** Every agent entry records its model provider and model ID. Combined with usage metrics from the observability layer, the catalog enables per-agent, per-team, and per-tier cost breakdowns. FinOps stops being a company-wide aggregate and becomes a per-capability conversation.
+
+None of these capabilities requires a sophisticated platform. They require a structured registry with enforced schemas and cross-references — the catalog.
+
+## Building the catalog
+
+A catalog is not a product you buy. It is a data structure you maintain. The implementation can be as simple as a version-controlled directory of YAML files with a CI pipeline that validates schemas on every merge — or as involved as a dedicated service with a web UI and a CLI for registration. The complexity should match the organisation's scale, and it should start simpler than you think it needs to be.
+
+The minimum viable catalog has four properties:
+
+1. **Enforced schema.** Every entry conforms to a defined structure. An entry without an owner or a risk tier fails validation and cannot be merged. The schema is the governance — not a review meeting, not a checklist, but a structural constraint that makes incomplete registration impossible.
+
+2. **Single source of truth.** The catalog lives in one place. Not a spreadsheet per team, not a Confluence page per department, not a Backstage instance that half the teams forgot to update. One registry, one schema, one location.
+
+3. **Cross-references.** Agent entries reference skill entries. Skill entries reference tool entries. The references are typed and validated — a dangling reference (an agent claiming to depend on a skill that does not exist in the registry) fails CI.
+
+4. **Ownership.** Every entry has a named human owner. Not a team alias, not a Slack channel, not "the platform team." A person whose name appears in the entry and whose review date appears beside it.
+
+The financial-services firm starts with a Git repository, a JSON Schema for each registry type, and a CI job that validates every pull request. The fraud team registers their agent. The support team registers theirs. The compliance team discovers that the document-review agent the contractor built was never registered — which is precisely the kind of gap the catalog exists to surface.
+
+<Callout type="note" title="Reference implementation">
+TensAI maintains a working reference catalog — agent, skill, and tool registry schemas in YAML, a validation CLI, and a lightweight web UI for browsing entries — at [`tensaicompl/tensai-agent-catalog`](https://github.com/tensaicompl/tensai-agent-catalog). Clone it to stand up a catalog in an afternoon. Replace the example entries with your own and let the schema enforce the discipline.
+</Callout>
+
+## The catalog and the operating model
+
+The catalog does not exist in isolation. It is the data layer beneath the operating model — the structured record that every other operating-model function reads from and writes to.
+
+The CoE maintains the catalog. It owns the schemas, reviews the entries, and enforces the promotion workflows that gate deployment. When a team wants to move an agent from staging to production, the CoE reviews the catalog entry — not the code, not the architecture, but the structured record that proves the agent has an owner, a risk tier, passing eval scores, and declared dependencies. The catalog is what the CoE maintains; the CoE is who maintains it. Neither functions without the other, and the next page — CoE and Enablement — is where that relationship is defined.

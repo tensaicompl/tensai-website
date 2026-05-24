@@ -7,7 +7,7 @@ import DiagramSlot from "@/components/diagrams/DiagramSlot";
 import { getDiagramForSlug } from "@/components/diagrams/registry";
 import ContentPlaceholder from "@/components/mdx/ContentPlaceholder";
 import { Callout } from "@/components/mdx/Callout";
-import { CodeBlock } from "@/components/mdx/CodeBlock";
+import { CodeBlock, MdxPre, MdxCode } from "@/components/mdx/CodeBlock";
 import { getConceptsByPillar, getConceptBySlug } from "@/lib/content";
 import { getSpineConceptsForConcept } from "@/lib/spine-data";
 import { mdxOptions } from "@/lib/mdx-options";
@@ -17,6 +17,8 @@ const mdxComponents = {
   ContentPlaceholder,
   Callout,
   CodeBlock,
+  pre: MdxPre,
+  code: MdxCode,
 };
 
 export async function generateStaticParams() {
@@ -156,7 +158,7 @@ export default async function CraftConceptPage({
           </div>
 
           {/* ── MDX body ─────────────────────────────────────────── */}
-          <div className="concept-body" style={{ marginTop: "48px" }}>
+          <div className="concept-body" style={{ marginTop: "48px", marginLeft: "auto", marginRight: "auto" }}>
             <MDXRemote
               source={concept.content}
               components={mdxComponents}

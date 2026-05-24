@@ -18,7 +18,8 @@ Guides shape model behaviour at input time — system prompts, retrieved context
 
 The implication for team structure is significant. A mid-level engineer can wire up a working agent against a capable model in a day. The hard work — designing idempotent tool use, building evaluation pipelines that catch regression, implementing permission hierarchies that prevent privilege escalation across multi-agent chains, writing memory retrieval logic that stays coherent across long conversations — requires the kind of systems thinking that senior engineers spent the previous decade applying to databases and distributed services. Harness engineering is not a narrow specialisation. It is the domain where the field's most consequential technical decisions now live.
 
-<CodeBlock language="typescript">{`// Example: a sensor that validates structured output before it reaches downstream tools
+```typescript
+// Example: a sensor that validates structured output before it reaches downstream tools
 async function validateAgentOutput(raw: unknown): Promise<AgentOutput> {
   const parsed = AgentOutputSchema.safeParse(raw);
   if (!parsed.success) {
@@ -31,4 +32,5 @@ async function validateAgentOutput(raw: unknown): Promise<AgentOutput> {
     throw new HarnessValidationError("Output below confidence threshold");
   }
   return parsed.data;
-}`}</CodeBlock>
+}
+```

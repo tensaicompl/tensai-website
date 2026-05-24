@@ -5,8 +5,137 @@ slug: "code-doc-indexing"
 definition: "Indexed vs runtime exploration — and the cost of phantom APIs."
 spineConcepts: [17]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 9
 ---
 
-<ContentPlaceholder title="Code & Doc Indexing" />
+A coding agent that cannot find the right function will invent one. Code and documentation indexing is the discipline of making the actual codebase — its symbols, its signatures, its dependency graph — available to an agent before the agent writes a line of code. Two architectures exist: indexed retrieval, where the codebase is parsed and stored ahead of time, and runtime exploration, where the agent searches and reads files on demand. Both work. They fail differently — and the failure mode of having no retrieval at all is the one this page exists to name, because it is the most consequential class of error a coding agent makes.
+
+## What a coding agent needs to know
+
+A coding agent pointed at a real codebase needs three things: what symbols exist, where they live, and how they connect. "Symbols" is precise — it means functions, classes, methods, types, constants, interfaces. Not files, not lines, not paragraphs of prose. The unit of retrieval for code is the symbol, because the symbol is the unit the agent will reference when it writes.
+
+Take a concrete task to hold through the rest of the page: an agent asked to add a new API endpoint to an existing TypeScript service. The service already has a `UserService` class with methods like `getUserById`, `createUser`, and `updateUserRole`. It has a validation layer, a database access layer, and a set of shared types. The agent needs to discover all of this — not because it cannot write an endpoint from scratch, but because an endpoint that ignores the existing patterns will either duplicate code that already exists or call functions that do not.
+
+That discovery can happen two ways, and the choice between them is the architectural decision this page is about.
+
+| | Indexed retrieval | Runtime exploration |
+|---|---|---|
+| When parsing happens | Ahead of time, stored | On demand, per query |
+| What is stored | Symbols, signatures, relationships, embeddings | Nothing — the codebase is the store |
+| How the agent queries | Semantic search, symbol lookup, dependency traversal | grep, file reads, AST walking |
+| Startup cost | Minutes to hours for first index | Zero |
+| Staleness risk | Index can drift from code | Always current |
+| Token cost per query | Low — returns only matched symbols | Variable — may read entire files to find one function |
+
+Neither column is uniformly better. The right choice depends on the codebase size, how often the agent runs, and which failure mode you can least afford.
+
+## Indexed retrieval — the pipeline
+
+An indexed retrieval system is a pipeline with four stages: parse, extract, embed, store. Each stage narrows the codebase from raw files to queryable symbols.
+
+**Parse.** A parser reads every source file and produces a syntax tree — a structural representation of the code that captures what is a function, what is a class, what is an import, and how they nest. Tree-sitter is the standard tool here, and it has earned that position. It is incremental — re-parsing a changed file costs microseconds, not the full parse — and it supports over 100 languages from a single interface. The alternative is language-specific parsers (the TypeScript compiler's own AST, Python's `ast` module, ctags), but tree-sitter's uniformity across languages makes it the default for any system that must handle more than one.
+
+**Extract.** The syntax tree is walked to pull out symbols and their metadata: name, kind (function, class, method, type), file path, line range, signature, and relationships (imports, calls, extends). This is where file-level indexing and symbol-level indexing diverge — and the divergence matters. A file-level index knows that `user-service.ts` exists. A symbol-level index knows that `UserService.getUserById` takes a `string` parameter, returns `Promise<User | null>`, and is called by `UserController.handleGetUser`. The agent building a new endpoint needs the second kind.
+
+```typescript
+// Symbol extraction from a tree-sitter parse
+// Each symbol carries its signature, location, and relationships
+
+interface ExtractedSymbol {
+  name: string;
+  kind: "function" | "class" | "method" | "type" | "constant";
+  filePath: string;
+  lineStart: number;
+  lineEnd: number;
+  signature: string;          // e.g. "(id: string) => Promise<User | null>"
+  relationships: {
+    imports: string[];         // symbols this one depends on
+    calledBy: string[];        // symbols that reference this one
+    extends?: string;          // parent class or interface
+  };
+}
+
+// What the index returns for a query like "user service methods"
+const results: ExtractedSymbol[] = [
+  {
+    name: "getUserById",
+    kind: "method",
+    filePath: "src/services/user-service.ts",
+    lineStart: 24,
+    lineEnd: 31,
+    signature: "(id: string) => Promise<User | null>",
+    relationships: {
+      imports: ["User", "db"],
+      calledBy: ["UserController.handleGetUser"],
+    },
+  },
+  // ... createUser, updateUserRole, etc.
+];
+```
+
+**Embed.** Each extracted symbol — or a chunk that groups related symbols — is passed through an embedding model to produce a vector. The vector captures semantic meaning, so a query for "fetch user data" can match `getUserById` even though no word overlaps. Code-specialised embedding models (descendants of CodeBERT, or general-purpose models like those in the Qwen or Gemini families that handle code well) outperform text-only embeddings here, because they have learned that `get` and `fetch` and `retrieve` are near-synonyms in code while being distinct in prose.
+
+**Store.** The symbols, their metadata, and their embedding vectors go into a store — typically SQLite for the metadata and a vector index (FAISS, or SQLite's own vector extensions) for the embeddings. The store must support two query types: semantic search (nearest-neighbour on embeddings) and structural lookup (give me all methods of class X, or all callers of function Y). A system that offers only one will leave the agent half-grounded.
+
+The whole pipeline — parse, extract, embed, store — runs once on initial setup and incrementally on every change. For a 50,000-file monorepo, the initial run takes minutes; incremental updates take seconds. The cost is real but front-loaded.
+
+## Runtime exploration — the alternative
+
+The alternative to indexing is no indexing at all. The agent receives the codebase as a directory and is given tools to search it: grep (or ripgrep), file reads, and sometimes an AST-walking tool that can list function signatures in a file. There is no pre-built index, no embedding store, no startup cost. The agent navigates the codebase the way a human developer navigates an unfamiliar project — by searching, reading, following imports, and building a mental model as it goes.
+
+Claude Code is the most prominent system built on this philosophy. It reads files on demand, follows import chains, checks test files, and builds understanding from first principles. The approach has a genuine engineering argument behind it: the agent always works with the current state of the code, never a stale index, and every search operation is visible and auditable.
+
+Return to the endpoint task. An agent using runtime exploration would grep for `UserService`, read the file, see the existing methods, grep for how they are called, read the controller, and piece together the patterns. This works — and for small to medium codebases, it works well. The cost is measured in tokens, not in accuracy: the agent may read entire files to find one relevant function, or may search three times for something an index would have returned in one query.
+
+The deeper cost surfaces at scale. In a codebase of 10,000 files, runtime exploration can consume tens of thousands of tokens in navigation before the agent writes a single line of implementation. In a codebase of 100,000 files, it can consume the majority of the context window on search alone, leaving little room for the reasoning that is the point of the exercise. Cursor's Merkle-tree indexing exists for precisely this reason; Windsurf's graph-based dependency models exist for the same one. The indexed approach trades startup cost for query-time efficiency — and in large codebases, the trade is not close.
+
+## The cost of phantom APIs
+
+Here is the provocation this page has been building towards: the most consequential error a coding agent makes is not a logic bug, not a style violation, not a missing test. It is calling a function that does not exist.
+
+The field has named these phantom APIs — and the closely related phenomenon, where an agent invents a package name that does not exist, has been named slopsquatting. The mechanism is the same in both cases. The model has seen thousands of codebases in training. When asked to write code that calls an API it has not been grounded in, it synthesises a plausible name from patterns it has learned — `userService.findByEmail`, say, when the actual method is `getUserById`. The name looks right. The signature looks right. The code compiles in the model's imagination. It fails at runtime, silently or loudly, and the developer who trusted the agent's output is now debugging a function call that points at nothing.
+
+The numbers are stark. Research has found that 19.7% of LLM-recommended package names do not exist — and open-source models hallucinate packages at a rate of 21.7%, compared to 5.2% for proprietary models. Across all models studied, over 205,000 unique hallucinated package names were observed. One hallucinated package name — `huggingface-cli` — was downloaded over 30,000 times in three months after an attacker registered it. The phantom API problem is not theoretical. It is a measured, exploited, ongoing failure mode.
+
+<Callout type="note" title="Why phantom APIs are the hardest error to catch">
+A syntax error is caught by the parser. A type error is caught by the compiler. A logic bug is caught by a test — if a test exists. A phantom API passes all three checks in the model's reasoning and is only caught when the code actually runs against the real codebase. By then, the agent has often built subsequent logic on top of the phantom call, and the fix is not a one-line correction — it is a rethink. This is why grounding the agent in actual parsed code, before it writes, is not an optimisation. It is a category of error prevention that no other control covers.
+</Callout>
+
+Indexed retrieval prevents phantom APIs by construction. If the agent's retrieval returns the actual methods of `UserService` — with their real names, real signatures, real parameter types — the model has no reason to invent one. The grounding is not a suggestion; it is the only material the model has to work with. Runtime exploration reduces the risk as well, since the agent can read the real file, but it depends on the agent choosing to read the right file before it starts writing — and an agent under token pressure may skip that step.
+
+## Documentation indexing — the other half
+
+Code is not the only thing an agent needs to be grounded in. Documentation — API references, architecture decision records, onboarding guides, inline comments — carries information that is not in the code itself: why a pattern was chosen, what the migration path is, which endpoints are deprecated.
+
+Documentation indexing follows the same pipeline as code indexing, with one difference at the chunking stage. Code chunks naturally at the symbol level — one function, one class, one type. Documentation chunks at the section level, and the sections are less uniform. A good documentation index chunks by heading, preserves the heading hierarchy as metadata, and embeds each section with its parent headings for context. A query for "user authentication flow" should return the architecture decision record that explains why OAuth was chosen, not a paragraph from the installation guide that happens to mention "authentication."
+
+The hybrid — code symbols and documentation sections in the same index, queryable together — is the strongest grounding an agent can receive. The agent building the new endpoint can retrieve the `UserService` methods (code index) and the API design guidelines that specify how errors should be returned (documentation index) in a single query pass. Neither alone is complete.
+
+## The architectural choice
+
+The two approaches — indexed and runtime — are not rival religions. They are points on a trade-off curve, and most production systems will use elements of both. The choice reduces to three questions:
+
+**How large is the codebase?** Below a few thousand files, runtime exploration is sufficient — the token cost of navigation is manageable, and the agent can build a working mental model within its context window. Above that threshold, the token cost of runtime exploration begins to dominate, and an index pays for itself quickly.
+
+**How often does the agent run?** An agent that runs once — a one-off migration, a single feature — does not justify the setup cost of a full index. An agent that runs continuously — a coding assistant, a CI agent, a review bot — amortises that cost across thousands of queries.
+
+**Which failure mode is least acceptable?** If phantom APIs are the primary risk — in a large, unfamiliar codebase with many internal libraries — indexed retrieval is the stronger choice. If staleness is the primary risk — in a rapidly changing codebase where the index could drift within hours — runtime exploration's guarantee of freshness matters more.
+
+| Scenario | Recommended approach | Rationale |
+|---|---|---|
+| Large monorepo, continuous agent use | Indexed retrieval | Token cost of runtime exploration exceeds index maintenance cost |
+| Small project, one-off task | Runtime exploration | No setup cost, codebase fits in context |
+| Enterprise with internal libraries | Indexed retrieval | Phantom API risk is high — internal APIs are absent from training data |
+| Rapidly evolving prototype | Runtime exploration | Index staleness risk exceeds phantom API risk |
+| Hybrid — large codebase, critical correctness | Both | Index for symbol grounding, runtime reads for verification |
+
+The last row is the one the field is converging on. Augment Code's Context Engine pre-indexes the codebase into a semantic dependency graph. Cursor uses Merkle-tree indexing with embeddings. Windsurf uses graph-based dependency models with remote indexing that scales to million-line repositories. Claude Code reads files on demand — but the ecosystem around it is already adding tree-sitter-powered indexing tools (CodeRLM, Codebase-Memory, AFT) that serve as MCP servers, giving the runtime-exploration agent an indexed backbone without changing its architecture. The convergence is towards indexed retrieval as the default, with runtime exploration as the verification layer.
+
+<Callout type="note" title="Reference implementation">
+The full pipeline — tree-sitter parsing, symbol extraction, embedding, SQLite storage, and a query interface that returns symbols with file paths and line numbers — is implemented at [`tensaicompl/tensai-indexing-reference`](https://github.com/tensaicompl/tensai-indexing-reference). It demonstrates phantom-API prevention by grounding retrieval in actual parsed code, and includes benchmarks comparing indexed queries against equivalent runtime grep chains on the same codebase.
+</Callout>
+
+## What indexing does not solve
+
+Indexing tells the agent what exists. It does not tell the agent whether what the agent wrote is correct. A grounded agent — one that calls real functions with real signatures — can still produce code that is logically wrong, architecturally misfit, or subtly broken in ways that only surface under load. The phantom API is the error indexing prevents. The errors that remain — the ones that require judgment, not just lookup — are the domain of evaluation. Once the agent writes code grounded in the real codebase, the question shifts from "did it call the right function" to "did it do the right thing" — and that is the problem evals and observability exist to answer.

@@ -5,8 +5,82 @@ slug: "build-buy-boost"
 definition: "The decision that actually matters, plus the build-to-learn vs build-to-run trap."
 spineConcepts: [1, 8]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 2
 ---
 
-<ContentPlaceholder title="Build · Buy · Boost" />
+Every organisation adopting AI faces a three-way choice before anything else can begin: build the model yourself, buy a finished product off the shelf, or boost — treat the model as a commodity and build the harness around it. The choice sounds like a procurement decision. It is not. It is a strategic commitment that determines where your engineering effort goes, what you end up maintaining, and whether the thing you ship is the model or the system wrapped around it. Most teams frame it as build versus buy. That framing is incomplete — and its incompleteness is what leads to the most expensive mistakes in the field.
+
+## The three options, precisely
+
+The terms need sharpening before they are useful. Each option places the model and the engineering effort in a different relationship, and the consequences flow from that relationship alone.
+
+**Build** means training or fine-tuning your own model. You assemble a dataset, run a training pipeline, and produce a set of weights you own. The model is your artifact — your team created it, your infrastructure hosts it, and your engineers maintain it through every retrain cycle. The organisations that do this at the frontier — the labs themselves — spend between $78 million and $191 million on a single training run. Fine-tuning is cheaper by orders of magnitude, but the maintenance obligation is the same in kind: every time the base model advances, you decide whether to retrain, and if you do not, your variant falls behind.
+
+**Buy** means adopting a vendor's product as a finished solution. You do not touch the model; you use the application the vendor built around it. The vendor chose the model, designed the interface, defined what the product can do. Your engineering effort is integration — connecting the product to your systems, not shaping how it reasons. This is the fastest path to a working capability, and for problems the vendor anticipated well, it is the correct one.
+
+**Boost** means using the model as a commodity input and building the system around it yourself. You call the model through an API — the same API your competitor calls — and invest your engineering effort in everything that is not the model: the data pipeline, the retrieval layer, the evaluation suite, the orchestration logic, the guards and monitors that make the system reliable. The model is bought; the harness is built.
+
+Hold a concrete example for the rest of the page: an insurance company that wants to automate the first pass of claims processing — reading a claim, extracting the relevant facts, checking them against the policy, and drafting a recommendation for the human adjuster.
+
+| | Build | Buy | Boost |
+|---|---|---|---|
+| What you create | A model (weights you own) | Nothing — you adopt the vendor's product | A harness (your data, your evals, your orchestration) |
+| Where engineering effort goes | Dataset curation, training, retraining | Integration and configuration | Retrieval, evaluation, steering, tooling |
+| What you maintain | The model and its training pipeline | The integration | The harness — but not the model |
+| Your competitive asset | The model itself | Speed to market | The system wrapped around the model |
+| Model upgrade path | You retrain, or fall behind | Vendor upgrades; you inherit or are forced along | You swap the model; the harness carries over |
+
+The last row of that table is where the strategies diverge most sharply. A built model is an asset that depreciates. A bought product is a dependency you do not control. A boosted harness is a system that gets stronger with every model generation — because the harness was always the product, and the model was always the replaceable part.
+
+## The build-to-learn trap
+
+Here is the provocation this page exists to deliver: most teams that choose Build are not building to run. They are building to learn — and they do not know the difference until the maintenance bill arrives.
+
+Building to learn is legitimate. A team fine-tunes a model to understand how fine-tuning works — what data preparation demands, how evaluation changes, where the failure modes live. The purpose is education, and the artifact is disposable. The team learns, and moves on to the approach that will actually run in production.
+
+Building to run is a different commitment entirely. A model in production must be retrained as the world changes, evaluated against every new failure mode, monitored for drift, hosted on infrastructure that does not sleep. The team that built to learn now discovers it must staff a machine-learning operations function — dataset versioning, evaluation pipelines, retraining schedules, rollback procedures — that it never planned for and may not have the people to sustain.
+
+The trap closes when the two are confused. A proof-of-concept fine-tune works well enough that someone promotes it to production. The team celebrates the result and inherits the obligation. Six months later, the base model vendor releases a new generation that outperforms the fine-tuned variant on the same task — for free, through the same API, with no retraining required. The team's choice is now to retrain against the new base (spending again) or to abandon the investment and switch to the commodity model they could have started with.
+
+Return to the claims-processing example. A team fine-tunes a model on 50,000 historical claims to teach it the company's specific policy language. The fine-tuned model performs well — better, on this narrow task, than the general model with a well-crafted prompt. But the general model improves on a schedule the team does not control. Within two model generations, the gap closes. The fine-tuned variant is now a maintenance burden that delivers no measurable advantage, and the team that built it is maintaining a training pipeline for a model that is, by any honest measure, worse than the commodity alternative on every dimension except the narrow one it was trained on — a dimension the commodity model has since caught up to.
+
+The honest question is not "can we fine-tune?" but "can we maintain a fine-tuned model, and is the advantage durable enough to justify the cost?" For most teams, and for most tasks, the answer is no.
+
+<Callout type="note" title="When fine-tuning is genuinely justified">
+Fine-tuning earns its place in a narrow set of cases: when the task requires a specific output format the model must produce thousands of times per hour and prompting alone is too slow or too expensive; when the domain vocabulary is so specialised that the general model cannot learn it from context alone; or when regulatory constraints prohibit sending data to a third-party API and a self-hosted model is the only compliant option. In every other case, the same engineering effort spent on retrieval, evaluation, and prompt design — the harness — will outperform a fine-tune and cost less to maintain. The test is not whether fine-tuning improves performance on a benchmark. It is whether the improvement survives the next model generation.
+</Callout>
+
+## Why Boost is the dominant strategy
+
+The economics of foundation models have settled into a pattern that makes the Boost strategy rational for the vast majority of organisations. Training costs are rising — a single frontier training run now exceeds $100 million, and credible forecasts place billion-dollar runs within two years. Inference costs are collapsing — the price of querying a capable model fell roughly 280-fold between late 2022 and late 2024, and continues to fall. The model, in other words, is getting more expensive to create and cheaper to use. That is the textbook definition of a commodity input.
+
+When the input is a commodity, the value shifts to what you build around it. Two companies calling the same API begin with identical reasoning ability. What separates them — reliability, safety, cost-efficiency, the fitness of the system for their specific domain — is entirely a function of the harness each built. The retrieval pipeline that pulls the right policy documents into context. The evaluation suite that catches a hallucinated clause before it reaches the adjuster. The steering logic that keeps the model within the boundaries the business requires. None of this lives in the model. All of it lives in the harness.
+
+This is where Build, Buy, Boost connects to the deepest claim in this Blueprint. The Harness Engineering page in Pillar III makes the case in full: the model is the part you do not control and the part that improves on someone else's schedule; the harness is the part you build, the part that compounds, and the part where your competitive advantage actually lives. Boost is the strategy that follows directly from that understanding. You source the model as cheaply and flexibly as you can, and you invest your scarce engineering talent in the system that makes the model's output trustworthy.
+
+The claims-processing team, taking the Boost path, calls the best available model through an API. It builds a retrieval layer that pulls the relevant policy sections into context for each claim. It builds an evaluation pipeline that checks the model's extraction against known ground truth. It builds a confidence-scoring mechanism that routes low-confidence cases to human review. When the model vendor releases a stronger generation, the team swaps the model identifier in a configuration file and reruns the evaluation suite. If the new model scores higher — and it almost always does — the upgrade is done. The harness carries over untouched. The team's investment compounds with every model generation rather than depreciating against it.
+
+## The buy ceiling
+
+Buy is not wrong. For problems that are well-understood, widely shared, and not a source of competitive differentiation, buying a finished product is the fastest and cheapest path. The claims team could buy an off-the-shelf claims-processing product, integrate it, and be running within weeks rather than months.
+
+The ceiling appears when the organisation's needs diverge from the vendor's design. The vendor built the product for insurance companies in general; this company's policy language, risk appetite, and regulatory obligations are specific. Every customisation request is now a feature request to a vendor whose roadmap serves a thousand other customers. The organisation cannot change how the model reasons, what data it sees, or how its output is evaluated — because the organisation does not own the harness. It rents one.
+
+Buy works until differentiation matters. When the problem is generic, buy. When the problem is yours — when the data is yours, the domain knowledge is yours, the risk tolerance is yours — boost.
+
+## A portfolio, not a single choice
+
+No organisation of meaningful size makes one choice across every use case. The three options are a portfolio, and the discipline is in matching each use case to the right strategy.
+
+Internal tooling — summarising meeting notes, drafting routine correspondence, generating first-pass documentation — is a Buy problem. The task is generic, the stakes are low, and the speed of deployment matters more than the depth of customisation.
+
+Domain-specific workflows — claims processing, regulatory analysis, underwriting support — are Boost problems. The organisation's data and domain knowledge are the differentiator, and the model is the interchangeable part.
+
+Genuine frontier research — a pharmaceutical company modelling molecular interactions, a quantitative fund whose alpha depends on a proprietary architecture — may be Build problems. The model itself is the product, and the maintenance cost is justified by the competitive return.
+
+The allocation, for most enterprises, lands heavily on Boost. The Menlo Ventures survey of enterprise AI spending found that the overwhelming majority of generative AI investment is going not into model training but into the application and orchestration layers — the harness, by another name. The market has already voted.
+
+## The question that follows
+
+Build, Buy, and Boost answer where to invest your engineering effort. They do not answer where to source the model itself — and once the Boost decision is made, that question becomes urgent. If the model is a commodity, should you single-source it? Run multiple providers in parallel? Route different tasks to different tiers? The economics of token sourcing, and the strategic architecture that governs it, is the next decision the Groundwork asks you to make.

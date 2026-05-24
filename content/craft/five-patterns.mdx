@@ -5,8 +5,208 @@ slug: "five-patterns"
 definition: "Chaining, routing, parallelisation, orchestrator-workers, evaluator-optimiser."
 spineConcepts: [9]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 2
 ---
 
-<ContentPlaceholder title="The Five Patterns" />
+There are exactly five ways to compose model calls into a workflow, and they were codified — by Anthropic, in late 2024 — because the field kept reinventing the same five shapes under different names. They are: prompt chaining, routing, parallelisation, orchestrator-workers, and evaluator-optimiser. Each solves a different structural problem. None of them is an agent — every path through every pattern is fixed in code before the system runs. What varies between them is not whether the model decides the next step (it never does), but how the steps relate to one another: in sequence, by classification, in parallel, by delegation, or in a loop.
+
+## One task, five structures
+
+To see the patterns clearly, hold one concrete task through all five: a system that processes incoming documents — contracts, invoices, internal memos — and produces a structured summary with extracted metadata. The task is the same each time. What changes is the shape of the composition, and the shape is the whole point.
+
+Most teams that struggle with these patterns struggle because they chose by instinct rather than by structure. The rest of this page exists to make the choice mechanical.
+
+## Prompt chaining
+
+Prompt chaining decomposes a task into a sequence of steps, where each model call processes the output of the previous one. The sequence is linear and fixed — step one feeds step two, step two feeds step three — and between any two steps you can insert a programmatic gate that checks whether the intermediate output is fit to continue.
+
+For the document system: step one classifies the document type, step two extracts the relevant fields for that type, step three produces the structured summary. A gate between steps one and two confirms the classification confidence is above a threshold before the extraction prompt runs. If the gate fails, the chain halts — no wasted calls, no silent errors downstream.
+
+```typescript
+// Prompt chaining — linear sequence with a gate.
+const classification = await model.call("Classify this document.", doc);
+
+// Programmatic gate: halt if confidence is too low.
+if (classification.confidence < 0.85) {
+  return escalate("Low-confidence classification", doc);
+}
+
+const fields = await model.call(
+  \`Extract fields for a \${classification.type}.\`,
+  doc
+);
+
+const summary = await model.call(
+  "Produce a structured summary from these fields.",
+  fields
+);
+```
+
+The trade is latency for accuracy. Each call is scoped to a single, well-defined step — easier to prompt, easier to evaluate, easier to debug when something breaks. The cost is that the chain runs in series: three calls take three times the latency of one. The gate is what makes this worth it — without gates, chaining is just a slower single call.
+
+**When to use it:** the task decomposes into fixed, ordered subtasks, and you gain something real by checking intermediate results before continuing. Document processing pipelines, content generation with review stages, multi-step data transformations.
+
+Chaining is the default pattern. Reach for it first, and move to the others only when the task's structure demands it.
+
+## Routing
+
+Routing classifies an input and directs it to a specialised followup task. A single model call — or a deterministic classifier — reads the input, assigns it a category, and hands it to the prompt or chain built for that category. The router itself does no substantive work; it is a switch statement powered by a model.
+
+For the document system: the router reads the incoming document and classifies it as a contract, an invoice, or an internal memo. Each type has its own extraction prompt — contracts need party names and obligation clauses, invoices need line items and totals, memos need action items and owners. The router dispatches to the right one. A contract never sees the invoice prompt.
+
+```typescript
+// Routing — classify, then dispatch.
+const route = await model.call(
+  "Classify this document as: contract, invoice, or memo.",
+  doc
+);
+
+const handlers: Record<string, (doc: string) => Promise<Result>> = {
+  contract: extractContract,
+  invoice:  extractInvoice,
+  memo:     extractMemo,
+};
+
+const handler = handlers[route.type];
+if (!handler) return escalate("Unknown document type", doc);
+
+const result = await handler(doc);
+```
+
+The value is separation of concerns. Each downstream prompt is specialised — shorter, sharper, tuned for one kind of input — and that specificity improves quality more than a single do-everything prompt ever could. The cost is the extra classification call, and the rigidity: if a document is genuinely two things at once (a memo that contains an invoice), the router must pick one route or the system must be rebuilt to handle composites.
+
+**When to use it:** distinct categories of input exist, each benefits from specialised handling, and the categories can be identified reliably by a model call or a simple classifier. Customer support triage, content moderation pipelines, multi-format ingestion systems.
+
+Routing is chaining with a branch — one step that decides which chain runs next. The branch is what makes it a separate pattern.
+
+## Parallelisation
+
+Parallelisation runs multiple model calls at the same time and aggregates their outputs programmatically. It appears in two forms — sectioning, where a task is broken into independent subtasks that run concurrently, and voting, where the same task runs multiple times to produce diverse outputs that are compared or merged.
+
+For the document system, sectioning: one call extracts metadata (dates, parties, reference numbers), another call produces a plain-language summary, a third call flags risk clauses. All three read the same document, none depends on the others, and a final programmatic step merges the three outputs into the structured result.
+
+For the document system, voting: three parallel calls each independently extract the key obligations from a contract. A deterministic aggregator compares the three lists and keeps only the obligations that at least two of the three calls agree on. The result is more reliable than any single extraction.
+
+```typescript
+// Parallelisation — sectioning variant.
+const [metadata, summary, risks] = await Promise.all([
+  model.call("Extract metadata: dates, parties, references.", doc),
+  model.call("Write a plain-language summary.", doc),
+  model.call("Flag any risk clauses.", doc),
+]);
+
+const result = merge(metadata, summary, risks);
+```
+
+| Variant | What runs in parallel | How outputs combine |
+|---|---|---|
+| Sectioning | Different subtasks on the same input | Merge — each contributes a distinct piece |
+| Voting | The same task, multiple times | Consensus — agreement filters noise |
+
+The trade is cost for either speed or reliability. Sectioning buys speed — three calls that would have run in series now finish in the time of the slowest one. Voting buys reliability — redundancy catches errors that a single call would have let through. Both spend more compute than a single call. The aggregation step matters as much as the parallel calls themselves; a careless merge undoes the benefit.
+
+**When to use it:** the subtasks are genuinely independent (sectioning), or the task has no cheap verifier and redundancy is the best available check (voting). Batch document processing, multi-aspect analysis, safety-critical extractions where a single model call is not trustworthy enough.
+
+Parallelisation is the only pattern that reduces latency rather than increasing it — and that alone makes it worth understanding precisely.
+
+## Orchestrator-workers
+
+The orchestrator-workers pattern uses a central model call to decompose a task dynamically, delegates the subtasks to worker calls, and synthesises their results. Unlike chaining, the decomposition is not fixed in advance — the orchestrator decides at runtime how many workers to spawn and what each one does. Unlike a true agent, the orchestrator makes that decision once; it does not revise the plan based on worker outputs.
+
+For the document system: the orchestrator receives a long, complex contract — say, 80 pages with multiple annexes. It reads the document and decides that this particular contract needs five workers: one for the main body, one for each of three annexes, and one for the signature block. A simpler contract might need only two. The orchestrator writes the decomposition, the workers execute in parallel, and the orchestrator synthesises the results into the final structured output.
+
+```typescript
+// Orchestrator-workers — dynamic decomposition.
+const plan = await model.call(
+  "Break this document into independent sections for extraction. " +
+  "Return a list of { section, instruction } objects.",
+  doc
+);
+
+const workerResults = await Promise.all(
+  plan.sections.map((s: Section) =>
+    model.call(s.instruction, s.content)
+  )
+);
+
+const finalResult = await model.call(
+  "Synthesise these section extractions into one structured summary.",
+  workerResults
+);
+```
+
+The orchestrator-workers pattern sits between a workflow and an agent. The decomposition is dynamic — the model decides the plan — but the plan executes without revision. There is no loop, no self-correction, no re-planning when a worker fails. This is the pattern's precise location on the autonomy gradient introduced on the previous page: more flexible than a fixed workflow, less autonomous than an agent.
+
+**When to use it:** the number or nature of subtasks genuinely cannot be known until the input is seen, but the subtasks themselves are straightforward once identified. Large or variable-structure documents, codebases where the set of files to modify depends on the change, research tasks where the sources to consult vary by question.
+
+The orchestrator's value is in the decomposition. If you can write the decomposition yourself — if the subtasks are always the same — you do not need an orchestrator. You need chaining or parallelisation.
+
+## Evaluator-optimiser
+
+The evaluator-optimiser pattern puts two model calls in a loop: one generates an output, the other evaluates it against defined criteria, and if the evaluation fails, the generator receives the feedback and tries again. The loop runs until the evaluator passes the output or a maximum iteration count is reached.
+
+For the document system: the generator produces a structured summary of a contract. The evaluator checks whether every required field is present, whether the summary is consistent with the source text, and whether the formatting matches the schema. If the evaluator finds a missing party name and an inconsistent date, it returns that feedback. The generator revises. The loop runs again.
+
+```typescript
+// Evaluator-optimiser — generate, evaluate, revise.
+let draft = await model.call("Summarise this contract.", doc);
+
+for (let i = 0; i < MAX_ITERATIONS; i++) {
+  const evaluation = await evaluator.call(
+    "Check: all fields present, consistent with source, schema-valid.",
+    { draft, source: doc }
+  );
+
+  if (evaluation.pass) break;
+
+  draft = await model.call(
+    \`Revise this summary. Issues found: \${evaluation.feedback}\`,
+    { draft, source: doc }
+  );
+}
+```
+
+This is the only pattern with a feedback loop, and the loop is what distinguishes it from chaining. A chain runs once, start to finish. The evaluator-optimiser runs until a quality bar is met — or until it gives up. The evaluator can be a second model, a cheaper model, or a deterministic check (schema validation, test suite, type checker); the stronger the evaluator, the more useful the loop becomes. Using a deterministic evaluator where one exists is always preferable — it is faster, cheaper, and its verdict is certain.
+
+| Component | Role | Can be |
+|---|---|---|
+| Generator | Produces the output | Any model call |
+| Evaluator | Judges the output against criteria | A model, a cheaper model, or a deterministic check |
+| Feedback | What the evaluator tells the generator | Structured critique: what failed, why, what to fix |
+| Termination | When the loop stops | Evaluator passes, or max iterations reached |
+
+**When to use it:** clear evaluation criteria exist, the model's output measurably improves when given specific feedback, and the cost of iteration is justified by the quality gain. Code generation with test suites, translation with back-translation checks, any extraction where a schema validator can confirm completeness.
+
+<Callout type="note" title="The pattern that rewrites the economics">
+The evaluator-optimiser is the only pattern where spending more compute directly and predictably improves output quality. The other four patterns spend compute on structure — decomposition, classification, distribution. This one spends it on refinement. That changes the cost calculation: the question is not "can the model get it right" but "how many iterations does it take, and is each iteration cheaper than the error it prevents." When the evaluator is deterministic — a type checker, a test suite, a schema validator — the loop converges fast and the economics are almost always favourable.
+</Callout>
+
+## Choosing between them
+
+The five patterns are not a menu to browse. They are a decision tree to walk, and the branching condition at each node is the structure of the task — not its difficulty, not its domain, not the model you are using.
+
+| Question | If yes | If no |
+|---|---|---|
+| Can the task be done in one well-scoped call? | Do not use a pattern. Use a single call. | Continue. |
+| Do the steps have a fixed, known order? | **Chaining.** | Continue. |
+| Does the input need to be classified first? | **Routing** (then chain or parallel within each route). | Continue. |
+| Are the subtasks independent of one another? | **Parallelisation.** | Continue. |
+| Is the decomposition itself dynamic — unknown until the input is seen? | **Orchestrator-workers.** | Continue. |
+| Does a clear evaluator exist, and does the output improve with feedback? | **Evaluator-optimiser.** | Reconsider the task. |
+
+The patterns compose. A routing step can dispatch to a chain. A chain can contain a parallelisation step. An orchestrator can spawn workers that each run an evaluator-optimiser loop. The five are primitives, not finished architectures — and the discipline is in assembling only what the task demands, not what the tooling makes easy.
+
+One thing to notice about the table: the first row — "do not use a pattern" — is the most important row. A single well-prompted model call with good retrieval handles a remarkable share of real tasks. The patterns exist for the tasks that genuinely outgrow a single call, and reaching for a pattern before that threshold is reached adds latency, cost, and failure surface for no gain.
+
+## The patterns are the starting vocabulary
+
+These five compositions are the structural primitives of the workflow side of the autonomy gradient. They are fixed-path, inspectable, testable — every virtue of a workflow that the previous page described. They are also, by definition, limited to the cases you anticipated. The moment a task requires the system to revise its own plan based on intermediate results — to loop, adapt, and recover — you have crossed from workflow territory into agent territory, and the patterns on this page are no longer sufficient on their own.
+
+But they do not disappear. An agent is not an alternative to these patterns; it is a system that selects and composes them at runtime. The patterns remain the building blocks. What changes is who assembles them — you, in code, or the model, live.
+
+<Callout type="note" title="Reference implementation">
+All five patterns — chaining, routing, parallelisation, orchestrator-workers, and evaluator-optimiser — are implemented against the same document-processing task at [`tensaicompl/tensai-pattern-library`](https://github.com/tensaicompl/tensai-pattern-library). The same problem solved five ways is the fastest route to seeing what each pattern actually changes.
+</Callout>
+
+What wraps around these patterns — the guides that shape each call, the sensors that check each output, the controls that make the whole composition trustworthy — is the harness. That is the next page, and the discipline it teaches applies to every pattern on this one.

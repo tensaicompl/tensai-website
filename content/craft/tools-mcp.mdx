@@ -5,8 +5,225 @@ slug: "tools-mcp"
 definition: "Tool design principles and the standard interface for exposing them."
 spineConcepts: [3, 18]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 5
 ---
 
-<ContentPlaceholder title="Tools & MCP" />
+A tool is how an agent acts on the world — the boundary where reasoning becomes doing. Every tool is a contract: the agent reads a schema that describes what the tool does, decides whether to call it, fills in the arguments, and gets a structured result back. The quality of that contract — how clear the description is, how tight the schema is, how predictable the failure modes are — determines whether the agent uses the tool correctly or invents plausible-looking calls that fail in production. This page covers two things: the principles that make a tool well-designed, and the open standard — the Model Context Protocol — that has become the way tools are exposed.
+
+## The tool contract
+
+A tool is not a function the agent calls. It is a contract the agent reads. The distinction matters because the agent never sees the implementation — it sees a name, a natural-language description, and a JSON schema for the inputs and outputs. Everything the agent knows about what the tool does, when to use it, and what to pass it comes from those three fields. A bad implementation behind a good contract will at least be called correctly. A good implementation behind a bad contract will be called wrong, and the failure will look like a model failure when it is an interface failure.
+
+Take a concrete tool to hold through the rest of the page: a tool that creates an invoice in a billing system. It accepts a customer identifier, a list of line items, a currency, and an optional due date. It returns the created invoice with its identifier, or a structured error explaining what went wrong. Simple enough to fit in a single schema, consequential enough that getting it wrong costs money — which makes it a good place to see every principle in action.
+
+That makes tools sound straightforward. They are not. The majority of agent failures in production trace back to tool selection and invocation errors, not to reasoning failures. The model picks the wrong tool because two descriptions overlap. It passes the wrong arguments because the schema left a field ambiguous. It retries a call that already succeeded because the tool gave no signal that the work was done. These are not model problems. They are tool-design problems — and they are the ones this page teaches you to prevent.
+
+## Five principles of well-designed tools
+
+A tool earns its place in an agent's toolkit by satisfying five properties. Miss any one of them and the tool becomes a source of errors that look like model failures but are really interface failures.
+
+| Principle | What it means | Invoice tool example |
+|---|---|---|
+| Atomicity | One tool, one operation, one responsibility | `create_invoice` creates. It does not also send or finalise. |
+| Discoverability | The name and description are unambiguous — the model never confuses this tool with another | "Create a new invoice for a customer" — not "process billing" |
+| Idempotency | Calling the tool twice with the same input produces the same result, not a duplicate | An idempotency key ensures a retry does not create a second invoice |
+| Safe defaults | Omitted optional fields resolve to the least destructive value | Currency defaults to the customer's configured currency, not an arbitrary one |
+| Clear error contracts | Errors are structured, typed, and actionable — not raw stack traces or generic strings | `{ "error": "CUSTOMER_NOT_FOUND", "message": "No customer with ID cust_382", "retryable": false }` |
+
+Each principle addresses a specific failure mode. Atomicity prevents tools from doing too much, which makes it impossible for the model to predict side effects. Discoverability prevents selection errors — when two tools have overlapping descriptions, the model resolves the ambiguity arbitrarily, and arbitrarily means wrong half the time. Idempotency prevents duplication on retry, which matters because agents retry freely and often. Safe defaults prevent destructive surprises when the model omits a field it did not understand. Clear error contracts prevent the model from guessing what went wrong and inventing a fix that makes it worse.
+
+The invoice tool, designed against all five:
+
+```typescript
+const createInvoiceTool = {
+  name: "create_invoice",
+  description:
+    "Create a new invoice for an existing customer. " +
+    "Returns the created invoice with its ID. " +
+    "Requires an idempotency key to prevent duplicate invoices on retry.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      idempotency_key: {
+        type: "string",
+        description: "Client-generated unique key. Retries with the same key return the original invoice."
+      },
+      customer_id: {
+        type: "string",
+        description: "The customer's unique identifier (e.g. cust_382)."
+      },
+      line_items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            description: { type: "string" },
+            quantity: { type: "integer", minimum: 1 },
+            unit_price_cents: { type: "integer", minimum: 0 }
+          },
+          required: ["description", "quantity", "unit_price_cents"]
+        },
+        minItems: 1,
+        description: "At least one line item is required."
+      },
+      currency: {
+        type: "string",
+        enum: ["GBP", "EUR", "USD"],
+        description: "ISO 4217 currency code. Defaults to the customer's configured currency if omitted."
+      },
+      due_date: {
+        type: "string",
+        format: "date",
+        description: "Payment due date in YYYY-MM-DD format. Defaults to 30 days from today if omitted."
+      }
+    },
+    required: ["idempotency_key", "customer_id", "line_items"]
+  }
+}
+```
+
+Notice what the schema does beyond declaring types. The `idempotency_key` is required — not optional, not inferred — so the agent cannot skip it. The `currency` field is an enum, which means the model cannot invent a value. The `line_items` array has a `minItems` constraint, so an empty invoice is rejected before it reaches the implementation. Every constraint in the schema is a guardrail that fires before execution, and guardrails that fire before execution are always cheaper than errors caught after.
+
+<Callout type="note" title="The description is a guide, not documentation">
+The tool description is read by a model, not a person. It must answer exactly one question — "when should I call this tool?" — and nothing else. A description that explains the implementation ("Uses the Stripe API to create an invoice object in the billing database") adds words that do not help selection and may confuse it. A description that states the effect ("Create a new invoice for an existing customer") is shorter and more accurate. The description is a guide in the harness-engineering sense: a feedforward control that shapes the model's decision before it acts.
+</Callout>
+
+## Where tools fail
+
+Most tool failures are not execution failures. They are selection and invocation failures — the model called the wrong tool, or called the right tool with the wrong arguments. Understanding why sharpens every design decision.
+
+**Ambiguous descriptions.** Two tools with overlapping descriptions — `create_invoice` described as "create or update a billing record" alongside `update_invoice` described as "modify a billing record" — force the model to guess which one applies. It guesses wrong roughly half the time. The fix is not a smarter model. It is a clearer description.
+
+**Unconstrained schemas.** A `currency` field typed as `string` with no enum invites the model to pass "dollars", "usd", "US Dollar", or any other plausible rendering. A field typed as `string` with an enum of `["GBP", "EUR", "USD"]` eliminates the ambiguity at the schema level. Tight schemas are cheap constraints that prevent expensive failures.
+
+**Missing error structure.** A tool that returns `{ "error": "something went wrong" }` gives the model nothing to reason about. It cannot tell whether the error is retryable, whether its arguments were wrong, or whether the system is down. A tool that returns `{ "error": "CUSTOMER_NOT_FOUND", "message": "No customer with ID cust_382", "retryable": false }` gives the model a code it can branch on, a message it can relay, and a retry signal it can respect.
+
+**Non-idempotent state changes.** An agent that calls `create_invoice` and gets a timeout will retry. If the first call succeeded and the tool is not idempotent, the retry creates a second invoice. The customer is billed twice. The idempotency key — a client-generated unique value sent with the call — turns the retry into a no-op that returns the original result. This is the same pattern the payments industry solved two decades ago, and it applies identically to agent tool use.
+
+**Side effects the model cannot see.** A tool named `create_invoice` that also sends the invoice by email has a side effect the model cannot predict from the name or description. If the model calls the tool to test a draft, the customer receives a real email. Atomicity — one tool, one operation — prevents this by making every side effect visible in the name.
+
+The pattern across all five failure modes is the same: the model is not broken, the interface is. Improving the model does not fix an ambiguous description. Improving the description does.
+
+## The protocol problem
+
+Before the Model Context Protocol, every tool provider built its own integration. A database connector spoke one schema format. A code-search API spoke another. A file-system tool spoke a third. Each required its own client library, its own authentication flow, its own error format, and its own documentation for how the model should interact with it. Building an agent that used five tools from three providers meant writing three integrations and maintaining three sets of assumptions about how tool calls worked.
+
+This is the same problem the web faced before HTTP, and the same problem APIs faced before REST. When every provider invents its own wire format, the cost of integration scales with the number of providers — and that cost falls on the consumer, not the provider. What the field needed was not better tools but a standard interface for exposing them.
+
+## MCP — the standard interface
+
+The Model Context Protocol is that standard. Announced by Anthropic in November 2024 and donated to the Linux Foundation's Agentic AI Foundation in December 2025 — co-founded with Block and OpenAI, backed by AWS, Google, Microsoft, Salesforce, and Snowflake — MCP is an open protocol that decouples tool providers from tool consumers. A tool provider builds an MCP server once. A tool consumer — any AI application — connects to it through any MCP client. The provider does not need to know which model or which application will use its tools. The consumer does not need to know how the provider implemented them.
+
+The protocol runs on JSON-RPC 2.0 over two transport options: local stdio for tools running on the same machine, and streamable HTTP for remote servers. It maintains a stateful session — client and server negotiate capabilities at connection time — and defines three primitives that a server can expose:
+
+| Primitive | What it provides | How the model uses it |
+|---|---|---|
+| **Tools** | Executable operations the model can invoke | The model reads the tool's schema, decides to call it, and receives a structured result |
+| **Resources** | Read-only data sources — files, database records, API responses | The model or client pulls context into the window without executing an operation |
+| **Prompts** | Parameterised prompt templates maintained by the server | The client retrieves a template and fills in the parameters before sending it to the model |
+
+Tools are the primitive most relevant to this page — they are the mechanism through which an MCP server exposes actions the model can take. But the separation of tools from resources is itself a design decision worth noting. A tool that returns data and a resource that provides data look similar from the model's perspective. The difference is that a tool executes — it can change state, it can fail, it can have side effects — while a resource is read-only. Keeping them separate means the model knows, before it acts, whether a call will change the world or only read from it.
+
+The invoice tool, exposed as an MCP server:
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+
+const server = new McpServer({
+  name: "billing",
+  version: "1.0.0",
+});
+
+server.tool(
+  "create_invoice",
+  "Create a new invoice for an existing customer. " +
+    "Requires an idempotency key to prevent duplicates on retry.",
+  {
+    idempotency_key: z.string().describe(
+      "Client-generated unique key. Retries with the same key return the original invoice."
+    ),
+    customer_id: z.string().describe("The customer's unique identifier."),
+    line_items: z.array(
+      z.object({
+        description: z.string(),
+        quantity: z.number().int().min(1),
+        unit_price_cents: z.number().int().min(0),
+      })
+    ).min(1).describe("At least one line item is required."),
+    currency: z.enum(["GBP", "EUR", "USD"]).optional().describe(
+      "ISO 4217 code. Defaults to customer's configured currency."
+    ),
+    due_date: z.string().date().optional().describe(
+      "YYYY-MM-DD. Defaults to 30 days from today."
+    ),
+  },
+  async ({ idempotency_key, customer_id, line_items, currency, due_date }) => {
+    // Check idempotency — return cached result if this key was seen before.
+    const existing = await invoiceStore.findByIdempotencyKey(idempotency_key);
+    if (existing) {
+      return { content: [{ type: "text", text: JSON.stringify(existing) }] };
+    }
+
+    const customer = await customerStore.find(customer_id);
+    if (!customer) {
+      return {
+        content: [{ type: "text", text: JSON.stringify({
+          error: "CUSTOMER_NOT_FOUND",
+          message: \`No customer with ID \${customer_id}\`,
+          retryable: false,
+        })}],
+        isError: true,
+      };
+    }
+
+    const invoice = await invoiceStore.create({
+      idempotency_key,
+      customer_id,
+      line_items,
+      currency: currency ?? customer.default_currency,
+      due_date: due_date ?? thirtyDaysFromNow(),
+    });
+
+    return { content: [{ type: "text", text: JSON.stringify(invoice) }] };
+  }
+);
+```
+
+The five principles from earlier are visible in the implementation, not just the schema. Idempotency is enforced by the key check at the top. Safe defaults resolve `currency` and `due_date` from the customer record and the current date. The error is structured — a code, a message, a retry signal — and flagged with `isError: true` so the client knows the call failed without parsing the content. Atomicity holds because this tool creates and does nothing else.
+
+## What MCP changes
+
+MCP does not make tools better. It makes well-designed tools portable. A tool provider that builds an MCP server with clear schemas, structured errors, and idempotent operations makes that tool available to every MCP client — Claude, ChatGPT, Gemini, Cursor, Windsurf, the Vercel AI SDK, the OpenAI Agents SDK — without writing a separate integration for each. The provider builds once; every consumer connects for free.
+
+The economics of this are worth stating plainly. Before MCP, the cost of integrating a tool scaled linearly with the number of consumers. A tool that served five AI applications needed five integrations. After MCP, the cost is fixed: one server, any number of clients. The same economics that made HTTP valuable for the web and REST valuable for APIs make MCP valuable for agent tools. Standards do not eliminate complexity — they move it to one place and let everyone else stop solving it.
+
+By mid-2026, the ecosystem reflects this. Over 13,000 MCP servers are indexed across public registries. The Python and TypeScript SDKs together reach 97 million downloads per month. 78% of enterprise AI teams report at least one MCP-backed agent in production. The protocol has moved past adoption and into infrastructure — the kind of standard you stop noticing because everything uses it.
+
+Capability negotiation — the handshake at connection time where client and server declare what they support — is the detail that makes this work at scale. A client that does not support prompts connects to a server that exposes them and simply ignores that primitive. A server that adds a new tool does not break existing clients. The protocol is additive by design, which means the ecosystem can grow without coordination.
+
+## The difference a standard makes
+
+The distinction between giving an agent tools and giving it well-designed tools behind a standard interface is the difference between a demo and a system. A demo wires three tools by hand, tests them against one model, and works on stage. A system exposes those tools through MCP with tight schemas and structured errors, and they work with any client, any model, any transport — and they work the same way every time.
+
+| | Hand-wired tools | MCP tools |
+|---|---|---|
+| Integration cost per consumer | One custom integration each | Zero — any MCP client connects |
+| Schema format | Whatever the provider invented | JSON Schema, validated at the protocol level |
+| Error format | Strings, HTTP codes, raw exceptions | Structured content with `isError` flag |
+| Discovery | Read the documentation, if it exists | `tools/list` — the client discovers tools at runtime |
+| Transport | Provider-specific | stdio (local) or streamable HTTP (remote) |
+| Capability evolution | Breaking changes require consumer updates | Additive negotiation — new capabilities do not break old clients |
+
+Runtime discovery — `tools/list` returning every tool the server exposes, with its name, description, and schema — is the row that matters most for agent reliability. A hand-wired integration requires the agent's system prompt to contain the tool definitions at build time. An MCP integration lets the agent discover tools at connection time, which means the server can add, remove, or update tools without touching the agent's configuration. The tool catalogue becomes a living thing, not a frozen artefact.
+
+<Callout type="note" title="Reference implementation">
+TensAI maintains a reference MCP server — a billing-domain server with six well-designed tools (`create_invoice`, `get_invoice`, `list_invoices`, `void_invoice`, `create_customer`, `get_customer`), proper input schemas, idempotency keys on every state-changing operation, structured error contracts, and a test client that exercises each tool — at [`tensaicompl/tensai-mcp-reference`](https://github.com/tensaicompl/tensai-mcp-reference). Clone it to see the five principles operating together behind the MCP interface.
+</Callout>
+
+## Tools as the bridge to retrieval
+
+A tool is any operation an agent can invoke, and retrieval — searching a knowledge base, querying a vector store, looking up a document — is itself a tool call. The retrieval tool is, in most production systems, the most frequently called tool an agent has, and the one whose design matters most. A poorly designed retrieval tool — one that returns too many results, or results without provenance, or results the model cannot distinguish from its own knowledge — produces the same class of failures as any other poorly designed tool, just at higher volume and with harder-to-detect consequences.
+
+That makes retrieval the natural next step from this page. The principles taught here — atomicity, discoverability, idempotency, clear error contracts — apply directly to retrieval tool design, and the Model Context Protocol's `resources` primitive was built for exactly this pattern: exposing data sources the model can pull from without executing an operation. The next page takes retrieval as its subject and traces its evolution from naive top-k search to the agentic, self-correcting pipelines that define the current state of the field.

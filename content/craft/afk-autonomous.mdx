@@ -5,8 +5,282 @@ slug: "afk-autonomous"
 definition: "The Ralph loop, agent fleets, and the HITL→on-rails→AFK gradient."
 spineConcepts: [16]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 11
 ---
 
-<ContentPlaceholder title="AFK & Autonomous Agents" />
+An autonomous agent is a system that works while you are not watching. It plans its own steps, executes them, observes the results, and decides what to do next — all without a human approving each action. The field reached this capability in 2025, when coding agents began accepting a task description and returning a finished pull request hours later, and the tooling has matured rapidly since. But capability is not the interesting question. The interesting question is trust — how a system earns the right to act alone — and trust is what this page is about.
+
+## The Ralph loop
+
+Every autonomous agent, regardless of framework or vendor, runs a variant of the same inner loop. The field has converged on five steps — Plan, Act, Observe, Reflect, Decide — and this page calls it the Ralph loop, because naming it precisely is more useful than pretending each implementation invented something new.
+
+Hold one concrete system for the rest of the page: a deployment agent that receives a merged pull request and is responsible for releasing it to production. The agent must check the CI status, run a smoke test against staging, decide whether to proceed or roll back, update the deployment manifest, and notify the team. No human is present. The agent runs overnight.
+
+The Ralph loop, applied to this deployment agent, works as follows:
+
+1. **Plan** — the agent reads the PR, the CI results, and the deployment policy, and produces a plan: run smoke tests on staging, verify no regression in the three endpoints the PR touched, then promote to production.
+2. **Act** — the agent executes the first step of the plan: it triggers the smoke-test suite against the staging environment.
+3. **Observe** — the agent reads the test results. Two of 14 tests failed.
+4. **Reflect** — the agent reasons about what it observed: the failures are in an endpoint the PR did not touch, and the same tests failed on the previous deployment. These are pre-existing flaky tests, not a regression.
+5. **Decide** — the agent decides to proceed to the next step of the plan rather than rolling back. If the failures had been in an endpoint the PR modified, the decision would have been different.
+
+Then the loop runs again — the next plan step becomes the next action, and the cycle repeats until the agent either completes the deployment or hits a condition that causes it to stop and escalate.
+
+```typescript
+// The Ralph loop — plan, act, observe, reflect, decide.
+async function ralph(task: Task, tools: ToolKit, policy: Policy): Promise<Result> {
+  let plan = await model.call("Produce a step-by-step plan.", { task, policy });
+  let state: AgentState = { task, history: [], plan };
+
+  while (!state.terminated) {
+    // Act — execute the current step.
+    const action = selectNextAction(state.plan, state.history);
+    const observation = await tools.execute(action);
+
+    // Observe — record what happened.
+    state.history.push({ action, observation });
+
+    // Reflect — reason about the observation against the plan.
+    const reflection = await model.call(
+      "What does this result mean for the plan? Should the plan change?",
+      { plan: state.plan, history: state.history, policy }
+    );
+
+    // Decide — continue, replan, or terminate.
+    if (reflection.decision === "replan") {
+      state.plan = await model.call("Revise the plan.", {
+        task, history: state.history, reflection, policy
+      });
+    } else if (reflection.decision === "terminate") {
+      state.terminated = true;
+      state.result = reflection.reason;
+    }
+    // else: continue to the next step.
+  }
+
+  return state.result;
+}
+```
+
+The loop is not a ReAct trace with extra steps. It is a separation of concerns within the agent's reasoning. ReAct interleaves thought and action — the model thinks, acts, observes, and thinks again in a single stream. The Ralph loop makes the reflect and decide steps explicit and separate: reflection is about understanding what happened, and the decision is about what to do next. That separation matters because it is where you attach your controls. You can constrain what the agent is allowed to decide without interfering with how it reasons about what it observed. The reflect step is a sensor. The decide step is where a policy can act as a guide.
+
+The loop has one property worth stating directly: it is the evaluator-optimiser pattern from the Five Patterns page, generalised. Where the evaluator-optimiser loops on a single artefact until quality is met, the Ralph loop advances through a multi-step plan and can revise the plan itself. The structure is the same — generate, evaluate, revise — but the scope has widened from one output to an entire task.
+
+## The autonomy gradient
+
+Not every system that runs a Ralph loop should run it unsupervised. The field has settled on three levels of autonomy, and the difference between them is not the architecture of the loop — it is who holds the decide step.
+
+**Human-in-the-loop (HITL)** — every action requires explicit human approval before it executes. The agent plans, the human reviews and approves, the agent acts, the human sees the result. This is pair programming with a machine. The agent is a tool with initiative; the human is the authority on every move. Latency is high. Safety is maximal.
+
+**On-rails** — the agent works within pre-approved boundaries and escalates only when it encounters an exception. The deployment agent, for instance, is pre-approved to run tests, read logs, and update manifests — but not to modify the database schema or disable monitoring. Within its boundary, it acts without asking. Outside the boundary, it stops and calls a human. This is the mode most production agents run in today.
+
+**AFK (away from keyboard)** — the agent is fully autonomous. It has a kill switch and a policy document, but no human is present during execution. It plans, acts, reflects, and decides on its own, potentially for hours. The human reviews the outcome, not each step.
+
+| | HITL | On-rails | AFK |
+|---|---|---|---|
+| Who holds the decide step | Human | Agent, within boundaries | Agent, fully |
+| When human is consulted | Every action | On exception only | After completion (or kill) |
+| Latency per step | Minutes (waiting for approval) | Milliseconds | Milliseconds |
+| Failure mode | Approval fatigue — human rubber-stamps | Boundary gaps — exception not anticipated | Silent drift — agent confident and wrong |
+| Best fit | First deployment of any new agent | Agents with a proven track record on known tasks | Well-evaluated agents on repeatable, low-stakes tasks |
+
+The gradient is not a feature list. It is a trust hierarchy, and you climb it in one direction only — by demonstrating reliability at the level below. An agent that has not proven itself on-rails has not earned AFK. The data supports this directly: Anthropic's analysis of Claude Code sessions found that users grant full auto-approve roughly 20% of the time in their first 50 sessions, rising to over 40% only after 750 sessions. Trust is not configured. It accumulates.
+
+<Callout type="note" title="The failure mode worth memorising">
+The characteristic failure of HITL is not that the human blocks good work — it is that the human stops paying attention. Studies of production deployments in 2025 and 2026 found that human-in-the-loop approval degrades to rubber-stamping within weeks. What was designed as a safety mechanism becomes a checkbox exercise. The paradox is real: HITL is the safest mode in theory and the most vulnerable to complacency in practice. The honest response is not to abandon HITL but to recognise that it is a training phase, not a permanent operating mode — and to design the on-rails boundaries that will replace it.
+</Callout>
+
+## Agent fleets
+
+A single Ralph loop handles a single task. A fleet is multiple agents — each running its own Ralph loop — working in parallel on different parts of a larger problem. The deployment agent is one agent releasing one service. A fleet is eight deployment agents, each releasing a different microservice from the same mono-repo merge, all running at once.
+
+Fleets solve a real problem: the bottleneck in autonomous work is not the speed of any single agent but the serial nature of working through a queue one task at a time. When the tasks are independent — different files, different services, different tests — parallelism is the correct answer, for the same reason it was the correct answer in the parallelisation pattern three pages ago. The difference is that in a workflow pattern, you orchestrate the parallel calls. In a fleet, each parallel unit is itself an autonomous agent with its own loop, its own state, and its own capacity to fail independently.
+
+```typescript
+// Agent fleet — parallel Ralph loops with a coordinator.
+async function fleet(
+  tasks: Task[],
+  tools: ToolKit,
+  policy: Policy,
+  maxConcurrent: number
+): Promise<FleetResult> {
+  const results: Map<string, Result> = new Map();
+  const pool = new Semaphore(maxConcurrent);
+
+  await Promise.all(
+    tasks.map(async (task) => {
+      await pool.acquire();
+      try {
+        const result = await ralph(task, tools, policy);
+        results.set(task.id, result);
+      } catch (err) {
+        results.set(task.id, { status: "failed", error: err });
+      } finally {
+        pool.release();
+      }
+    })
+  );
+
+  return { results, summary: summarise(results) };
+}
+```
+
+Fleet coordination introduces three problems that a single agent never faces:
+
+1. **Shared state** — two agents modifying the same file, the same config, or the same database at the same time. The solution is the same as in concurrent programming: isolate the workspace. Git worktrees, separate branches, sandboxed environments — each agent gets its own copy of the world, and a coordinator merges the results.
+
+2. **Resource contention** — eight agents each consuming a context window, each making tool calls, each waiting on the same CI pipeline. A resource manager must throttle concurrency to what the system can sustain, or the fleet degrades into a queue with extra overhead.
+
+3. **Cross-agent learning** — agent three discovers that the staging database is down. Agents four through eight will discover the same thing, one at a time, wasting cycles. The fleet becomes useful when learnings propagate: agent three's discovery is written to a shared ledger, and agents four through eight read it before they act.
+
+The deployment fleet illustrates all three. Each agent gets its own worktree. A semaphore limits concurrency to what the CI system can handle. And when the first agent discovers the flaky tests, it writes that finding to a shared context — so the next agent skips the false-alarm reflection and moves straight to the deployment step.
+
+Fleets are not a different architecture. They are the Ralph loop, multiplied, with coordination overhead that must be paid or the multiplication does more harm than good.
+
+## The kill switch
+
+An AFK agent must be stoppable. This is not a philosophical position — it is an engineering requirement. A system that acts without supervision and cannot be halted is a system you will, eventually, wish you could halt.
+
+A kill switch has four properties, and all four are non-negotiable:
+
+1. **External** — the switch lives outside the agent's process. An agent that can reason about its own kill switch can reason about whether to honour it. The switch is a supervisor process, a monitoring service, or a hardware interrupt — never a flag the agent checks voluntarily.
+
+2. **Immediate** — the switch stops the agent within one action cycle. It does not wait for the current plan to complete. It does not ask the agent to finish gracefully. It terminates.
+
+3. **Observable** — every action the agent takes is logged before execution, so that when the switch fires, a human can reconstruct what the agent was doing and why it was stopped.
+
+4. **Tested** — the switch is exercised regularly, in production, not only in drills. A kill switch that has never fired is a kill switch you do not know works.
+
+```typescript
+// Kill switch — external supervisor with action-level granularity.
+class AgentSupervisor {
+  private halted = false;
+
+  halt(reason: string): void {
+    this.halted = true;
+    this.log({ event: "halt", reason, timestamp: Date.now() });
+    // Notify on-call, write incident record.
+    this.notify(reason);
+  }
+
+  async guard(action: AgentAction): Promise<boolean> {
+    // Check before every action — not between plans, between steps.
+    if (this.halted) return false;
+
+    // Policy check: is this action within bounds?
+    if (!this.policy.allows(action)) {
+      this.halt(\`Action outside policy: \${action.type}\`);
+      return false;
+    }
+
+    // Resource check: has the agent exceeded its budget?
+    if (this.budget.exhausted()) {
+      this.halt("Token budget exhausted");
+      return false;
+    }
+
+    // Anomaly check: is the agent looping?
+    if (this.detector.isLooping(action)) {
+      this.halt("Loop detected — same action attempted 3 times");
+      return false;
+    }
+
+    this.log({ event: "action_approved", action, timestamp: Date.now() });
+    return true;
+  }
+}
+```
+
+The deployment agent's kill switch is its supervisor process. Before every action — not every plan, every action — the supervisor checks three things: is the agent still within its policy boundary, has it exceeded its token budget, and is it looping (attempting the same action more than twice in a row). If any check fails, the supervisor halts the agent, logs the state, and pages the on-call engineer.
+
+The kill switch is the minimum viable safety mechanism. It is necessary and not sufficient. A kill switch that fires after the agent has already deleted the production database is a kill switch that worked too late. The real safety comes from the layer beneath — the on-rails boundaries, the policy document, the evals that proved the agent would not reach for that action in the first place.
+
+## Earning AFK
+
+Here is the provocation this page has been building to: AFK is not a capability to unlock. It is a trust level to earn. The agent does not become autonomous because you removed the approval gate. It becomes autonomous because it has demonstrated — through evaluation, through a track record on-rails, through guardrails that held across hundreds of runs — that it does not need the gate.
+
+The path from HITL to AFK is a ladder with specific rungs:
+
+**Rung one: evals.** Before an agent runs on-rails, it passes an evaluation suite that covers the task space it will operate in. For the deployment agent, that means: it correctly handles a clean deployment, a deployment with flaky tests, a deployment that should be rolled back, a deployment where staging is down, and a deployment where the manifest is malformed. The evals are not demonstrations — they are adversarial. They include the cases the agent should refuse, not only the cases it should complete.
+
+**Rung two: on-rails with a leash.** The agent runs in production, within boundaries, with every decision logged and a human reviewing the logs daily. The review is not for approval — the agent already acted. The review is for calibration: did the agent's decisions match what a human would have done? Where they diverged, was the agent right or wrong? This phase typically runs for weeks, not days.
+
+**Rung three: on-rails with a longer leash.** The boundaries widen. The agent is permitted to handle more exception types without escalating. The human reviews weekly instead of daily. The eval suite is extended to cover the new boundary.
+
+**Rung four: AFK.** The agent runs overnight, unattended. The human reviews the outcome in the morning. The kill switch is live. The eval suite runs on every release of the agent's code. The on-rails boundaries are still in the policy document — not as active constraints, but as a record of what was proven safe and when.
+
+| Rung | Mode | Human involvement | Duration |
+|---|---|---|---|
+| 1 | Eval suite | Designs and reviews evals | Before deployment |
+| 2 | On-rails, daily review | Reviews every decision log | Weeks |
+| 3 | On-rails, weekly review | Reviews aggregated summaries | Weeks to months |
+| 4 | AFK | Reviews outcomes, maintains evals | Ongoing |
+
+The ladder is not optional. Each rung depends on the one below it. An agent that skipped evals and went straight to AFK is an agent whose first production failure will be its evaluation suite — run by the incident, against real users, at the worst possible time.
+
+## Configurable autonomy
+
+The gradient from HITL to AFK should not be hard-coded. A well-built agent accepts its autonomy level as configuration, not architecture. The same Ralph loop, the same tools, the same policy — what changes is a single parameter that controls whether the decide step requires human approval, operates within boundaries, or runs free.
+
+```typescript
+// Configurable autonomy — same loop, different trust level.
+type AutonomyLevel = "hitl" | "on-rails" | "afk";
+
+interface AgentConfig {
+  autonomy: AutonomyLevel;
+  policy: Policy;           // What the agent is allowed to do.
+  supervisor: Supervisor;   // Kill switch + logging.
+  escalation: EscalationConfig; // Who to call and when.
+}
+
+async function decide(
+  reflection: Reflection,
+  config: AgentConfig
+): Promise<Decision> {
+  const proposed = reflection.proposedAction;
+
+  switch (config.autonomy) {
+    case "hitl":
+      // Every action requires approval.
+      return await config.escalation.requestApproval(proposed);
+
+    case "on-rails":
+      // Within policy: proceed. Outside: escalate.
+      if (config.policy.allows(proposed)) return { action: proposed };
+      return await config.escalation.requestApproval(proposed);
+
+    case "afk":
+      // Policy + kill switch, no human in the loop.
+      if (!config.policy.allows(proposed)) {
+        config.supervisor.halt(\`Policy violation: \${proposed.type}\`);
+        return { action: "terminate" };
+      }
+      return { action: proposed };
+  }
+}
+```
+
+This is the architecture the deployment agent uses. In its first week of operation, it ran as HITL — every deployment approved by a human. In week three, after the eval suite passed and the first two weeks of logs showed no divergence from human judgment, it moved to on-rails: permitted to deploy clean builds and escalate anything else. After two months of clean operation and 340 successful deployments, it moved to AFK. The code did not change. The config did.
+
+The value of configurable autonomy is that you can move backwards. When the deployment pipeline changes — a new cloud provider, a new manifest format — the agent drops back to on-rails until the eval suite is updated and the new task space is proven. Demotion is not a failure. It is the mechanism that keeps the trust calibrated.
+
+## What the field is building
+
+The deployment agent is one agent on one task. The field's trajectory — visible in Claude Code's background agents, OpenAI's Codex, GitHub's coding agent, and Devin — is towards systems that run fleets of autonomous agents across entire workflows, unsupervised, for hours.
+
+Claude Code's auto mode is the clearest illustration of the gradient in a shipping product. It implements a two-stage classifier: a fast allowlist handles safe actions (file reads, searches, navigation) without any prompt, while everything else goes to a reasoning classifier that evaluates context before approving or escalating. If a session accumulates three consecutive denials, the system stops the agent and hands control back to the human. This is not HITL, and it is not AFK. It is on-rails — the boundary is drawn by classifier confidence, and the escalation is automatic.
+
+OpenAI's Codex runs each task in a sandboxed cloud environment — isolated filesystem, no network access, no ability to affect production. The sandbox is the boundary. The agent is fully autonomous within it, but "within it" means it can modify files and run tests, not deploy code or access secrets. The pull request it produces is the escalation point: a human reviews the output, not the process.
+
+The pattern across all of these systems is the same. None of them shipped as AFK-from-day-one. Each started with aggressive constraints — sandboxes, classifiers, mandatory review — and expanded the boundary as the tooling and the evals matured. The ones that work are the ones that treated autonomy as something to be earned across hundreds of sessions, not declared in a launch announcement.
+
+<Callout type="note" title="Reference implementation">
+The deployment agent from this page — the Ralph loop, a fleet variant, configurable autonomy levels, and a kill-switch supervisor — is implemented at [`tensaicompl/tensai-autonomous-reference`](https://github.com/tensaicompl/tensai-autonomous-reference). The repo ships with an eval suite that covers clean deployments, rollbacks, flaky-test scenarios, and policy violations, and a configuration file that switches between HITL, on-rails, and AFK modes without changing the agent code.
+</Callout>
+
+## The gradient leads to the edge
+
+Autonomous agents are the most capable systems the field can build — and the most exposed to failure. A HITL agent that hallucinates is caught by the human before it acts. An on-rails agent that exceeds its boundary is caught by the escalation gate. An AFK agent that hallucinates, acts on the hallucination, and reflects that its action succeeded has compounded an error across every step of the loop with no human present to interrupt. Every failure mode the field has catalogued — hallucination, reward hacking, goal drift, context poisoning, cascade failure in multi-agent systems — is amplified by autonomy, because autonomy removes the one control that catches everything else: a person watching.
+
+That is why the failure taxonomy is the final page of The Craft. It is the catalogue of everything that can go wrong when the system is trusted to act alone — and the engineering response to each one. The taxonomy is not a list of theoretical risks. It is the set of failure modes that autonomous agents encounter in production, and every guardrail on this page exists because one of those failures happened first.

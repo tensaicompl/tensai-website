@@ -5,8 +5,223 @@ slug: "multi-agent"
 definition: "Topologies, transfer contracts, and the inter-agent wire protocol."
 spineConcepts: [11, 12, 18]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 7
 ---
 
-<ContentPlaceholder title="Multi-Agent, Handoffs & A2A" />
+A multi-agent system is a system where more than one agent shares a task — each with its own instructions, tools, and model calls — and the architecture decides how they coordinate. That coordination takes a small number of shapes: one agent supervises the others, agents pass work down a chain, or agents hand off to one another in a network. The choice of shape is the choice of where control lives, how state moves, and where failure propagates — and it is a harder choice than it looks, because the simplest answer is often not to split the work at all.
+
+The question this page exists to answer is the one most teams skip: when does splitting work across multiple agents actually outperform a single agent with more tools. The answer is less often than the architecture diagrams suggest — and when it does, the topology and the handoff contract matter more than the number of agents.
+
+## Why not just one agent
+
+A single agent with access to every tool can, in principle, do anything a team of agents can do. It reads the task, picks the tool, acts, observes, and repeats. For most tasks, this is the right answer — and reaching for multiple agents before a single agent has hit a wall is the multi-agent version of the same mistake the Agents vs Workflows page warned about: adding autonomy before it has earned its place.
+
+The wall is real, though, and it comes in three forms. First, context saturation — a single agent whose tool set, instructions, and accumulated state exceed what the model can hold in its window begins to lose precision on all of them. A support agent that also handles billing, refunds, account changes, and escalation is not four specialists in one; it is one generalist whose instructions compete for attention. Second, conflicting constraints — the careful, policy-bound tone required for a compliance check is a different persona from the fast, creative drafting required for content generation, and a single system prompt cannot serve both well at once. Third, parallelism — a task that decomposes into independent subtasks gains wall-clock speed only if those subtasks run concurrently, and a single agent is sequential by definition.
+
+Hold a concrete example for the rest of the page: a code-review pipeline. A pull request arrives. Someone — or something — must plan what to review, read the diff against the codebase, check for security issues, verify the tests pass, and write a summary. A single agent can do all of this, and for a small diff it should. But as the diff grows, the context window fills with code that competes with the review instructions; the security analysis wants a different mental frame from the stylistic review; and the test verification can run while the review is still being written. This is the wall — and this is where splitting the work begins to pay.
+
+The provocation is simple: most multi-agent systems in production today would perform better as a single agent with a longer context window and a tighter prompt. The ones that genuinely benefit from the split share a structural property — the task decomposes into subtasks that are better served by isolated contexts, distinct instructions, or parallel execution. If none of those three conditions holds, the coordination overhead of multiple agents is pure cost.
+
+## The five topologies
+
+A topology is the shape of the connections between agents — who talks to whom, and who decides what happens next. Five topologies cover essentially all production multi-agent systems, and they compose: a supervisor can manage a pipeline, a pipeline stage can internally run a swarm. The skill is knowing which shape fits which coordination problem.
+
+### Supervisor
+
+One agent — the supervisor — receives the task, decomposes it, delegates subtasks to specialist agents, collects their results, and synthesises the answer. The supervisor holds the full context of the task; the specialists see only their slice. Anthropic's "brain and hands" pattern, shipped in production in early 2026, is a supervisor topology: a lead agent breaks a job into pieces and delegates each to a sub-agent with its own model, prompts, and tools.
+
+In the code-review pipeline, the supervisor reads the pull request, decides which specialists to invoke — a security reviewer, a style checker, a test verifier — collects their verdicts, and writes the final summary. The supervisor sees every specialist's output; no specialist sees another's.
+
+**Strengths:** clear accountability (the supervisor owns the outcome), easy to reason about (the flow is a star, not a web), natural fit for decomposition tasks.
+**Costs:** the supervisor is a bottleneck and a single point of failure; its context window must hold every specialist's output; it pays the latency of waiting for the slowest specialist.
+
+### Pipeline (chain)
+
+Agents are arranged in a fixed sequence. Each agent receives the output of the previous one, transforms it, and passes the result forward. No agent sees the full task — each sees only what the previous stage produced.
+
+In the code-review pipeline, the chain runs: planner (decides what to review) then security reviewer (checks the diff) then style checker (checks conventions) then summariser (writes the final report). Each stage's output is the next stage's input, and the chain is the entire control flow.
+
+**Strengths:** simple to build, simple to debug (each stage's input and output are inspectable), natural fit for tasks with a clear sequence.
+**Costs:** strictly sequential — no parallelism; an error in an early stage poisons every downstream stage; adding a stage means changing the chain.
+
+### Parallelisation (fan-out / fan-in)
+
+A coordinator sends the same task — or independent slices of a task — to multiple agents simultaneously, then collects and merges their results. This is the supervisor topology with concurrent execution of independent subtasks.
+
+In the code-review pipeline, the coordinator fans out the diff to a security reviewer, a style checker, and a test runner in parallel, waits for all three, and merges their verdicts into a single report. The three specialists never communicate with one another.
+
+**Strengths:** wall-clock speedup proportional to the number of parallel agents; each agent works in a clean, isolated context.
+**Costs:** the merge step is its own hard problem (conflicting verdicts, inconsistent framing); coordination overhead grows with the number of parallel agents; an error in one branch may invalidate the merge.
+
+### Swarm
+
+Agents operate as peers with no fixed hierarchy. Each agent can hand off to any other agent in the swarm based on its own judgment, and control flows through the network dynamically. OpenAI's Agents SDK, which replaced the experimental Swarm framework in March 2025, makes this the default pattern: each agent carries a list of other agents it can hand off to, and the model decides when and where to transfer.
+
+In the code-review pipeline, a triage agent reads the pull request and hands off to whichever specialist it deems most relevant — security, style, or testing. That specialist may hand off to another, or back to the triage agent, depending on what it finds.
+
+**Strengths:** flexible — handles tasks whose decomposition is not known in advance; agents self-organise around the actual problem.
+**Costs:** hard to predict, hard to debug, hard to test. Free-form delegation is a documented failure mode — production swarms that survived 2025 did so by constraining the handoff graph to a small, curated set of transitions, not by allowing arbitrary agent-to-agent transfers. In practice, a swarm that works is a supervisor with a more flexible delegation policy, not a genuinely flat network.
+
+### Hierarchy (nested supervisors)
+
+A supervisor delegates to sub-supervisors, each of which manages its own team of specialists. The structure is a tree — the root supervisor sets the high-level plan, mid-level supervisors manage subsystems, and leaf agents do the work.
+
+In the code-review pipeline, a root supervisor delegates "security review" to a security sub-supervisor, which in turn manages a dependency-audit agent and a vulnerability-scan agent. The root never sees the leaf agents; each level of the tree sees only one level down.
+
+**Strengths:** scales to large, complex tasks; mirrors organisational structure; each supervisor's context is bounded.
+**Costs:** deep hierarchies multiply latency and coordination overhead; information loss at each level; the tree structure must be designed up front, which means the decomposition must be known in advance.
+
+| Topology | Control | Parallelism | When it fits |
+|---|---|---|---|
+| Supervisor | Centralised, one orchestrator | Yes, if orchestrator fans out | Decomposable tasks with a clear owner |
+| Pipeline | Sequential, fixed order | No | Tasks with a natural stage sequence |
+| Parallelisation | Centralised fan-out/fan-in | Yes, by design | Independent subtasks, same input |
+| Swarm | Decentralised, peer handoffs | Possible but hard to control | Tasks whose routing is not known in advance |
+| Hierarchy | Tree of supervisors | Yes, within each subtree | Large tasks needing bounded context per level |
+
+Every production multi-agent system this page has examined turns out to be one of these five, or a composition of two. The topology is not a style choice — it is a structural decision about where control, state, and failure live, and changing it after the system is built is expensive.
+
+## Handoffs — the transfer contract
+
+A handoff is the moment one agent transfers execution to another. It is not a function call — the first agent does not wait for the second to return. It is a one-way transfer of control: the first agent stops, the second agent starts, and the conversation continues under new instructions, new tools, and potentially a new model.
+
+The concept was formalised by OpenAI's Agents SDK, where a handoff is represented as a tool the model can invoke. When agent A decides to hand off to agent B, the model calls a tool named something like `transfer_to_security_reviewer`. The SDK then replaces the active agent — swapping instructions, tools, and the handoff list — and the new agent picks up the conversation from the existing message history.
+
+Three things make a handoff contract reliable:
+
+**1. A typed payload.** The handoff carries data — the context the receiving agent needs to do its work. In the code-review pipeline, the handoff from the triage agent to the security reviewer carries the diff, the list of changed files, and the repository's security policy. This payload should be typed — a schema, not a free-text dump — because an untyped handoff is a prompt injection surface between your own agents.
+
+**2. An input filter.** Not everything in the conversation history is relevant to the receiving agent, and forwarding the full history is both wasteful and dangerous — it pollutes the new agent's context with instructions and reasoning it should not see. The Agents SDK provides an `input_filter` function that transforms the handoff data before the new agent receives it, allowing you to strip, summarise, or restructure the context at the boundary.
+
+**3. A one-way commitment.** A handoff is not a delegation — it is a transfer. The first agent does not resume after the second finishes. If the second agent needs to return control, that is a separate handoff back, with its own payload and its own filter. This asymmetry is deliberate: it keeps each agent's scope bounded and prevents the circular delegation patterns that plague unconstrained multi-agent systems.
+
+```typescript
+// A handoff contract in the code-review pipeline.
+// The triage agent transfers to the security reviewer
+// with a typed payload and a filtered conversation history.
+
+const securityReviewer = new Agent({
+  name: "security_reviewer",
+  instructions: "Review the diff for security vulnerabilities...",
+  tools: [dependencyAudit, cveDatabase],
+});
+
+const triageAgent = new Agent({
+  name: "triage",
+  instructions: "Read the PR and route to the right reviewer.",
+  handoffs: [
+    handoff(securityReviewer, {
+      inputFilter: (data) => ({
+        // Strip triage reasoning; pass only what the
+        // security reviewer needs.
+        history: data.history.filter(m => m.role !== "assistant"),
+        context: {
+          diff: data.context.diff,
+          changedFiles: data.context.changedFiles,
+          securityPolicy: data.context.securityPolicy,
+        },
+      }),
+    }),
+  ],
+});
+```
+
+The handoff is where most multi-agent systems fail in practice. Research published in late 2025 found that unstructured multi-agent systems — agents working in parallel without typed communication protocols — amplified errors by a factor of 17 compared to single-agent baselines. The handoff contract is not ceremony; it is the difference between coordination and chaos.
+
+## Shared state and message passing
+
+Agents in a multi-agent system need to share information, and how they do it is the second structural decision after topology. Two patterns dominate: shared state and message passing. They are not interchangeable — each fits a different coordination shape.
+
+**Shared state** gives all agents read-write access to a common data store — a file system, a database, a shared memory object. Anthropic's multi-agent orchestration uses a shared filesystem: the lead agent and its sub-agents all operate on the same directory, and coordination happens through the artifacts they produce. LangGraph takes a more structured approach — a typed state object that every node in the graph can read and write, with reducer functions that resolve concurrent writes.
+
+**Message passing** gives each agent its own context and routes messages between them — through a queue, an event bus, or direct invocation. AutoGen's GroupChat pattern is pure message passing: agents take turns posting messages to a shared conversation, and a manager agent decides who speaks next.
+
+The trade-off maps directly to the topology:
+
+| Pattern | Fits | Risks |
+|---|---|---|
+| Shared state | Supervisor, parallelisation — where agents work on parts of the same artifact | Write conflicts, state pollution, agents reading stale data |
+| Message passing | Pipeline, swarm — where agents have distinct contexts and sequential handoffs | Message loss, ordering bugs, context window bloat from long message chains |
+| Hybrid | Hierarchy — shared state within a team, messages between teams | Complexity of maintaining both; unclear which channel carries authority |
+
+The practical lesson from production systems in 2025 and 2026 is that every successful multi-agent deployment enforces schema at the boundary. Whether the boundary is a shared-state write or a message payload, the data crossing it is validated against a schema — not left as free text for the receiving agent to interpret. Free-text boundaries between agents are prompt injection surfaces you built yourself.
+
+## A2A — the inter-agent wire protocol
+
+Everything above assumes agents that live in the same system — the same codebase, the same runtime, the same trust boundary. A2A — the Agent-to-Agent protocol — is the answer to a different question: how do agents built by different organisations, running on different infrastructure, discover each other and collaborate over a network.
+
+Google announced A2A in April 2025. By June 2025, governance had moved to the Linux Foundation. By April 2026, over 150 organisations had adopted it, IBM's Agent Communication Protocol had merged into it, and production deployments were running at Microsoft, AWS, Salesforce, SAP, and ServiceNow. For inter-agent integration today, A2A is the emerging standard — not because it is perfect, but because nothing else has reached critical mass.
+
+The protocol is built on three primitives:
+
+**Agent Cards.** An Agent Card is a JSON document an agent publishes at a well-known URL, describing its identity, capabilities, skills, endpoint, and authentication requirements. It is the agent equivalent of an API's OpenAPI spec — a machine-readable advertisement of what the agent can do and how to call it. Discovery starts with the card: a client agent fetches the card, reads the skills, and decides whether this agent can help with its current task.
+
+**Tasks.** A Task is the unit of work. A client agent creates a task by sending a JSON-RPC 2.0 request to the server agent's endpoint. The task has a unique ID and progresses through a lifecycle — `submitted`, `working`, `input-required`, `completed`, `failed`. The client can poll for status or, if the server supports streaming, receive real-time updates via Server-Sent Events. Tasks carry Messages (the conversation) and produce Artifacts (the outputs — documents, structured data, files).
+
+**Parts.** A Part is the smallest unit of content within a message or artifact — text, a file reference, or structured data. Parts are typed and composable, which means an agent can return a mix of prose, code, and binary data in a single response.
+
+```json
+// An Agent Card for the security reviewer in the code-review pipeline,
+// published for discovery by other agents over A2A.
+{
+  "name": "Security Reviewer",
+  "description": "Reviews code diffs for security vulnerabilities.",
+  "url": "https://agents.example.com/security-reviewer",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false
+  },
+  "skills": [
+    {
+      "id": "vulnerability-scan",
+      "name": "Vulnerability Scan",
+      "description": "Scans a code diff against known CVE databases.",
+      "inputModes": ["text/plain", "application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "authentication": {
+    "schemes": ["Bearer"]
+  }
+}
+```
+
+A2A is deliberately transport-level — it specifies how agents communicate, not what they say or how they reason. It does not prescribe topology, shared-state management, or handoff semantics. This is both its strength and its limitation. A2A lets a security-review agent built by one team accept tasks from a code-review orchestrator built by another, across organisational and infrastructure boundaries. It does not help you design the orchestrator, choose the topology, or structure the handoff payload — that is the work described in the sections above.
+
+The distinction matters: A2A solves interoperability between agents. Handoff contracts solve coordination within a multi-agent system. MCP — the Model Context Protocol — solves how a single agent connects to its tools. These three standards occupy different layers of the stack, and conflating them is a common source of architectural confusion.
+
+<Callout type="note" title="Three protocols, three layers">
+MCP connects an agent to its tools — the interface between the model and the capabilities it can invoke. Handoff contracts connect agents to each other within a system — the interface between one agent's output and another's input. A2A connects agents across systems — the wire protocol for inter-organisational agent collaboration. They are not competing standards. They are three layers of the same stack, and a well-built multi-agent system uses all three: MCP inward, handoff contracts laterally, A2A outward.
+</Callout>
+
+## When to split — the decision framework
+
+The topologies, the handoff contracts, and the wire protocol are all engineering tools. The harder question is when to reach for them. The research from production deployments in 2025 and 2026 converges on a decision framework with three gates, and a task must pass at least one to justify the multi-agent split.
+
+**Gate 1 — Context isolation.** The subtasks require different instructions, different personas, or different tool sets, and combining them into a single prompt degrades performance on all of them. If the security reviewer's instructions interfere with the style checker's — because the model cannot hold two contradictory personas at once — isolation into separate agents is the fix. Measure it: run the combined prompt and the split prompts on the same eval set and compare accuracy.
+
+**Gate 2 — Parallelism.** The subtasks are independent and the task is latency-sensitive. A supervisor that fans out to three specialists running concurrently finishes in the time of the slowest specialist. The same work done sequentially by a single agent takes three times as long. The gain is real only if the subtasks are genuinely independent — if they share state or depend on each other's output, the parallelism is illusory.
+
+**Gate 3 — Scale.** The task exceeds a single agent's context window — the accumulated instructions, tool definitions, conversation history, and working state no longer fit. This gate is becoming rarer as context windows grow, but it is still real for tasks that require holding large codebases, long documents, or deep conversation histories in working memory.
+
+If none of these gates opens, a single agent with a well-structured prompt and the right tools is the better architecture. It is cheaper to run, simpler to debug, and — critically — does not pay the coordination tax. Multi-agent coordination on sequential reasoning tasks has been measured at 39 to 70% performance degradation compared to single-agent baselines. The overhead is not free, and pretending otherwise is how multi-agent projects get cancelled.
+
+| Gate | Signal that it is open | Signal that it is closed |
+|---|---|---|
+| Context isolation | Eval scores drop when instructions are combined | A single prompt handles all personas without degradation |
+| Parallelism | Independent subtasks and a latency budget that demands concurrency | Subtasks depend on each other's output |
+| Scale | Context window is full before the task is done | The task fits comfortably in a single window |
+
+The framework is not a checklist — it is a diagnostic. Run the single-agent version first, measure where it fails, and split only at the failure point. The topology, the handoff contract, and the state protocol follow from the failure mode, not from an architecture diagram drawn before any code was written.
+
+<Callout type="note" title="Reference implementation">
+The code-review pipeline from this page — a supervisor with typed handoff contracts, three specialist agents (security, style, test), and an A2A Agent Card for cross-system discovery — is implemented at [`tensaicompl/tensai-multi-agent-reference`](https://github.com/tensaicompl/tensai-multi-agent-reference). The repository includes all five topologies applied to the same task, so the reader can see where each one helps and where it hurts.
+</Callout>
+
+## The coordination tax — and where it leads
+
+Every agent added to a system adds a coordination surface — a handoff that can drop context, a message that can arrive out of order, a shared-state write that can conflict. The coordination tax is real, it compounds, and it is the reason most production multi-agent systems that survived into 2026 converged on the simplest topology that worked: a supervisor with a small, bounded set of specialists, not a free-form swarm. The three patterns that proved durable — supervisor fan-out, fixed pipeline, and constrained swarm with a curated handoff graph — all share a property: the coordination surface is designed, not emergent.
+
+That insight points forward. Once a task is split across multiple agents, the reliability of each individual agent becomes the critical lever — because a chain of agents is only as reliable as its weakest link, and a supervisor that delegates to an unreliable specialist will produce unreliable results regardless of how well the topology is designed. Steering each agent — controlling its behaviour at runtime through mechanistic and operational levers — is the subject of the next page, and it is the discipline that makes multi-agent systems trustworthy rather than merely impressive.

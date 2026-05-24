@@ -5,8 +5,89 @@ slug: "adoption-patterns"
 definition: "The adoption cliff, the scaling cliff, the governance gap."
 spineConcepts: [14]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 5
 ---
 
-<ContentPlaceholder title="Adoption & Failure Patterns" />
+Every organisation that adopts AI at scale hits the same three failure patterns — the adoption cliff, the scaling cliff, and the governance gap — and nearly every one is surprised by them, because they look nothing like technology problems. They are organisational problems wearing technology masks: usage that evaporates after the first month, a successful pilot that cannot be replicated, a governance vacuum that remains invisible until the first real incident fills it. More than 80% of AI projects fail to deliver business value, and the failure rate for generative AI pilots is higher still. Those numbers are not a commentary on the technology. They are a commentary on the absence of the operating model this pillar has been teaching.
+
+## The adoption cliff
+
+The pattern begins with enthusiasm. A team builds a pilot — a summarisation tool, a classification agent, a drafting assistant — and the first week's usage looks strong. Executives circulate the dashboard. By the end of the first month, daily active usage has dropped by half. By the third month, the tool is open in a browser tab that nobody switches to. The adoption cliff is the gap between a tool that works and a tool that is used, and it is the most common way an AI investment dies — not with a failure, but with a quiet fade.
+
+The cliff has three causes, and they reinforce each other. The first is workflow integration. An agent that sits outside the existing workflow — a separate tab, a separate login, a separate step — demands that the user change how they work in order to use it. Most will not. A contact-centre summarisation engine with 90% accuracy gathers dust when supervisors instruct agents to keep typing notes manually, because the AI summary is not embedded in the tool they already use but beside it. The second cause is unclear value. If the user cannot see, within seconds, what the agent saved them — time, effort, a decision they would otherwise have had to make — they will revert to the process they already trust. The third is trust, and it is the deepest. A user who has seen the agent get something wrong once will not use it a second time unprompted, regardless of the error rate. Trust is not built by accuracy statistics. It is built by the user's direct experience of catching or not catching mistakes, and by whether someone they respect — a team lead, a peer, a named champion — visibly relies on the tool.
+
+Consider a running example that will carry through the rest of the page: a European logistics company deploying an AI agent to draft customs declarations. The pilot runs in one office, with eight experienced brokers. It works well — the agent pre-fills 85% of the declaration fields correctly, and the brokers catch and correct the rest. Leadership decides to roll it out to 14 offices across four countries. Within six weeks, usage in 11 of the 14 offices has dropped below 10%. The three offices still using it are the ones where a senior broker was involved in the pilot and now walks new users through the tool in person. The technology did not change between the pilot and the rollout. The presence of a human champion did.
+
+The adoption cliff is not a user problem. It is a design problem — a failure to embed the agent into the work, to make its value legible, and to build trust through people rather than through dashboards. Solving it requires workflow integration as a first-class engineering requirement, not an afterthought; explicit value metrics visible to the end user, not only to management; and a champion network — named individuals in each team who use the tool daily and whose role includes showing others how to use it. Prosci's data puts the difference plainly: AI initiatives with dedicated change management achieve a 58% success rate; without it, 16%.
+
+The adoption cliff is not about whether the technology works. It is about whether anyone bothered to make it part of the job.
+
+## The scaling cliff
+
+A pilot succeeds. The next question — "How do we roll this out to the rest of the organisation?" — is where the second pattern strikes, and it strikes harder because it arrives disguised as good news.
+
+The scaling cliff is the structural wall between a working pilot and a production capability, and it exists because pilots are built to prove a point, not to be reused. The customs-declaration agent in the logistics company was built by two engineers over three weeks. Its prompts are hardcoded for Belgian customs forms. Its evaluation pipeline is a spreadsheet where one of the engineers manually checks 50 outputs a week. It has no monitoring, no structured logging, no way to detect when its accuracy degrades. It runs on one engineer's API key. It works — beautifully, for one office, for one form type, for one country. Scaling it to 14 offices across four countries means supporting different customs regimes, different languages, different form structures, and different regulatory requirements. The pilot's architecture cannot absorb any of this without being rebuilt from scratch.
+
+This is the pattern: the very qualities that make a pilot fast to build — hardcoded prompts, manual evaluation, no abstraction, no reuse infrastructure — are the qualities that prevent it from scaling. Only 33% of AI pilots ever reach production. The remaining two-thirds do not fail because the idea was bad. They fail because the pilot was never designed to become anything other than a pilot.
+
+The scaling cliff has a precise anatomy:
+
+| Pilot reality | Production requirement |
+|---|---|
+| Hardcoded prompts tuned to one use case | Parameterised, versioned prompt templates |
+| Manual evaluation by the builder | Automated eval pipeline with regression detection |
+| No monitoring beyond "it seems to work" | Structured traces, latency and cost dashboards, drift alerts |
+| Single API key, single provider | Gateway with multi-provider routing, rate-limit pooling, failover |
+| One-off build, no documentation | Reusable skill with manifest, owner, version, governance metadata |
+| Builder is the operator | Dedicated ownership, on-call rotation, incident response |
+
+The logistics company faces every row. To scale the customs agent, they must extract the Belgian-specific logic into a configuration layer, build eval sets for each country's form type, instrument the agent for monitoring, route it through a gateway, package it as a governed skill, and assign an owner. This is not incremental work on top of the pilot. It is a second build — and the organisation that approved three weeks of pilot work is now being asked to approve three months of platform work, with no new demo to show for it.
+
+The scaling cliff is the Stage 2-to-3 wall from the maturity model, seen from the engineering side. The wall is not a lack of ambition. It is the absence of reuse infrastructure — the platform, the skill registry, the eval pipeline, the governance metadata — that turns a one-off success into a repeatable capability. Organisations that clear it do so by building the platform before the second pilot, not after the tenth.
+
+<Callout type="note" title="The pilot trap">
+The most dangerous pilot is the one that succeeds. A failed pilot is abandoned and costs only the time it took. A successful pilot creates organisational pressure to scale — pressure that collides with an architecture designed for exactly one instance. The result is either a painful rebuild that leadership did not budget for, or — more commonly — a series of copy-pasted pilots, each hardcoded to its own context, each maintained by whoever built it, each slowly drifting out of accuracy with no shared infrastructure to detect or correct the drift. The field has a name for this: pilot purgatory. The exit is not more pilots. It is the operating model.
+</Callout>
+
+## The governance gap
+
+The third pattern is the quietest and the most destructive. It does not announce itself with declining usage or a failed rollout. It announces itself with an incident — and by then, the damage is organisational.
+
+The governance gap is the distance between what an organisation's AI systems can do and what its governance structures are prepared to handle. It widens silently. Teams deploy agents without risk assessment. Employees paste proprietary data into public models — shadow AI, the field calls it, and it is not an edge case: 83% of organisations operate without basic controls to prevent data exposure to AI tools. Agents are launched without named owners, without incident response plans, without anyone accountable for what happens when the agent gets something wrong. The gap is invisible precisely because nothing has gone wrong yet — and invisibility is what makes it dangerous.
+
+Return to the logistics company. The customs-declaration agent is working in three offices. It has no formal risk classification. Nobody has assessed what happens if it produces an incorrect declaration — the regulatory exposure, the financial penalty, the reputational cost. No policy governs what data the brokers can paste into it. No incident response plan exists for the day the agent pre-fills a declaration with a commodity code that triggers a customs inspection and a delayed shipment worth several hundred thousand euros. That day arrives. A broker in the Rotterdam office accepts an agent-suggested commodity code without checking it. The shipment is flagged, held for 11 days, and the client — a tier-one account — demands an explanation. Leadership's response is immediate and predictable: freeze all AI deployments, company-wide, pending a full review.
+
+The freeze is the governance gap's signature consequence. It is not proportionate — the incident involved one agent in one office — but it is rational, because leadership has just discovered that they have no way of knowing how many other ungoverned agents are running, what data they are touching, or what risks they carry. The freeze is not an overreaction. It is the only responsible action available to an organisation that has no governance scaffold.
+
+The numbers confirm the pattern. The Stanford HAI AI Index recorded 233 AI-related incidents in 2024 alone. IBM's data shows that shadow AI incidents now account for 20% of all breaches and carry a cost premium of $4.63 million per incident. Gartner predicts that 80% of data and analytics governance initiatives will fail by 2027 — not because governance is impossible, but because most organisations treat it as a compliance exercise to be completed rather than an operating discipline to be practised.
+
+The governance gap has three layers, each feeding the next:
+
+| Layer | What is missing | What happens |
+|---|---|---|
+| Risk classification | No inventory of AI systems, no risk tiering | Organisation cannot distinguish a low-risk summariser from a high-risk decision agent |
+| Policy framework | No acceptable-use policy, no data governance for AI, no model inventory | Shadow AI proliferates; data exposure goes undetected |
+| Operational governance | No named owners, no incident response, no escalation path | The first real incident triggers an organisation-wide freeze |
+
+The governance gap is not a future risk. It is a present condition in most organisations deploying AI — and the longer it persists without an incident, the wider it grows.
+
+## Why all three are the same problem
+
+The three patterns look different on the surface — one is a usage problem, one is an engineering problem, one is a policy problem. Beneath the surface, they share a single root cause: the organisation treated AI as a technology to be deployed rather than a capability to be operated.
+
+The adoption cliff exists because nobody designed the operating wrapper — the workflow integration, the champion network, the feedback loop from users back to the team that built the agent. The scaling cliff exists because nobody built the reuse infrastructure — the skill registry, the eval pipeline, the platform that turns a one-off into a repeatable asset. The governance gap exists because nobody built the governance scaffold — the risk register, the policy framework, the named ownership that makes incident response possible before an incident occurs.
+
+Each of these is a layer of the operating model. Together, they form the system that turns AI capability into an organisational asset — one that is adopted because it is embedded in the work, scales because it is built on shared infrastructure, and survives its first incident because governance was in place before the incident arrived.
+
+The logistics company that deployed the customs agent needed all three layers from the start. It needed the adoption layer — a champion in each office, the agent embedded in the existing customs workflow, visible metrics showing time saved per declaration. It needed the scaling layer — the Belgian prompts extracted into a configurable skill, an eval pipeline testing accuracy per country, monitoring that would catch a drift in commodity-code accuracy before a broker accepted a wrong suggestion. And it needed the governance layer — the agent classified by risk tier, a data policy governing what information enters the model, a named owner accountable for the system's behaviour, and an incident response plan that could contain a single-office problem without freezing the entire organisation.
+
+Without any one of those layers, the deployment was a pilot pretending to be a product. That pretence is the common thread of all three failure patterns — and it is the pretence the operating model exists to end.
+
+## The prevention is the operating model
+
+Every page in this pillar — skills as the reusable unit, the power-user distribution, the agent catalogue, the centre of enablement — exists to prevent one or more of these patterns. Skills prevent the scaling cliff by making capability reusable and versioned from the start. The power-user distribution prevents the adoption cliff by embedding champions into every tier. The agent catalogue prevents the governance gap by making every deployed system visible, owned, and risk-classified. The centre of enablement ties all three together — the platform team that maintains the shared infrastructure, enforces the governance scaffold, and enables teams to build on the platform rather than beside it.
+
+The three failure patterns are not inevitable. They are predictable — and what is predictable is preventable, provided the prevention is structural rather than heroic. No amount of individual effort will compensate for a missing operating model. The logistics company did not need smarter engineers or more enthusiastic brokers. It needed the organisational layer between strategy and code — the layer this pillar has been building, page by page, from the reusable unit to the catalogue to the centre of enablement to this final accounting of what happens without it.
+
+These patterns are what the operating model exists to prevent. They are also, read in reverse, the clearest argument for why an operating model is not optional — why capability without operations is not an asset but a liability, and why the organisations that treat AI as a discipline rather than a deployment will be the ones still running their agents a year from now.

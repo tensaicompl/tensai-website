@@ -5,8 +5,166 @@ slug: "skills"
 definition: "The open standard that turns capability into a versioned, governed inventory."
 spineConcepts: [8]
 relatedNotes: []
-status: "stub"
+status: "draft"
 order: 1
 ---
 
-<ContentPlaceholder title="Skills as the Reusable Unit" />
+A skill is a portable, reusable, packaged unit of agent capability. It has a contract — a manifest that declares what the skill does, what it needs, and what it produces — an entry point, a resource bundle, and governance metadata that records who owns it, what risk tier it carries, and when it was last audited. Without skills, every team that needs the same capability builds it from scratch, and the organisation accumulates dozens of undiscoverable, unmaintained, mutually incompatible versions of the same work. Skills are the unit that makes capability an asset — findable, composable, and governed — rather than a one-off achievement that lives in one team's prompt and dies with their next sprint.
+
+## The reuse problem
+
+Start with what skills exist to solve, because the problem is older than agents. An organisation adopts AI. A team builds a prompt chain that classifies incoming support tickets — it works, it ships, and nobody outside the team knows it exists. Three months later, a second team in a different business unit needs exactly the same classification, and builds it again. By the end of the year, four versions of the same capability exist in four repositories, each with its own quality, its own quirks, and its own maintainer who does not know the other three are there. None of them are tested against a shared evaluation. None of them carry a risk classification. When the model vendor deprecates an endpoint, four teams scramble independently.
+
+This is not a failure of engineering. It is a failure of packaging. The capability was built — built well, even — but it was never turned into something another team could find, trust, and use without rebuilding it.
+
+Every mature software discipline has solved this problem for its own artefacts. Libraries have package managers. Infrastructure has modules. APIs have registries. The question the AI operating model must answer is: what is the equivalent unit for agent capability? The answer this page teaches is the skill — and the discipline of treating skills as governed, versioned, first-class assets is the foundation the rest of the operating model stands on.
+
+<Callout type="note" title="The packaging is the product">
+A capability that cannot be discovered is a capability that does not exist — organisationally, it makes no difference whether it was never built or was built and buried. The skill contract does not add value to the underlying logic. It makes the value accessible. The manifest, the version, the governance metadata — none of these change what the skill does. They change whether anyone else can use it. The gap between "we have this capability" and "this capability is available" is exactly the gap the skill contract exists to close.
+</Callout>
+
+## The skill contract
+
+A skill is defined by its contract — a set of fields that together make the skill discoverable, executable, and governable without reading its source. Hold on to a concrete example for the rest of the page: a skill that reviews a pull request for security issues. Here is what its contract looks like.
+
+```yaml
+# SKILL.md frontmatter — the skill contract
+name: security-review
+version: 2.1.0
+description: >
+  Reviews a pull request diff for security issues — injection risks,
+  credential exposure, insecure dependencies, misconfigured permissions.
+  Outputs a structured report with severity, location, and fix guidance.
+
+owner: platform-security
+risk_tier: high
+last_audit: 2026-04-12
+
+triggers:
+  - slash_command: /security-review
+  - auto: when a pull request touches auth/, payments/, or infrastructure/
+
+inputs:
+  - diff: string         # the pull request diff
+  - context: string      # repository CLAUDE.md and AGENTS.md
+
+outputs:
+  - report: structured   # findings with severity, file, line, recommendation
+  - verdict: enum        # pass | warn | fail
+
+resources:
+  - references/owasp-top-10.md
+  - references/internal-security-policy.md
+  - scripts/check-dependencies.sh
+```
+
+Five elements make the contract work, and each one solves a distinct problem:
+
+| Element | What it declares | What it prevents |
+|---|---|---|
+| **Manifest** (name, version, description) | What the skill does, at what version | Duplicate builds — teams can search before they build |
+| **Entry point** (the SKILL.md body) | Step-by-step instructions the agent follows | Ambiguity — any compatible agent executes the same way |
+| **Resource bundle** (references, scripts, assets) | Supporting files loaded on demand | Context bloat — resources enter the window only when needed |
+| **Governance metadata** (owner, risk tier, audit date) | Who is accountable, how sensitive the capability is | Orphaned capabilities — every skill has a name attached |
+| **Interface** (inputs, outputs, triggers) | What the skill needs and what it produces | Integration surprises — consumers know the shape before they call |
+
+The manifest is semantic versioning applied to capability. When the security-review skill changes its output schema — adding a new severity level, say — the major version increments, and every downstream consumer knows the contract has changed. When it improves its detection of credential exposure without changing the interface, the minor version increments, and consumers inherit the improvement without touching their own code. This is not novel engineering. It is package management applied to a new kind of artefact, and the discipline is identical: the version number is a promise about what changed and what did not.
+
+## Progressive disclosure — the design principle that makes skills scale
+
+A skill contract could, in theory, load every resource into the agent's context window the moment the skill is invoked. A small skill would survive this. A skill with a 40-page security policy, a dependency-checking script, and three worked examples would not — it would flood the context, crowd out the actual task, and waste tokens on material the agent may never need.
+
+The solution — borrowed from interface design and applied to agent architecture — is progressive disclosure. The skill's entry point is a short, focused instruction set. Its resources are declared but not loaded. The agent reads the entry point, begins the task, and loads each resource only at the step that needs it. The OWASP reference is read when the agent reaches the injection-risk check, not at the start. The dependency script is executed when the agent reaches the dependency step, not before.
+
+This is what makes skills composable without being expensive. A workflow that chains three skills — classify the ticket, draft a reply, review the reply for tone — loads each skill's entry point in turn. The resources of skill one are already evicted by the time skill three runs. The total context cost is the cost of the largest single skill, not the sum of all three.
+
+Progressive disclosure also sets the upper bound on what a skill can contain. Because resources load incrementally, the amount of knowledge a skill can bundle is effectively unbounded — a skill can carry an entire regulatory framework as reference material, and the agent will page through it section by section rather than loading it whole. The constraint is not size. It is structure — the entry point must know when to load what. A well-structured skill is a curriculum, not a dump.
+
+## The skill registry
+
+Skills that exist only in a team's repository are better than capabilities that exist only in a team's prompts — but not by much. The organisational value of skills is realised when they are published to a registry: a searchable, governed catalogue where skills are discovered, evaluated, and consumed.
+
+The registry solves three problems that the skill contract alone cannot:
+
+**Discovery.** A team about to build a new capability searches the registry first. If a security-review skill already exists at version 2.1.0, owned by platform-security, audited last month, with a high risk tier — the team consumes it rather than rebuilding. The manifest fields that seemed like overhead in a single skill become the search index of the registry.
+
+**Governance at rest.** The registry enforces organisational rules that individual skill authors cannot be trusted to remember. A skill marked `risk_tier: high` requires review before publication. A skill whose `last_audit` date is older than six months is flagged for re-assessment. A skill with no owner is rejected at the gate. These are not technical constraints — they are policy constraints, and the registry is where policy meets the artefact.
+
+**Lifecycle management.** Skills, like any software artefact, have a lifecycle: draft, active, deprecated, retired. A deprecated skill remains callable but emits a warning and points to its replacement. A retired skill is removed from the registry and cannot be invoked. Without lifecycle states, old skills never die — they accumulate, and the catalogue becomes a liability rather than an asset.
+
+The registry is not a marketplace. It is closer to an internal package manager — a governed distribution layer where the organisation's AI capabilities are published, versioned, and retired under the same discipline it applies to its libraries and APIs.
+
+## The skill that creates skills
+
+Every standard needs a proof of self-sufficiency: can it describe itself? The answer for skills is a concrete one. The flagship skill in the `tensai-skills` repository is a skill whose purpose is to create other skills — it takes a description of a desired capability, interviews the author for inputs, outputs, risk classification, and resource needs, and produces a complete skill directory: manifest, entry point, resource stubs, governance metadata, and evaluation scaffolding.
+
+This is not a parlour trick. It is an operational accelerant. The skill-creating skill encodes the organisation's standards for what a well-formed skill looks like — its output is always compliant with the contract, always versioned, always carrying governance fields. A team that uses it to scaffold a new skill starts from a correct structure rather than copying an old skill and hoping the fields are still right. The meta-skill is the CoE's most efficient enablement tool: it distributes the standard by embodying it.
+
+The self-referential structure also serves as a stress test. If the skill contract is expressive enough to describe the process of creating skills, it is expressive enough for any capability an organisation is likely to package. A format that can describe its own creation has no obvious ceiling.
+
+```yaml
+# The meta-skill — a skill that creates skills
+name: skill-creator
+version: 1.4.0
+description: >
+  Creates a new skill from a capability description. Interviews the author,
+  produces a complete skill directory (SKILL.md, resource stubs, eval scaffold),
+  and validates the result against the skill contract.
+
+owner: platform-team
+risk_tier: low
+last_audit: 2026-03-20
+
+triggers:
+  - slash_command: /skill-creator
+
+inputs:
+  - capability_description: string
+  - target_directory: path
+
+outputs:
+  - skill_directory: directory   # complete, contract-compliant skill
+
+resources:
+  - references/skill-contract-spec.md
+  - references/governance-tiers.md
+  - scripts/validate-skill.sh
+  - assets/skill-template/
+```
+
+The four operating modes — create, evaluate, improve, benchmark — form a lifecycle around the skill itself. The skill-creator does not merely scaffold; it tests the scaffolded skill against evaluation prompts, grades the output, and suggests improvements. A team can iterate a skill to production quality without leaving the tool that created it. The meta-skill is a factory with a built-in quality gate.
+
+## Skills and the agent catalogue
+
+Skills are not agents. A skill is a unit of capability — a discrete, bounded thing an agent can do. An agent is a system that decides which skills to apply, in what order, and with what judgment. The distinction matters because the governance model is different for each.
+
+A skill is governed by its contract: version, owner, risk tier, audit date. An agent is governed by its composition: which skills it has access to, what autonomy level it operates at, what guardrails constrain its decisions. The Agent Catalogue — covered on the next page in this pillar — is the registry that tracks agents as composed entities, recording their skill dependencies, their risk profile, and their evaluation history. Skills feed into the catalogue as components; the catalogue governs the assembled whole.
+
+This separation is what makes the operating model modular. A change to the security-review skill — a new detection rule, say — propagates to every agent that consumes it, without those agents needing to change. A change to an agent's composition — granting it access to a new skill — is tracked in the catalogue, not in the skill registry. Two registries, two governance surfaces, one clean dependency direction: agents depend on skills, never the reverse.
+
+## Versioning, auditing, and the governance surface
+
+The governance metadata on a skill is not decoration. It is the surface the organisation uses to answer three questions that regulators, auditors, and incident-response teams will ask:
+
+**Who is responsible?** The `owner` field. Every skill has a named owner — a team, not an individual. When the skill misbehaves, there is no ambiguity about who investigates. When the owner changes teams, the registry requires a transfer, not a silent abandonment.
+
+**How sensitive is it?** The `risk_tier` field. A skill that summarises meeting notes is low-risk. A skill that reviews code for security vulnerabilities is high-risk. A skill that generates customer-facing financial advice is critical. The tier determines the governance controls: low-risk skills self-certify; high-risk skills require peer review before publication; critical skills require formal audit and cannot be modified without a change-control process. The tiers are not bureaucracy for its own sake — they are the mechanism that lets low-risk work move fast without applying the same friction to everything.
+
+**When was it last checked?** The `last_audit` field. A skill that was audited six months ago and has not changed since is in a known state. A skill that was audited six months ago and has been modified three times since is not. The registry can enforce re-audit on modification — or on a calendar schedule — and surface skills that have drifted out of compliance before an external auditor finds them.
+
+| Risk tier | Publication gate | Modification rule | Audit cadence |
+|---|---|---|---|
+| Low | Self-certify | Owner approves | Annual |
+| Medium | Peer review | Two approvals | Six-monthly |
+| High | Security review | Change-control process | Quarterly |
+| Critical | Formal audit + sign-off | Change-control + regression eval | Monthly |
+
+This is the governance surface that the CoE — the Centre of Excellence covered later in this pillar — operates against. The CoE does not govern by reviewing every skill. It governs by setting the tier definitions, the publication gates, and the audit cadences, and then letting the registry enforce them. The CoE scales by governing the system, not the artefacts.
+
+<Callout type="note" title="Reference implementation">
+The [`tensaicompl/tensai-skills`](https://github.com/tensaicompl/tensai-skills) repository contains a working skills collection built on the contract described here. Its flagship entry is the skill-creator — a meta-skill that scaffolds new skills, validates them against the contract, and evaluates them against test prompts. Clone it to see the contract, the progressive-disclosure pattern, and the governance metadata operating together.
+</Callout>
+
+## From unit to distribution
+
+Skills solve the reuse problem — they turn capability into a findable, versioned, governed artefact. But a solved reuse problem immediately raises a distribution problem. Who creates skills? Who consumes them? Who sets the governance tiers, reviews the high-risk publications, and retires the skills that have drifted? The skill is the unit; the organisational question is how that unit flows — from the power users who build, through the consumers who use, to the governance layer that ensures neither group operates unchecked. That distribution — and the three-tier model that makes it work — is the subject of the next page.
