@@ -141,7 +141,7 @@ export function StageIllustration({ stage }: { stage: number | string }) {
     <figure
       style={{
         float: "right",
-        margin: "4px 0 16px 24px",
+        margin: "0 0 16px 24px",
         width: `${STAGE_W}px`,
       }}
     >
