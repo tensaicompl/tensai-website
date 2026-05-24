@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { LogoIntro } from "./LogoIntro";
 import styles from "./LogoIntro.module.css";
 
@@ -17,10 +17,10 @@ export function HomeWithIntro({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     sessionStorage.setItem(SESSION_KEY, "1");
     setPageVisible(true);
-  };
+  }, []);
 
   return (
     <>

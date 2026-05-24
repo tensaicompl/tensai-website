@@ -4,14 +4,23 @@
    then lockup flies to nav position and page fades in.
    ============================================================= */
 
+/* Backdrop covers the page — fades out independently of the lockup */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
+  background: var(--bg-page);
+  pointer-events: none;
+}
+
+/* Lockup layer sits ABOVE the backdrop so elements stay visible when backdrop fades */
+.lockupLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 101;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-page);
 }
 
 /* ── Lockup (centered, then animates to nav) ──────────────── */

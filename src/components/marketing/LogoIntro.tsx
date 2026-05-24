@@ -83,7 +83,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
       // Brief hold
       tl.to({}, { duration: 0.8 });
 
-      // Step 2: Fly to nav position
+      // Step 2: Fly to nav
       tl.call(() => {
         setPhase("flying");
 
@@ -99,34 +99,30 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           return;
         }
 
-        // Measure current positions of animated elements
+        // Measure positions
         const markRect = mark.getBoundingClientRect();
         const dividerRect = divider.getBoundingClientRect();
-        const wordmarkNameEl = wordmarkBlock;
-
-        // Measure nav target positions
         const navIconRect = navIcon.getBoundingClientRect();
         const navWordmarkRect = navWordmark.getBoundingClientRect();
         const navDividerRect = navDivider?.getBoundingClientRect();
 
-        // Icon: center-to-center delta + scale
         const iconScale = navIconRect.width / markRect.width;
         const markCX = markRect.left + markRect.width / 2;
         const markCY = markRect.top + markRect.height / 2;
         const navIconCX = navIconRect.left + navIconRect.width / 2;
         const navIconCY = navIconRect.top + navIconRect.height / 2;
 
-        // Hide nav lockup during flight
+        // Hide nav elements during flight
         gsap.set(navIcon, { opacity: 0 });
         gsap.set(navWordmark, { opacity: 0 });
         if (navDivider) gsap.set(navDivider, { opacity: 0 });
 
         const flyTl = gsap.timeline();
 
-        // Fade tagline only (divider stays and flies)
+        // Fade tagline
         flyTl.to(tagline, { opacity: 0, yPercent: -20, duration: 0.3, ease: "power2.in" }, 0);
 
-        // Fly icon to nav position
+        // Fly icon
         flyTl.to(mark, {
           x: navIconCX - markCX,
           y: navIconCY - markCY,
@@ -135,7 +131,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           ease: "power3.inOut",
         }, 0.15);
 
-        // Fly divider to nav divider position (scale height down)
+        // Fly divider
         if (navDividerRect) {
           const divCX = dividerRect.left + dividerRect.width / 2;
           const divCY = dividerRect.top + dividerRect.height / 2;
@@ -150,20 +146,18 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
             duration: 1.2,
             ease: "power3.inOut",
           }, 0.15);
-        } else {
-          flyTl.to(divider, { opacity: 0, duration: 0.4 }, 0);
         }
 
-        // Fly wordmark to nav wordmark position
-        if (wordmarkNameEl) {
-          const wmRect = wordmarkNameEl.getBoundingClientRect();
+        // Fly wordmark
+        if (wordmarkBlock) {
+          const wmRect = wordmarkBlock.getBoundingClientRect();
           const wordScale = navWordmarkRect.height / wmRect.height;
           const wmCX = wmRect.left + wmRect.width / 2;
           const wmCY = wmRect.top + wmRect.height / 2;
           const navWmCX = navWordmarkRect.left + navWordmarkRect.width / 2;
           const navWmCY = navWordmarkRect.top + navWordmarkRect.height / 2;
 
-          flyTl.to(wordmarkNameEl, {
+          flyTl.to(wordmarkBlock, {
             x: navWmCX - wmCX,
             y: navWmCY - wmCY,
             scale: wordScale,
@@ -172,21 +166,26 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           }, 0.15);
         }
 
-        // Fade backdrop
+        // Once elements have landed, fade backdrop BEHIND them
+        // and trigger the page fade-in simultaneously
         flyTl.to(backdrop, {
           opacity: 0,
-          duration: 0.6,
+          duration: 0.8,
           ease: "power2.out",
-        }, 0.9);
+          onStart: () => {
+            // Signal page to fade in NOW (while lockup is still visible)
+            onComplete?.();
+          },
+        }, 1.0);
 
-        // Restore nav elements and finish
+        // After backdrop is gone and page is visible,
+        // show the real nav elements and remove the overlay
         flyTl.call(() => {
           gsap.set(navIcon, { opacity: 1 });
           gsap.set(navWordmark, { opacity: 1 });
           if (navDivider) gsap.set(navDivider, { opacity: 1 });
           setPhase("done");
-          onComplete?.();
-        });
+        }, undefined, 1.8);
       });
 
       document.fonts?.ready
@@ -198,45 +197,49 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
   if (phase === "done") return null;
 
   return (
-    <div
-      ref={backdropRef}
-      className={styles.backdrop}
-      style={{ pointerEvents: phase === "flying" ? "none" : undefined }}
-    >
-      <div ref={lockupRef} className={styles.lockup}>
-        <div ref={markRef} className={styles.mark} role="img" aria-label="TensAI">
-          <svg
-            className={`${styles.art} ${styles.artInk}`}
-            viewBox="0 0 1500 1500"
-            aria-hidden="true"
-          >
-            <LogoPaths />
-          </svg>
-          <svg
-            ref={wetRef}
-            className={`${styles.art} ${styles.artWet}`}
-            viewBox="0 0 1500 1500"
-            aria-hidden="true"
-          >
-            <LogoPaths />
-          </svg>
+    <>
+      {/* Backdrop — covers the page, fades out behind the lockup */}
+      <div
+        ref={backdropRef}
+        className={styles.backdrop}
+      />
+      {/* Lockup — sits ABOVE the backdrop so it stays visible when backdrop fades */}
+      <div className={styles.lockupLayer} style={{ pointerEvents: phase === "flying" ? "none" : undefined }}>
+        <div ref={lockupRef} className={styles.lockup}>
+          <div ref={markRef} className={styles.mark} role="img" aria-label="TensAI">
+            <svg
+              className={`${styles.art} ${styles.artInk}`}
+              viewBox="0 0 1500 1500"
+              aria-hidden="true"
+            >
+              <LogoPaths />
+            </svg>
+            <svg
+              ref={wetRef}
+              className={`${styles.art} ${styles.artWet}`}
+              viewBox="0 0 1500 1500"
+              aria-hidden="true"
+            >
+              <LogoPaths />
+            </svg>
+          </div>
+
+          <span ref={dividerRef} className={styles.divider} />
+
+          <span ref={wordmarkRef} className={styles.wordmark}>
+            <span className={styles.wordmarkName}>
+              {[...WORD].map((ch, i) => (
+                <span key={i} ref={addCharRef(i)} className={styles.ch}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+            <span ref={taglineRef} className={styles.tagline}>
+              {TAGLINE}
+            </span>
+          </span>
         </div>
-
-        <span ref={dividerRef} className={styles.divider} />
-
-        <span ref={wordmarkRef} className={styles.wordmark}>
-          <span className={styles.wordmarkName}>
-            {[...WORD].map((ch, i) => (
-              <span key={i} ref={addCharRef(i)} className={styles.ch}>
-                {ch}
-              </span>
-            ))}
-          </span>
-          <span ref={taglineRef} className={styles.tagline}>
-            {TAGLINE}
-          </span>
-        </span>
       </div>
-    </div>
+    </>
   );
 }
