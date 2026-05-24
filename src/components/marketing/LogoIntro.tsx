@@ -89,9 +89,9 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
 
         const navIcon = document.querySelector("[data-nav-icon]");
         const navWordmark = document.querySelector("[data-nav-wordmark]");
+        const navDivider = document.querySelector("[data-nav-divider]");
 
         if (!navIcon || !navWordmark) {
-          // Fallback: just fade out
           gsap.to(backdrop, {
             opacity: 0, duration: 0.6, ease: "power2.out",
             onComplete: () => { setPhase("done"); onComplete?.(); },
@@ -99,51 +99,73 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
           return;
         }
 
-        // Measure positions
+        // Measure current positions of animated elements
         const markRect = mark.getBoundingClientRect();
-        const navIconRect = navIcon.getBoundingClientRect();
+        const dividerRect = divider.getBoundingClientRect();
         const wordmarkNameEl = wordmarkBlock;
+
+        // Measure nav target positions
+        const navIconRect = navIcon.getBoundingClientRect();
         const navWordmarkRect = navWordmark.getBoundingClientRect();
+        const navDividerRect = navDivider?.getBoundingClientRect();
 
-        // Calculate how much the icon needs to move
-        const markCenterX = markRect.left + markRect.width / 2;
-        const markCenterY = markRect.top + markRect.height / 2;
-        const navIconCenterX = navIconRect.left + navIconRect.width / 2;
-        const navIconCenterY = navIconRect.top + navIconRect.height / 2;
-
+        // Icon: center-to-center delta + scale
         const iconScale = navIconRect.width / markRect.width;
+        const markCX = markRect.left + markRect.width / 2;
+        const markCY = markRect.top + markRect.height / 2;
+        const navIconCX = navIconRect.left + navIconRect.width / 2;
+        const navIconCY = navIconRect.top + navIconRect.height / 2;
 
-        // Hide nav elements during transition (we're animating on top of them)
+        // Hide nav lockup during flight
         gsap.set(navIcon, { opacity: 0 });
         gsap.set(navWordmark, { opacity: 0 });
+        if (navDivider) gsap.set(navDivider, { opacity: 0 });
 
-        // Fade out divider and tagline
         const flyTl = gsap.timeline();
 
-        flyTl.to(divider, { opacity: 0, scaleY: 0, duration: 0.4, ease: "power2.in" }, 0)
-          .to(tagline, { opacity: 0, yPercent: -20, duration: 0.3, ease: "power2.in" }, 0);
+        // Fade tagline only (divider stays and flies)
+        flyTl.to(tagline, { opacity: 0, yPercent: -20, duration: 0.3, ease: "power2.in" }, 0);
 
-        // Fly the mark to the nav icon position
+        // Fly icon to nav position
         flyTl.to(mark, {
-          x: navIconCenterX - markCenterX,
-          y: navIconCenterY - markCenterY,
+          x: navIconCX - markCX,
+          y: navIconCY - markCY,
           scale: iconScale,
           duration: 1.2,
           ease: "power3.inOut",
         }, 0.15);
 
-        // Fly the wordmark name to the nav wordmark position
+        // Fly divider to nav divider position (scale height down)
+        if (navDividerRect) {
+          const divCX = dividerRect.left + dividerRect.width / 2;
+          const divCY = dividerRect.top + dividerRect.height / 2;
+          const navDivCX = navDividerRect.left + navDividerRect.width / 2;
+          const navDivCY = navDividerRect.top + navDividerRect.height / 2;
+          const divScale = navDividerRect.height / dividerRect.height;
+
+          flyTl.to(divider, {
+            x: navDivCX - divCX,
+            y: navDivCY - divCY,
+            scaleY: divScale,
+            duration: 1.2,
+            ease: "power3.inOut",
+          }, 0.15);
+        } else {
+          flyTl.to(divider, { opacity: 0, duration: 0.4 }, 0);
+        }
+
+        // Fly wordmark to nav wordmark position
         if (wordmarkNameEl) {
-          const wordmarkNameRect = wordmarkNameEl.getBoundingClientRect();
-          const wordScale = navWordmarkRect.height / wordmarkNameRect.height;
-          const wordCenterX = wordmarkNameRect.left + wordmarkNameRect.width / 2;
-          const wordCenterY = wordmarkNameRect.top + wordmarkNameRect.height / 2;
-          const navWordCenterX = navWordmarkRect.left + navWordmarkRect.width / 2;
-          const navWordCenterY = navWordmarkRect.top + navWordmarkRect.height / 2;
+          const wmRect = wordmarkNameEl.getBoundingClientRect();
+          const wordScale = navWordmarkRect.height / wmRect.height;
+          const wmCX = wmRect.left + wmRect.width / 2;
+          const wmCY = wmRect.top + wmRect.height / 2;
+          const navWmCX = navWordmarkRect.left + navWordmarkRect.width / 2;
+          const navWmCY = navWordmarkRect.top + navWordmarkRect.height / 2;
 
           flyTl.to(wordmarkNameEl, {
-            x: navWordCenterX - wordCenterX,
-            y: navWordCenterY - wordCenterY,
+            x: navWmCX - wmCX,
+            y: navWmCY - wmCY,
             scale: wordScale,
             duration: 1.2,
             ease: "power3.inOut",
@@ -161,6 +183,7 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
         flyTl.call(() => {
           gsap.set(navIcon, { opacity: 1 });
           gsap.set(navWordmark, { opacity: 1 });
+          if (navDivider) gsap.set(navDivider, { opacity: 1 });
           setPhase("done");
           onComplete?.();
         });

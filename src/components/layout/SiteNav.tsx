@@ -85,13 +85,14 @@ export function SiteNav() {
             height: "100%",
           }}
         >
-          {/* Logo lockup */}
+          {/* Logo lockup — proportions match the intro animation scaled down */}
           <Link
             href="/"
             aria-label="TensAI home"
             style={{
               display: "flex",
               alignItems: "center",
+              gap: "8px",
               textDecoration: "none",
               flexShrink: 0,
             }}
@@ -101,15 +102,24 @@ export function SiteNav() {
               viewBox="0 0 1500 1500"
               aria-hidden="true"
               style={{
-                height: "72px",
-                width: "72px",
+                height: "50px",
+                width: "50px",
                 display: "block",
-                margin: "-10px -14px -14px -14px",
+                margin: "-6px -10px -10px -10px",
                 fill: "var(--color-bg-black)",
               }}
             >
               <LogoPaths />
             </svg>
+            <span
+              data-nav-divider
+              style={{
+                width: "1px",
+                height: "24px",
+                background: "var(--border)",
+                flexShrink: 0,
+              }}
+            />
             <span
               data-nav-wordmark
               style={{
@@ -118,7 +128,6 @@ export function SiteNav() {
                 fontSize: "22px",
                 letterSpacing: "-0.02em",
                 color: "var(--color-midnight)",
-                marginLeft: "-6px",
                 lineHeight: 1,
               }}
             >
