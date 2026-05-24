@@ -79,7 +79,7 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
       </button>
       <pre
         style={{
-          padding: "var(--space-4)",
+          padding: "var(--space-8) var(--space-4) var(--space-4) var(--space-4)",
           margin: 0,
           overflow: "auto",
           fontFamily: "var(--font-mono)",
