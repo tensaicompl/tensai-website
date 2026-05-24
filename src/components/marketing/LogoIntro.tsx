@@ -88,6 +88,14 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
       tl.call(() => {
         setPhase("flying");
 
+        // Remove overflow clipping so elements can fly out of their containers
+        if (wordmarkRef.current) {
+          wordmarkRef.current.style.overflow = "visible";
+        }
+        if (lockup) {
+          lockup.style.overflow = "visible";
+        }
+
         const navIcon = document.querySelector("[data-nav-icon]");
         const navWordmark = document.querySelector("[data-nav-wordmark]");
         const navDivider = document.querySelector("[data-nav-divider]");
