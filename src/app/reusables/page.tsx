@@ -226,35 +226,62 @@ export default function ReusablesPage() {
       <main>
         {/* ── Header ───────────────────────────────────────── */}
         <section style={{ paddingTop: "96px", paddingBottom: "48px", paddingLeft: "24px", paddingRight: "24px" }}>
-          <div style={{ maxWidth: "1440px", margin: "0 auto" }}>
-            <Eyebrow>REFERENCE IMPLEMENTATIONS</Eyebrow>
+          <div
+            className="reusables-hero"
+            style={{
+              maxWidth: "1440px",
+              margin: "0 auto",
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              alignItems: "center",
+              gap: "48px",
+            }}
+          >
+            <div>
+              <Eyebrow>REFERENCE IMPLEMENTATIONS</Eyebrow>
 
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(36px, 5vw, 56px)",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.05,
-                color: "var(--fg-1)",
-                marginTop: "12px",
-              }}
-            >
-              TensAI Reusables
-            </h1>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(36px, 5vw, 56px)",
+                  fontWeight: 700,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.05,
+                  color: "var(--fg-1)",
+                  marginTop: "12px",
+                }}
+              >
+                TensAI Reusables
+              </h1>
 
-            <p
-              style={{
-                maxWidth: "680px",
-                color: "var(--fg-2)",
-                fontSize: "20px",
-                lineHeight: 1.55,
-                marginTop: "16px",
-              }}
+              <p
+                style={{
+                  maxWidth: "680px",
+                  color: "var(--fg-2)",
+                  fontSize: "20px",
+                  lineHeight: 1.55,
+                  marginTop: "16px",
+                }}
             >
               {TOTAL_REPOS} curated open-source repos, each solving one sub-problem from the Spine.
               Clone the one that matches your need. Every repo maps to a concept page that teaches the context.
             </p>
+            </div>
+
+            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0 }}>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "radial-gradient(circle at center, rgba(109,40,217,0.06), transparent 60%)",
+                }}
+              />
+              <img
+                src="/logos/icon-black.svg"
+                alt=""
+                style={{ width: "min(400px, 25vw)", height: "auto", objectFit: "contain", display: "block", position: "relative" }}
+              />
+            </div>
           </div>
         </section>
 
@@ -395,6 +422,10 @@ export default function ReusablesPage() {
       <SiteFooter />
 
       <style>{`
+        @media (max-width: 768px) {
+          .reusables-hero { grid-template-columns: 1fr !important; }
+          .reusables-hero-icon { display: none; }
+        }
         .repo-card {
           display: block;
           padding: 16px 18px;
