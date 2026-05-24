@@ -83,6 +83,8 @@ export function TheIndex() {
   const [expanded, setExpanded] = useState(false);
   const [hoveredPillar, setHoveredPillar] = useState<string | null>(null);
 
+  const isPillarOpen = (id: string) => expanded || hoveredPillar === id;
+
   return (
     <div className={styles.stage}>
       {/* Value indicator */}
@@ -93,7 +95,7 @@ export function TheIndex() {
         <span className={styles.valueLbl}>Value</span>
       </div>
 
-      {/* Governance band */}
+      {/* Governance band + expand button */}
       <div className={styles.gov}>
         <div className={styles.govItems}>
           <span>Governance</span>
@@ -102,52 +104,65 @@ export function TheIndex() {
           <span className={styles.govSep}>·</span>
           <span>Observability</span>
         </div>
+        <button
+          className={styles.expandBtn}
+          onClick={() => setExpanded((prev) => !prev)}
+          aria-expanded={expanded}
+        >
+          {expanded ? "Collapse" : "Show entire map"}
+          <span className={`${styles.expandChevron} ${expanded ? styles.expandChevronOpen : ""}`}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
       </div>
 
       {/* Main body: pillars + spine */}
       <div className={styles.body}>
         {/* Pillars */}
         <div className={styles.pillars}>
-          {PILLAR_DATA.map((pillar) => (
-            <div
-              key={pillar.id}
-              className={`${styles.pillar} ${styles.pillarHover}`}
-              onMouseEnter={() => setHoveredPillar(pillar.id)}
-              onMouseLeave={() => setHoveredPillar(null)}
-              style={{
-                backgroundColor:
-                  hoveredPillar === pillar.id ? "var(--bg-surface)" : undefined,
-              }}
-            >
-              <div className={styles.pillarHeader}>
-                <span className={styles.roman}>{pillar.id}</span>
-                <span className={styles.pillarName}>{pillar.name}</span>
-                <span className={styles.pillarTag}>
-                  {pillar.stratum} · {pillar.concepts.length} concepts
-                </span>
-              </div>
-
+          {PILLAR_DATA.map((pillar) => {
+            const open = isPillarOpen(pillar.id);
+            return (
               <div
-                className={`${styles.cells} ${expanded ? styles.cellsExpanded : ""}`}
+                key={pillar.id}
+                className={styles.pillar}
+                onMouseEnter={() => setHoveredPillar(pillar.id)}
+                onMouseLeave={() => setHoveredPillar(null)}
+                style={{
+                  backgroundColor:
+                    hoveredPillar === pillar.id ? "var(--bg-surface)" : undefined,
+                }}
               >
-                {pillar.concepts.map((c) => (
-                  <Link key={c.ref} href={c.href} className={styles.cell}>
-                    <span className={styles.cellRef}>{c.ref}</span>
-                    <span className={styles.cellLbl}>{c.label}</span>
-                  </Link>
-                ))}
+                <div className={styles.pillarHeader}>
+                  <span className={styles.roman}>{pillar.id}</span>
+                  <span className={styles.pillarName}>{pillar.name}</span>
+                  <span className={styles.pillarTag}>
+                    {pillar.stratum} · {pillar.concepts.length} concepts
+                  </span>
+                </div>
+
+                <div className={`${styles.cells} ${open ? styles.cellsExpanded : ""}`}>
+                  {pillar.concepts.map((c) => (
+                    <Link key={c.ref} href={c.href} className={styles.cell}>
+                      <span className={styles.cellRef}>{c.ref}</span>
+                      <span className={styles.cellLbl}>{c.label}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Spine rail */}
-        <div className={styles.spine}>
+        {/* Spine rail — collapsed when not expanded */}
+        <div className={`${styles.spine} ${expanded ? styles.spineExpanded : styles.spineCollapsed}`}>
           <div className={styles.spineHeader}>
             <span className={styles.spineTitle}>The Spine</span>
             <span className={styles.spineTag}>18 concepts</span>
           </div>
-          <div className={styles.spineList}>
+          <div className={`${styles.spineList} ${expanded ? styles.spineListVisible : ""}`}>
             {SPINE.map((s) => (
               <div key={s.ref} className={styles.spineItem}>
                 <span className={styles.spineRef}>{s.ref}</span>
@@ -171,22 +186,6 @@ export function TheIndex() {
           ))}
         </div>
       </div>
-
-      {/* Expand/collapse button */}
-      <button
-        className={styles.expandBtn}
-        onClick={() => setExpanded((prev) => !prev)}
-        aria-expanded={expanded}
-      >
-        {expanded ? "Collapse map" : "Show entire map"}
-        <span
-          className={`${styles.expandChevron} ${expanded ? styles.expandChevronOpen : ""}`}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </span>
-      </button>
 
       {/* Colophon */}
       <div className={styles.colophon}>
