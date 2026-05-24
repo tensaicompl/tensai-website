@@ -6,6 +6,9 @@ import { ToolsMcpDiagram } from "./ToolsMcpDiagram";
 import { RagEvolutionsDiagram } from "./RagEvolutionsDiagram";
 import { MultiAgentDiagram } from "./MultiAgentDiagram";
 import { SteeringDiagram } from "./SteeringDiagram";
+import { CodeDocIndexingDiagram } from "./CodeDocIndexingDiagram";
+import { EvalsObservabilityDiagram } from "./EvalsObservabilityDiagram";
+import { FailureTaxonomyDiagram } from "./FailureTaxonomyDiagram";
 
 type DiagramComponent = () => React.JSX.Element;
 
@@ -18,6 +21,9 @@ const DIAGRAM_REGISTRY: Record<string, DiagramComponent> = {
   "rag-evolutions": RagEvolutionsDiagram,
   "multi-agent": MultiAgentDiagram,
   "steering": SteeringDiagram,
+  "code-doc-indexing": CodeDocIndexingDiagram,
+  "evals-observability": EvalsObservabilityDiagram,
+  "failure-taxonomy": FailureTaxonomyDiagram,
 };
 
 export function getDiagramForSlug(slug: string): DiagramComponent | null {
