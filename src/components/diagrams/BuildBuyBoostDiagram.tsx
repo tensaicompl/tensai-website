@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * BuildBuyBoostDiagram — Build vs Buy vs Boost
  *
@@ -8,15 +10,49 @@
  *
  * Left-edge vertical arrow shows model commoditisation direction.
  * Single accent: var(--accent) on the Boost harness segment only.
+ *
+ * Animated: bar segments expand from zero width when scrolled into
+ * view, staggered top-to-bottom. The vertical arrow draws itself
+ * downward via stroke-dashoffset. Respects prefers-reduced-motion.
  */
 
+import { useEffect, useRef, useState } from "react";
+
 export function BuildBuyBoostDiagram() {
-  /* ── Layout constants ──────────────────────────────── */
-  const barLeft = 130;
-  const barWidth = 520;
-  const barHeight = 56;
-  const rowGap = 28;
-  const startY = 40;
+  /* ── Visibility via IntersectionObserver ───────────── */
+  const figRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setVisible(true);
+      return;
+    }
+
+    const el = figRef.current;
+    if (!el) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /* ── Layout constants (scaled to 1200-wide viewBox) ── */
+  const barLeft = 200;
+  const barWidth = 800;
+  const barHeight = 68;
+  const rowGap = 34;
+  const startY = 48;
 
   const rows = [
     {
@@ -24,6 +60,7 @@ export function BuildBuyBoostDiagram() {
       modelPct: 0.75,
       y: startY,
       annotation: "weights, training pipeline, retraining",
+      delay: 0,
     },
     {
       label: "Buy",
@@ -31,6 +68,7 @@ export function BuildBuyBoostDiagram() {
       y: startY + barHeight + rowGap,
       annotation: "vendor owns the system",
       hatched: true,
+      delay: 0.3,
     },
     {
       label: "Boost",
@@ -38,24 +76,31 @@ export function BuildBuyBoostDiagram() {
       y: startY + (barHeight + rowGap) * 2,
       annotation: "data, evals, orchestration, steering",
       accent: true,
+      delay: 0.6,
     },
   ];
 
-  const annotationX = barLeft + barWidth + 16;
+  const annotationX = barLeft + barWidth + 20;
+
+  /* ── Arrow geometry ─────────────────────────────────── */
+  const arrowX = 46;
+  const arrowTop = rows[0].y + 8;
+  const arrowBottom = rows[rows.length - 1].y + barHeight - 8;
+  const arrowLength = arrowBottom - arrowTop;
 
   return (
     <figure
+      ref={figRef}
       role="img"
       aria-label="Build vs Buy vs Boost: three strategies showing the split between model and harness investment, with Boost emphasising the harness"
       style={{
         margin: 0,
         width: "100%",
-        maxWidth: "780px",
         marginInline: "auto",
       }}
     >
       <svg
-        viewBox="0 0 780 320"
+        viewBox="0 0 1200 340"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -93,20 +138,20 @@ export function BuildBuyBoostDiagram() {
 
         {/* ── Column headers ──────────────────────────────── */}
         <text
-          x={barLeft + 40}
-          y={startY - 12}
+          x={barLeft + 60}
+          y={startY - 14}
           fontFamily="var(--font-mono)"
-          fontSize="9"
+          fontSize="11"
           letterSpacing="0.14em"
           fill="var(--fg-3)"
         >
           MODEL
         </text>
         <text
-          x={barLeft + barWidth - 40}
-          y={startY - 12}
+          x={barLeft + barWidth - 60}
+          y={startY - 14}
           fontFamily="var(--font-mono)"
-          fontSize="9"
+          fontSize="11"
           letterSpacing="0.14em"
           fill="var(--fg-3)"
           textAnchor="end"
@@ -119,14 +164,26 @@ export function BuildBuyBoostDiagram() {
           const modelW = barWidth * row.modelPct;
           const harnessW = barWidth - modelW;
 
+          /* Current animated widths — 0 until visible, then full */
+          const animModelW = visible ? modelW : 0;
+          const animHarnessW = visible ? harnessW : 0;
+
+          /* Base transition for segments */
+          const modelTransition = `width 0.8s ease ${row.delay}s`;
+          const harnessTransition = `width 0.8s ease ${row.delay + 0.15}s`;
+          /* Boost harness gets extra delay for emphasis */
+          const boostHarnessTransition = row.accent
+            ? `width 0.8s ease ${row.delay + 0.4}s`
+            : harnessTransition;
+
           return (
             <g key={row.label}>
               {/* Row label */}
               <text
-                x={barLeft - 16}
+                x={barLeft - 20}
                 y={row.y + barHeight / 2}
                 fontFamily="var(--font-display)"
-                fontSize="15"
+                fontSize="18"
                 fontWeight="700"
                 fill="var(--color-midnight)"
                 textAnchor="end"
@@ -147,11 +204,11 @@ export function BuildBuyBoostDiagram() {
                 fill="none"
               />
 
-              {/* Model segment */}
+              {/* Model segment — grows from left */}
               <rect
                 x={barLeft}
                 y={row.y}
-                width={modelW}
+                width={animModelW}
                 height={barHeight}
                 rx={modelW === barWidth ? 3 : 0}
                 fill={
@@ -160,41 +217,47 @@ export function BuildBuyBoostDiagram() {
                     : "var(--color-midnight)"
                 }
                 opacity={row.hatched ? 1 : 0.1}
+                style={{ transition: modelTransition }}
               />
               {/* Clean left corners on model segment */}
-              <rect
-                x={barLeft}
-                y={row.y}
-                width={Math.min(modelW, 6)}
-                height={barHeight}
-                fill={
-                  row.hatched
-                    ? "url(#bbbStipple)"
-                    : "var(--color-midnight)"
-                }
-                opacity={row.hatched ? 1 : 0.1}
-                rx="3"
-              />
+              {animModelW > 0 && (
+                <rect
+                  x={barLeft}
+                  y={row.y}
+                  width={Math.min(animModelW, 6)}
+                  height={barHeight}
+                  fill={
+                    row.hatched
+                      ? "url(#bbbStipple)"
+                      : "var(--color-midnight)"
+                  }
+                  opacity={row.hatched ? 1 : 0.1}
+                  rx="3"
+                  style={{ transition: modelTransition }}
+                />
+              )}
 
               {/* Harness segment — hatched for Buy, accent for Boost */}
               {row.hatched ? (
                 <rect
                   x={barLeft + modelW}
                   y={row.y}
-                  width={harnessW}
+                  width={animHarnessW}
                   height={barHeight}
                   fill="url(#bbbStipple)"
+                  style={{ transition: harnessTransition }}
                 />
               ) : row.accent ? (
                 <g>
-                  {/* Violet fill */}
+                  {/* Violet fill — fills last with emphasis */}
                   <rect
                     x={barLeft + modelW}
                     y={row.y}
-                    width={harnessW}
+                    width={animHarnessW}
                     height={barHeight}
                     fill="var(--accent)"
                     opacity="0.15"
+                    style={{ transition: boostHarnessTransition }}
                   />
                   {/* Violet left border on harness */}
                   <line
@@ -204,6 +267,8 @@ export function BuildBuyBoostDiagram() {
                     y2={row.y + barHeight}
                     stroke="var(--accent)"
                     strokeWidth="2.5"
+                    opacity={visible ? 1 : 0}
+                    style={{ transition: `opacity 0.3s ease ${row.delay + 0.4}s` }}
                   />
                 </g>
               ) : null}
@@ -227,6 +292,8 @@ export function BuildBuyBoostDiagram() {
                   y2={row.y + barHeight}
                   stroke="var(--border)"
                   strokeWidth="1"
+                  opacity={visible ? 1 : 0}
+                  style={{ transition: `opacity 0.3s ease ${row.delay + 0.1}s` }}
                 />
               )}
 
@@ -235,10 +302,12 @@ export function BuildBuyBoostDiagram() {
                 x={annotationX}
                 y={row.y + barHeight / 2}
                 fontFamily="var(--font-mono)"
-                fontSize="9"
+                fontSize="11"
                 fill={row.accent ? "var(--accent)" : "var(--fg-3)"}
                 dominantBaseline="middle"
                 letterSpacing="0.02em"
+                opacity={visible ? 1 : 0}
+                style={{ transition: `opacity 0.5s ease ${row.delay + 0.3}s` }}
               >
                 {row.annotation}
               </text>
@@ -247,46 +316,80 @@ export function BuildBuyBoostDiagram() {
         })}
 
         {/* ── Left vertical arrow: "model commoditises" ───── */}
-        {(() => {
-          const arrowX = 30;
-          const arrowTop = rows[0].y + 6;
-          const arrowBottom = rows[rows.length - 1].y + barHeight - 6;
-          return (
-            <g>
-              <line
-                x1={arrowX}
-                y1={arrowTop}
-                x2={arrowX}
-                y2={arrowBottom}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-                markerEnd="url(#bbbArrowDown)"
+        <g>
+          <line
+            x1={arrowX}
+            y1={arrowTop}
+            x2={arrowX}
+            y2={arrowBottom}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            markerEnd="url(#bbbArrowDown)"
+            strokeDasharray={arrowLength}
+            strokeDashoffset={visible ? 0 : arrowLength}
+            style={{ transition: "stroke-dashoffset 1.2s ease 0.2s" }}
+          />
+
+          {/* Travelling dot along the arrow path */}
+          <circle
+            cx={arrowX}
+            cy={arrowTop}
+            r="2.5"
+            fill="var(--color-midnight)"
+            opacity={visible ? 0.7 : 0}
+          >
+            {visible && (
+              <animate
+                attributeName="cy"
+                from={arrowTop}
+                to={arrowBottom}
+                dur="1.2s"
+                begin="0.2s"
+                fill="freeze"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1"
+                keyTimes="0;1"
               />
-              <text
-                x={arrowX - 8}
-                y={(arrowTop + arrowBottom) / 2}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-2)"
-                textAnchor="middle"
-                letterSpacing="0.06em"
-                transform={`rotate(-90, ${arrowX - 8}, ${(arrowTop + arrowBottom) / 2})`}
-              >
-                model commoditises
-              </text>
-            </g>
-          );
-        })()}
+            )}
+            {visible && (
+              <animate
+                attributeName="opacity"
+                values="0;0.7;0.7;0"
+                keyTimes="0;0.05;0.85;1"
+                dur="1.2s"
+                begin="0.2s"
+                fill="freeze"
+              />
+            )}
+          </circle>
+
+          <text
+            x={arrowX - 10}
+            y={(arrowTop + arrowBottom) / 2}
+            fontFamily="var(--font-mono)"
+            fontSize="11"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+            transform={`rotate(-90, ${arrowX - 10}, ${(arrowTop + arrowBottom) / 2})`}
+            opacity={visible ? 1 : 0}
+            style={{ transition: "opacity 0.6s ease 0.6s" }}
+          >
+            model commoditises
+          </text>
+        </g>
 
         {/* ── Bottom annotation ────────────────────────────── */}
         <text
           x={barLeft + barWidth / 2}
-          y={rows[rows.length - 1].y + barHeight + 36}
+          y={rows[rows.length - 1].y + barHeight + 42}
           fontFamily="var(--font-mono)"
-          fontSize="9"
+          fontSize="11"
           fill="var(--fg-3)"
           textAnchor="middle"
           letterSpacing="0.06em"
+          opacity={visible ? 1 : 0}
+          style={{ transition: "opacity 0.5s ease 1s" }}
         >
           value accrues to the harness, not the model
         </text>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 /**
  * FinopsDiagram — FinOps Four Levers & Metric Ladder
  *
@@ -19,30 +23,66 @@
  * Vertical arrow alongside with "climb to measure what matters".
  *
  * Single accent: var(--accent) on the "Cost per outcome" rung only.
+ *
+ * Animations:
+ *   - Funnel bars narrow from full width to target width, staggered top-to-bottom
+ *   - Ladder rungs fade+slide in bottom-to-top
+ *   - Top rung (accent) pulses gently after appearing
+ *   - All animations respect prefers-reduced-motion
  */
 
 export function FinopsDiagram() {
+  const figureRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduceMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    const el = figureRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   /* ── Left section: Funnel layout ────────────────────── */
-  const funnelX = 30;
-  const funnelCx = 195; // centre of funnel area
-  const funnelTopY = 40;
-  const barH = 36;
-  const barGap = 18;
-  const barWidths = [310, 250, 190, 130]; // progressively narrower
+  const funnelCx = 280; // centre of funnel area
+  const funnelTopY = 48;
+  const barH = 40;
+  const barGap = 20;
+  const maxBarW = 460; // full width (animation start)
+  const barWidths = [430, 340, 250, 170]; // target narrowed widths
 
   const levers = [
     { title: "Model routing", desc: "Route to cheapest capable tier" },
-    { title: "Context management", desc: "Remove tokens that don’t earn their place" },
+    { title: "Context management", desc: "Remove tokens that don't earn their place" },
     { title: "Prompt caching", desc: "Reuse processed prefixes at 10% cost" },
     { title: "Semantic caching", desc: "Eliminate redundant calls entirely" },
   ];
 
   /* ── Right section: Metric ladder layout ────────────── */
-  const ladderX = 460;
-  const ladderW = 240;
-  const ladderRungH = 32;
-  const ladderGap = 24;
-  const ladderBottomY = 310; // bottom rung baseline
+  const ladderX = 700;
+  const ladderW = 330;
+  const ladderRungH = 36;
+  const ladderGap = 28;
+  const ladderBottomY = 340; // bottom rung baseline
 
   const rungs = [
     { label: "Provider billing", accent: false },
@@ -52,20 +92,58 @@ export function FinopsDiagram() {
   ];
 
   /* Arrow alongside ladder */
-  const arrowX = ladderX + ladderW + 36;
+  const arrowX = ladderX + ladderW + 44;
+
+  /* Animation helpers */
+  const skip = reduceMotion || !visible;
 
   return (
     <figure
+      ref={figureRef}
       role="img"
       aria-label="FinOps diagram: four cost-reduction levers forming a narrowing funnel on the left, and a metric ladder climbing from provider billing to cost per outcome on the right"
-      style={{ margin: 0, width: "100%", maxWidth: "780px", marginInline: "auto" }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
       <svg
-        viewBox="0 0 780 420"
+        viewBox="0 0 1200 440"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
       >
+        {/* ── Style block for animations ─────────────────────── */}
+        <style>{`
+          @keyframes fo-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.65; }
+          }
+
+          .fo-bar {
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                        x 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+          }
+
+          .fo-rung-group {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+          }
+
+          .fo-accent-rung {
+            animation: fo-pulse 2.8s ease-in-out infinite;
+            animation-delay: 2s;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .fo-bar {
+              transition: none !important;
+            }
+            .fo-rung-group {
+              transition: none !important;
+            }
+            .fo-accent-rung {
+              animation: none !important;
+            }
+          }
+        `}</style>
+
         {/* ── Marker definitions ──────────────────────────────── */}
         <defs>
           <marker
@@ -99,9 +177,9 @@ export function FinopsDiagram() {
         {/* Section title */}
         <text
           x={funnelCx}
-          y={22}
+          y={28}
           fontFamily="var(--font-display)"
-          fontSize="13"
+          fontSize="14"
           fill="var(--color-midnight)"
           textAnchor="middle"
           fontWeight="600"
@@ -110,32 +188,36 @@ export function FinopsDiagram() {
           Four Levers
         </text>
 
-        {/* Funnel bars */}
+        {/* Funnel bars — animated narrowing */}
         {levers.map((lever, i) => {
-          const w = barWidths[i];
-          const x = funnelCx - w / 2;
+          const targetW = barWidths[i];
+          const currentW = skip ? targetW : visible ? targetW : maxBarW;
+          const x = funnelCx - currentW / 2;
           const y = funnelTopY + i * (barH + barGap);
+          const delay = `${i * 0.15}s`;
 
           return (
             <g key={`fo-lever-${i}`}>
-              {/* Bar rectangle */}
+              {/* Bar rectangle — animates width */}
               <rect
+                className="fo-bar"
                 x={x}
                 y={y}
-                width={w}
+                width={currentW}
                 height={barH}
                 rx="4"
                 stroke="var(--color-midnight)"
                 strokeWidth="1.5"
                 fill="var(--bg-surface)"
+                style={{ transitionDelay: delay }}
               />
 
               {/* Title */}
               <text
                 x={funnelCx}
-                y={y + 14}
+                y={y + 16}
                 fontFamily="var(--font-mono)"
-                fontSize="10"
+                fontSize="11"
                 fill="var(--color-midnight)"
                 textAnchor="middle"
                 fontWeight="600"
@@ -147,9 +229,9 @@ export function FinopsDiagram() {
               {/* Description */}
               <text
                 x={funnelCx}
-                y={y + 28}
+                y={y + 31}
                 fontFamily="var(--font-mono)"
-                fontSize="8"
+                fontSize="9"
                 fill="var(--fg-3)"
                 textAnchor="middle"
                 letterSpacing="0.04em"
@@ -160,7 +242,7 @@ export function FinopsDiagram() {
           );
         })}
 
-        {/* Funnel taper lines — left edge */}
+        {/* Funnel taper lines — left and right edges */}
         {[0, 1, 2].map((i) => {
           const w1 = barWidths[i];
           const w2 = barWidths[i + 1];
@@ -215,10 +297,10 @@ export function FinopsDiagram() {
           return (
             <>
               <rect
-                x={funnelCx - 80}
-                y={labelY - 12}
-                width={160}
-                height={26}
+                x={funnelCx - 90}
+                y={labelY - 14}
+                width={180}
+                height={30}
                 rx="4"
                 stroke="var(--color-midnight)"
                 strokeWidth="1.5"
@@ -228,7 +310,7 @@ export function FinopsDiagram() {
                 x={funnelCx}
                 y={labelY + 4}
                 fontFamily="var(--font-mono)"
-                fontSize="11"
+                fontSize="12"
                 fill="var(--color-midnight)"
                 textAnchor="middle"
                 fontWeight="600"
@@ -242,8 +324,8 @@ export function FinopsDiagram() {
 
         {/* ── Divider between sections ───────────────────────── */}
         <line
-          x1="415" y1="30"
-          x2="415" y2="390"
+          x1="600" y1="30"
+          x2="600" y2="420"
           stroke="var(--border)"
           strokeWidth="1"
           strokeDasharray="4 4"
@@ -256,9 +338,9 @@ export function FinopsDiagram() {
         {/* Section title */}
         <text
           x={ladderX + ladderW / 2}
-          y={22}
+          y={28}
           fontFamily="var(--font-display)"
-          fontSize="13"
+          fontSize="14"
           fill="var(--color-midnight)"
           textAnchor="middle"
           fontWeight="600"
@@ -267,13 +349,26 @@ export function FinopsDiagram() {
           Metric Ladder
         </text>
 
-        {/* Ladder rungs — bottom to top */}
+        {/* Ladder rungs — bottom to top, animated */}
         {rungs.map((rung, i) => {
           const y = ladderBottomY - i * (ladderRungH + ladderGap);
           const isAccent = rung.accent;
 
+          // Bottom-to-top: rung 0 (bottom) appears first, rung 3 (top) last
+          const staggerDelay = `${0.6 + i * 0.18}s`;
+          const rungOpacity = skip ? 1 : visible ? 1 : 0;
+          const rungTranslateY = skip ? 0 : visible ? 0 : 16;
+
           return (
-            <g key={`fo-rung-${i}`}>
+            <g
+              key={`fo-rung-${i}`}
+              className={`fo-rung-group${isAccent ? " fo-accent-rung" : ""}`}
+              style={{
+                opacity: rungOpacity,
+                transform: `translateY(${rungTranslateY}px)`,
+                transitionDelay: staggerDelay,
+              }}
+            >
               <rect
                 x={ladderX}
                 y={y}
@@ -289,7 +384,7 @@ export function FinopsDiagram() {
                 x={ladderX + ladderW / 2}
                 y={y + ladderRungH / 2 + 1}
                 fontFamily="var(--font-mono)"
-                fontSize={isAccent ? "11" : "10"}
+                fontSize={isAccent ? "12" : "11"}
                 fill={isAccent ? "var(--accent)" : "var(--color-midnight)"}
                 fontWeight={isAccent ? "700" : "500"}
                 textAnchor="middle"
@@ -340,14 +435,14 @@ export function FinopsDiagram() {
 
               {/* Rotated label alongside arrow */}
               <text
-                x={arrowX + 14}
+                x={arrowX + 16}
                 y={(bottomRungY + topRungY) / 2}
                 fontFamily="var(--font-mono)"
                 fontSize="9"
                 fill="var(--fg-2)"
                 textAnchor="middle"
                 letterSpacing="0.04em"
-                transform={`rotate(-90, ${arrowX + 14}, ${(bottomRungY + topRungY) / 2})`}
+                transform={`rotate(-90, ${arrowX + 16}, ${(bottomRungY + topRungY) / 2})`}
               >
                 climb to measure what matters
               </text>
@@ -362,10 +457,10 @@ export function FinopsDiagram() {
           return (
             <text
               key={`fo-rung-num-${i}`}
-              x={ladderX - 14}
+              x={ladderX - 16}
               y={y + 1}
               fontFamily="var(--font-mono)"
-              fontSize="9"
+              fontSize="10"
               fill="var(--fg-3)"
               textAnchor="middle"
               dominantBaseline="middle"

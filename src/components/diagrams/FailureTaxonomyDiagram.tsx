@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * FailureTaxonomyDiagram — Failure Taxonomy & Cascade
  *
@@ -5,43 +7,126 @@
  * abstract glyph and label (Memory, Reflection, Planning, Action, System).
  *
  * Lower zone: a cascade chain showing how failures propagate left-to-right
- * (System -> Memory -> Planning -> Reflection), connected by arrows.
+ * (System -> Memory -> Planning -> Reflection), connected by arrows with
+ * an animated flowing dot.
  *
  * Monochrome line art throughout; the single accent element is the
  * jagged crack on the System glyph (var(--accent), violet).
+ *
+ * Animations:
+ *  - Upper cells stagger in left-to-right on intersection
+ *  - Cascade zone fades in after cells
+ *  - Flowing dot traverses the cascade chain path (SMIL)
+ *  - Dashed connector from upper System to cascade System pulses
  */
 
+import { useEffect, useRef, useState } from "react";
+
 export function FailureTaxonomyDiagram() {
-  /* ── Layout constants ──────────────────────────────── */
-  const cellW = 120;
-  const cellH = 100;
-  const gutter = (780 - cellW * 5) / 6; // ~30px
-  const upperY = 30; // top of upper zone cells
+  const figureRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    const el = figureRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /* ── Layout constants (scaled to 1200x400) ──────────── */
+  const cellW = 160;
+  const cellH = 110;
+  const gutter = (1200 - cellW * 5) / 6; // ~33.3px
+  const upperY = 30;
 
   /* Cell centres */
-  const cx = Array.from({ length: 5 }, (_, i) => gutter + cellW / 2 + i * (cellW + gutter));
-  const cellCy = upperY + cellH / 2; // vertical centre of cells
-  const glyphCy = cellCy - 8; // glyphs sit slightly above centre
+  const cx = Array.from(
+    { length: 5 },
+    (_, i) => gutter + cellW / 2 + i * (cellW + gutter)
+  );
+  const cellCy = upperY + cellH / 2;
+  const glyphCy = cellCy - 8;
 
   /* Lower zone */
-  const cascadeY = 275;
-  const cascadeBandTop = 248;
-  const cascadeBandBottom = 338;
+  const cascadeY = 290;
+  const cascadeBandTop = 260;
+  const cascadeBandBottom = 360;
   const cascadeGlyphY = cascadeY;
 
   /* Cascade chain order: System, Memory, Planning, Reflection */
-  const cascadeStartX = 140;
-  const cascadeSpacing = 160;
-  const cascadeCx = Array.from({ length: 4 }, (_, i) => cascadeStartX + i * cascadeSpacing);
+  const cascadeStartX = 220;
+  const cascadeSpacing = 220;
+  const cascadeCx = Array.from(
+    { length: 4 },
+    (_, i) => cascadeStartX + i * cascadeSpacing
+  );
+
+  /* ── Build the cascade flow path for the dot ────────── */
+  // The dot flows along the connectors between the 4 cascade glyphs
+  const flowPathD = [
+    `M ${cascadeCx[0] + 14} ${cascadeGlyphY}`,
+    `L ${cascadeCx[1] - 18} ${cascadeGlyphY}`,
+    `M ${cascadeCx[1] + 18} ${cascadeGlyphY}`,
+    `L ${cascadeCx[2] - 22} ${cascadeGlyphY}`,
+    `M ${cascadeCx[2] + 18} ${cascadeGlyphY}`,
+    `L ${cascadeCx[3] - 22} ${cascadeGlyphY}`,
+  ].join(" ");
+
+  // Continuous path for animateMotion (no gaps — dot traverses the full span)
+  const flowContinuousD = [
+    `M ${cascadeCx[0] + 14} ${cascadeGlyphY}`,
+    `L ${cascadeCx[3] - 22} ${cascadeGlyphY}`,
+  ].join(" ");
+
+  /* ── Stagger delays ─────────────────────────────────── */
+  const cellDelays = [0, 0.1, 0.2, 0.3, 0.4]; // left-to-right, 100ms stagger
+  const cascadeDelay = 0.65; // after all cells have entered
+
+  /* CSS entrance class helper */
+  const entrance = (delay: number) =>
+    reducedMotion
+      ? { opacity: visible ? 1 : 0, transition: "opacity 0.01s" }
+      : {
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(12px)",
+          transition: `opacity 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.5s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+        };
+
+  const fadeIn = (delay: number) =>
+    reducedMotion
+      ? { opacity: visible ? 1 : 0, transition: "opacity 0.01s" }
+      : {
+          opacity: visible ? 1 : 0,
+          transition: `opacity 0.6s ease ${delay}s`,
+        };
 
   return (
     <figure
+      ref={figureRef}
       role="img"
       aria-label="Failure taxonomy showing five failure classes — Memory, Reflection, Planning, Action, System — and their cascade chain from root cause to symptom"
-      style={{ margin: 0, width: "100%", maxWidth: "780px", marginInline: "auto" }}
+      style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
       <svg
-        viewBox="0 0 780 380"
+        viewBox="0 0 1200 400"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -100,26 +185,30 @@ export function FailureTaxonomyDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Cascade flow path (for reference / dot motion) */}
+          <path id="ftCascadeFlow" d={flowContinuousD} fill="none" />
         </defs>
 
         {/* ═══════════════════════════════════════════════════
             UPPER ZONE — Five failure classes
             ═══════════════════════════════════════════════════ */}
 
-        {/* Cell borders (subtle) */}
+        {/* Cell borders + glyphs + labels — staggered entrance */}
         {cx.map((x, i) => (
-          <rect
-            key={`cell-${i}`}
-            x={x - cellW / 2}
-            y={upperY}
-            width={cellW}
-            height={cellH}
-            rx={6}
-            stroke="var(--border)"
-            strokeWidth="1"
-            fill="none"
-            opacity={0.5}
-          />
+          <g key={`cell-group-${i}`} style={entrance(cellDelays[i])}>
+            <rect
+              x={x - cellW / 2}
+              y={upperY}
+              width={cellW}
+              height={cellH}
+              rx={6}
+              stroke="var(--border)"
+              strokeWidth="1"
+              fill="none"
+              opacity={0.5}
+            />
+          </g>
         ))}
 
         {/* ── 1. Memory — broken horizontal bar ────────── */}
@@ -129,23 +218,28 @@ export function FailureTaxonomyDiagram() {
           const halfW = 26;
           const gap = 7;
           return (
-            <g>
+            <g style={entrance(cellDelays[0])}>
               <line
-                x1={x - halfW} y1={y}
-                x2={x - gap} y2={y}
+                x1={x - halfW}
+                y1={y}
+                x2={x - gap}
+                y2={y}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
               />
               <line
-                x1={x + gap} y1={y}
-                x2={x + halfW} y2={y}
+                x1={x + gap}
+                y1={y}
+                x2={x + halfW}
+                y2={y}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
               />
-              {/* Dashed gap to show broken continuity */}
               <line
-                x1={x - gap} y1={y}
-                x2={x + gap} y2={y}
+                x1={x - gap}
+                y1={y}
+                x2={x + gap}
+                y2={y}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
                 strokeDasharray="3 3"
@@ -159,7 +253,6 @@ export function FailureTaxonomyDiagram() {
           const x = cx[1];
           const y = glyphCy;
           const r = 16;
-          // Arc from ~30deg to ~320deg (leaving a gap at top-right)
           const startAngle = 40 * (Math.PI / 180);
           const endAngle = 350 * (Math.PI / 180);
           const sx = x + r * Math.cos(startAngle);
@@ -167,16 +260,14 @@ export function FailureTaxonomyDiagram() {
           const ex = x + r * Math.cos(endAngle);
           const ey = y - r * Math.sin(endAngle);
           return (
-            <g>
+            <g style={entrance(cellDelays[1])}>
               <path
                 d={`M ${sx} ${sy} A ${r} ${r} 0 1 0 ${ex} ${ey}`}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
                 fill="none"
               />
-              {/* Small arrowhead at the end */}
               {(() => {
-                // Tangent direction at end point (perpendicular to radius, clockwise)
                 const tangentAngle = endAngle - Math.PI / 2;
                 const aLen = 6;
                 const aSpread = 2.5;
@@ -208,10 +299,10 @@ export function FailureTaxonomyDiagram() {
           const spacing = 12;
           const bars = [y - spacing, y, y + spacing];
           return (
-            <g>
-              {bars.map((by, i) => (
+            <g style={entrance(cellDelays[2])}>
+              {bars.map((by, bi) => (
                 <rect
-                  key={i}
+                  key={bi}
                   x={x - barW / 2}
                   y={by - barH / 2}
                   width={barW}
@@ -222,10 +313,11 @@ export function FailureTaxonomyDiagram() {
                   fill="none"
                 />
               ))}
-              {/* Diagonal strike through middle bar */}
               <line
-                x1={x - barW / 2 - 4} y1={y + spacing / 2 + 2}
-                x2={x + barW / 2 + 4} y2={y - spacing / 2 - 2}
+                x1={x - barW / 2 - 4}
+                y1={y + spacing / 2 + 2}
+                x2={x + barW / 2 + 4}
+                y2={y - spacing / 2 - 2}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
               />
@@ -240,20 +332,19 @@ export function FailureTaxonomyDiagram() {
           const shaftLen = 26;
           const shaftX1 = x - shaftLen / 2 - 6;
           const shaftX2 = x + shaftLen / 2 - 10;
-          // Head detached and offset downward
           const headBaseX = x + shaftLen / 2 - 4;
           const headTipX = headBaseX + 12;
-          const headY = y + 6; // offset down
+          const headY = y + 6;
           return (
-            <g>
-              {/* Arrow shaft */}
+            <g style={entrance(cellDelays[3])}>
               <line
-                x1={shaftX1} y1={y}
-                x2={shaftX2} y2={y}
+                x1={shaftX1}
+                y1={y}
+                x2={shaftX2}
+                y2={y}
                 stroke="var(--color-midnight)"
                 strokeWidth="2"
               />
-              {/* Detached arrowhead (offset down) */}
               <path
                 d={`M ${headBaseX} ${headY - 7} L ${headTipX} ${headY} L ${headBaseX} ${headY + 7}`}
                 stroke="var(--color-midnight)"
@@ -271,8 +362,7 @@ export function FailureTaxonomyDiagram() {
           const size = 28;
           const half = size / 2;
           return (
-            <g>
-              {/* Square outline */}
+            <g style={entrance(cellDelays[4])}>
               <rect
                 x={x - half}
                 y={y - half}
@@ -306,12 +396,13 @@ export function FailureTaxonomyDiagram() {
             <text
               key={label}
               x={cx[i]}
-              y={upperY + cellH + 20}
+              y={upperY + cellH + 22}
               fontFamily="var(--font-display)"
               fontSize="14"
               fontWeight="500"
               fill="var(--color-midnight)"
               textAnchor="middle"
+              style={entrance(cellDelays[i])}
             >
               {label}
             </text>
@@ -323,272 +414,318 @@ export function FailureTaxonomyDiagram() {
           <line
             key={`drop-${i}`}
             x1={x}
-            y1={upperY + cellH + 28}
+            y1={upperY + cellH + 30}
             x2={x}
             y2={cascadeBandTop - 8}
             stroke="var(--border)"
             strokeWidth="1"
             strokeDasharray="3 4"
             opacity={0.5}
+            style={fadeIn(cellDelays[i] + 0.3)}
           />
         ))}
 
         {/* ═══════════════════════════════════════════════════
-            LOWER ZONE — Cascade chain
+            LOWER ZONE — Cascade chain (fades in after cells)
             ═══════════════════════════════════════════════════ */}
+        <g style={fadeIn(cascadeDelay)}>
+          {/* Cascade band borders */}
+          <line
+            x1={100}
+            y1={cascadeBandTop}
+            x2={1100}
+            y2={cascadeBandTop}
+            stroke="var(--border)"
+            strokeWidth="1"
+            opacity={0.3}
+          />
+          <line
+            x1={100}
+            y1={cascadeBandBottom}
+            x2={1100}
+            y2={cascadeBandBottom}
+            stroke="var(--border)"
+            strokeWidth="1"
+            opacity={0.3}
+          />
 
-        {/* Cascade band border */}
-        <line
-          x1={60} y1={cascadeBandTop}
-          x2={720} y2={cascadeBandTop}
-          stroke="var(--border)"
-          strokeWidth="1"
-          opacity={0.3}
-        />
-        <line
-          x1={60} y1={cascadeBandBottom}
-          x2={720} y2={cascadeBandBottom}
-          stroke="var(--border)"
-          strokeWidth="1"
-          opacity={0.3}
-        />
-
-        {/* Dashed vertical line from upper System cell to cascade System glyph */}
-        <line
-          x1={cx[4]}
-          y1={upperY + cellH + 28}
-          x2={cascadeCx[0]}
-          y2={cascadeGlyphY - 18}
-          stroke="var(--color-midnight)"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-          opacity={0.6}
-        />
-
-        {/* ── Cascade glyphs (smaller versions) ────────── */}
-
-        {/* System — small cracked square */}
-        {(() => {
-          const x = cascadeCx[0];
-          const y = cascadeGlyphY;
-          const size = 18;
-          const half = size / 2;
-          return (
-            <g>
-              <rect
-                x={x - half} y={y - half}
-                width={size} height={size}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-                fill="none"
+          {/* Dashed connector from upper System cell to cascade System glyph — pulsing */}
+          <line
+            x1={cx[4]}
+            y1={upperY + cellH + 30}
+            x2={cascadeCx[0]}
+            y2={cascadeGlyphY - 18}
+            stroke="var(--color-midnight)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+            opacity={0.6}
+          >
+            {visible && !reducedMotion && (
+              <animate
+                attributeName="opacity"
+                values="0.6;0.25;0.6"
+                dur="2.5s"
+                repeatCount="indefinite"
               />
-              <path
-                d={`M ${x - half + 2} ${y - half + 2}
-                    L ${x - 1} ${y - 2}
-                    L ${x + 1} ${y + 1}
-                    L ${x + half - 2} ${y + half - 2}`}
-                stroke="var(--accent)"
-                strokeWidth="1.5"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <text
-                x={x} y={y + half + 14}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-3)"
-                textAnchor="middle"
-                letterSpacing="0.03em"
-              >
-                System
-              </text>
-            </g>
-          );
-        })()}
+            )}
+          </line>
 
-        {/* Arrow: System -> Memory */}
-        <line
-          x1={cascadeCx[0] + 14}
-          y1={cascadeGlyphY}
-          x2={cascadeCx[1] - 18}
-          y2={cascadeGlyphY}
-          stroke="var(--fg-2)"
-          strokeWidth="1.5"
-          markerEnd="url(#ftArrowMuted)"
-        />
+          {/* ── Cascade glyphs ────────────────────────────── */}
 
-        {/* Memory — small broken bar */}
-        {(() => {
-          const x = cascadeCx[1];
-          const y = cascadeGlyphY;
-          const halfW = 14;
-          const gap = 4;
-          return (
-            <g>
-              <line
-                x1={x - halfW} y1={y}
-                x2={x - gap} y2={y}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-              />
-              <line
-                x1={x + gap} y1={y}
-                x2={x + halfW} y2={y}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-              />
-              <line
-                x1={x - gap} y1={y}
-                x2={x + gap} y2={y}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-                strokeDasharray="2 2"
-              />
-              <text
-                x={x} y={y + 22}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-3)"
-                textAnchor="middle"
-                letterSpacing="0.03em"
-              >
-                Memory
-              </text>
-            </g>
-          );
-        })()}
-
-        {/* Arrow: Memory -> Planning */}
-        <line
-          x1={cascadeCx[1] + 18}
-          y1={cascadeGlyphY}
-          x2={cascadeCx[2] - 22}
-          y2={cascadeGlyphY}
-          stroke="var(--fg-2)"
-          strokeWidth="1.5"
-          markerEnd="url(#ftArrowMuted)"
-        />
-
-        {/* Planning — small bars with strike */}
-        {(() => {
-          const x = cascadeCx[2];
-          const y = cascadeGlyphY;
-          const barW = 18;
-          const barH = 2.5;
-          const spacing = 7;
-          const bars = [y - spacing, y, y + spacing];
-          return (
-            <g>
-              {bars.map((by, i) => (
+          {/* System — small cracked square */}
+          {(() => {
+            const x = cascadeCx[0];
+            const y = cascadeGlyphY;
+            const size = 18;
+            const half = size / 2;
+            return (
+              <g>
                 <rect
-                  key={i}
-                  x={x - barW / 2}
-                  y={by - barH / 2}
-                  width={barW}
-                  height={barH}
-                  rx={0.5}
+                  x={x - half}
+                  y={y - half}
+                  width={size}
+                  height={size}
                   stroke="var(--color-midnight)"
                   strokeWidth="1.5"
                   fill="none"
                 />
-              ))}
-              <line
-                x1={x - barW / 2 - 2} y1={y + spacing / 2 + 1}
-                x2={x + barW / 2 + 2} y2={y - spacing / 2 - 1}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-              />
-              <text
-                x={x} y={y + spacing + 17}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-3)"
-                textAnchor="middle"
-                letterSpacing="0.03em"
-              >
-                Planning
-              </text>
-            </g>
-          );
-        })()}
+                <path
+                  d={`M ${x - half + 2} ${y - half + 2}
+                      L ${x - 1} ${y - 2}
+                      L ${x + 1} ${y + 1}
+                      L ${x + half - 2} ${y + half - 2}`}
+                  stroke="var(--accent)"
+                  strokeWidth="1.5"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <text
+                  x={x}
+                  y={y + half + 16}
+                  fontFamily="var(--font-mono)"
+                  fontSize="10"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  letterSpacing="0.03em"
+                >
+                  System
+                </text>
+              </g>
+            );
+          })()}
 
-        {/* Arrow: Planning -> Reflection */}
-        <line
-          x1={cascadeCx[2] + 18}
-          y1={cascadeGlyphY}
-          x2={cascadeCx[3] - 22}
-          y2={cascadeGlyphY}
-          stroke="var(--fg-2)"
-          strokeWidth="1.5"
-          markerEnd="url(#ftArrowMuted)"
-        />
+          {/* Arrow: System -> Memory */}
+          <line
+            x1={cascadeCx[0] + 14}
+            y1={cascadeGlyphY}
+            x2={cascadeCx[1] - 18}
+            y2={cascadeGlyphY}
+            stroke="var(--fg-2)"
+            strokeWidth="1.5"
+            markerEnd="url(#ftArrowMuted)"
+          />
 
-        {/* Reflection — small open circular arrow */}
-        {(() => {
-          const x = cascadeCx[3];
-          const y = cascadeGlyphY;
-          const r = 10;
-          const startAngle = 40 * (Math.PI / 180);
-          const endAngle = 350 * (Math.PI / 180);
-          const sx = x + r * Math.cos(startAngle);
-          const sy = y - r * Math.sin(startAngle);
-          const ex = x + r * Math.cos(endAngle);
-          const ey = y - r * Math.sin(endAngle);
-          return (
-            <g>
-              <path
-                d={`M ${sx} ${sy} A ${r} ${r} 0 1 0 ${ex} ${ey}`}
-                stroke="var(--color-midnight)"
-                strokeWidth="1.5"
-                fill="none"
-              />
-              {/* Small arrowhead */}
-              {(() => {
-                const tangentAngle = endAngle - Math.PI / 2;
-                const aLen = 4;
-                const aSpread = 2;
-                const tipX = ex;
-                const tipY = ey;
-                const backX = tipX - aLen * Math.cos(tangentAngle);
-                const backY = tipY + aLen * Math.sin(tangentAngle);
-                const perpX = aSpread * Math.sin(tangentAngle);
-                const perpY = aSpread * Math.cos(tangentAngle);
-                return (
-                  <path
-                    d={`M ${backX + perpX} ${backY + perpY} L ${tipX} ${tipY} L ${backX - perpX} ${backY - perpY}`}
+          {/* Memory — small broken bar */}
+          {(() => {
+            const x = cascadeCx[1];
+            const y = cascadeGlyphY;
+            const halfW = 14;
+            const gap2 = 4;
+            return (
+              <g>
+                <line
+                  x1={x - halfW}
+                  y1={y}
+                  x2={x - gap2}
+                  y2={y}
+                  stroke="var(--color-midnight)"
+                  strokeWidth="1.5"
+                />
+                <line
+                  x1={x + gap2}
+                  y1={y}
+                  x2={x + halfW}
+                  y2={y}
+                  stroke="var(--color-midnight)"
+                  strokeWidth="1.5"
+                />
+                <line
+                  x1={x - gap2}
+                  y1={y}
+                  x2={x + gap2}
+                  y2={y}
+                  stroke="var(--color-midnight)"
+                  strokeWidth="1.5"
+                  strokeDasharray="2 2"
+                />
+                <text
+                  x={x}
+                  y={y + 24}
+                  fontFamily="var(--font-mono)"
+                  fontSize="10"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  letterSpacing="0.03em"
+                >
+                  Memory
+                </text>
+              </g>
+            );
+          })()}
+
+          {/* Arrow: Memory -> Planning */}
+          <line
+            x1={cascadeCx[1] + 18}
+            y1={cascadeGlyphY}
+            x2={cascadeCx[2] - 22}
+            y2={cascadeGlyphY}
+            stroke="var(--fg-2)"
+            strokeWidth="1.5"
+            markerEnd="url(#ftArrowMuted)"
+          />
+
+          {/* Planning — small bars with strike */}
+          {(() => {
+            const x = cascadeCx[2];
+            const y = cascadeGlyphY;
+            const barW = 18;
+            const barH = 2.5;
+            const spacing = 7;
+            const bars = [y - spacing, y, y + spacing];
+            return (
+              <g>
+                {bars.map((by, bi) => (
+                  <rect
+                    key={bi}
+                    x={x - barW / 2}
+                    y={by - barH / 2}
+                    width={barW}
+                    height={barH}
+                    rx={0.5}
                     stroke="var(--color-midnight)"
                     strokeWidth="1.5"
                     fill="none"
                   />
-                );
-              })()}
-              <text
-                x={x} y={y + r + 14}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-3)"
-                textAnchor="middle"
-                letterSpacing="0.03em"
-              >
-                Reflection
-              </text>
-            </g>
-          );
-        })()}
+                ))}
+                <line
+                  x1={x - barW / 2 - 2}
+                  y1={y + spacing / 2 + 1}
+                  x2={x + barW / 2 + 2}
+                  y2={y - spacing / 2 - 1}
+                  stroke="var(--color-midnight)"
+                  strokeWidth="1.5"
+                />
+                <text
+                  x={x}
+                  y={y + spacing + 19}
+                  fontFamily="var(--font-mono)"
+                  fontSize="10"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  letterSpacing="0.03em"
+                >
+                  Planning
+                </text>
+              </g>
+            );
+          })()}
 
-        {/* ── Cascade caption ──────────────────────────── */}
-        <text
-          x={390}
-          y={cascadeBandBottom + 22}
-          fontFamily="var(--font-mono)"
-          fontSize="10"
-          fill="var(--fg-2)"
-          textAnchor="middle"
-          letterSpacing="0.06em"
-        >
-          Symptom at the end. Root cause at the start.
-        </text>
+          {/* Arrow: Planning -> Reflection */}
+          <line
+            x1={cascadeCx[2] + 18}
+            y1={cascadeGlyphY}
+            x2={cascadeCx[3] - 22}
+            y2={cascadeGlyphY}
+            stroke="var(--fg-2)"
+            strokeWidth="1.5"
+            markerEnd="url(#ftArrowMuted)"
+          />
+
+          {/* Reflection — small open circular arrow */}
+          {(() => {
+            const x = cascadeCx[3];
+            const y = cascadeGlyphY;
+            const r = 10;
+            const startAngle = 40 * (Math.PI / 180);
+            const endAngle = 350 * (Math.PI / 180);
+            const sx = x + r * Math.cos(startAngle);
+            const sy = y - r * Math.sin(startAngle);
+            const ex = x + r * Math.cos(endAngle);
+            const ey = y - r * Math.sin(endAngle);
+            return (
+              <g>
+                <path
+                  d={`M ${sx} ${sy} A ${r} ${r} 0 1 0 ${ex} ${ey}`}
+                  stroke="var(--color-midnight)"
+                  strokeWidth="1.5"
+                  fill="none"
+                />
+                {(() => {
+                  const tangentAngle = endAngle - Math.PI / 2;
+                  const aLen = 4;
+                  const aSpread = 2;
+                  const tipX = ex;
+                  const tipY = ey;
+                  const backX = tipX - aLen * Math.cos(tangentAngle);
+                  const backY = tipY + aLen * Math.sin(tangentAngle);
+                  const perpX = aSpread * Math.sin(tangentAngle);
+                  const perpY = aSpread * Math.cos(tangentAngle);
+                  return (
+                    <path
+                      d={`M ${backX + perpX} ${backY + perpY} L ${tipX} ${tipY} L ${backX - perpX} ${backY - perpY}`}
+                      stroke="var(--color-midnight)"
+                      strokeWidth="1.5"
+                      fill="none"
+                    />
+                  );
+                })()}
+                <text
+                  x={x}
+                  y={y + r + 16}
+                  fontFamily="var(--font-mono)"
+                  fontSize="10"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  letterSpacing="0.03em"
+                >
+                  Reflection
+                </text>
+              </g>
+            );
+          })()}
+
+          {/* ── Animated flowing dot along cascade chain ── */}
+          {visible && !reducedMotion && (
+            <circle r="4" fill="var(--accent)" opacity="0.8">
+              <animateMotion
+                dur="3s"
+                repeatCount="indefinite"
+                path={flowContinuousD}
+              />
+              <animate
+                attributeName="opacity"
+                values="0;0.8;0.8;0"
+                keyTimes="0;0.1;0.85;1"
+                dur="3s"
+                repeatCount="indefinite"
+              />
+            </circle>
+          )}
+
+          {/* ── Cascade caption ────────────────────────────── */}
+          <text
+            x={600}
+            y={cascadeBandBottom + 24}
+            fontFamily="var(--font-mono)"
+            fontSize="11"
+            fill="var(--fg-2)"
+            textAnchor="middle"
+            letterSpacing="0.06em"
+          >
+            Symptom at the end. Root cause at the start.
+          </text>
+        </g>
       </svg>
     </figure>
   );
