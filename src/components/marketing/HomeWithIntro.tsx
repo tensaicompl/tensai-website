@@ -2,32 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { LogoIntro } from "./LogoIntro";
+import styles from "./LogoIntro.module.css";
 
 const SESSION_KEY = "tensai-intro-played";
 
 export function HomeWithIntro({ children }: { children: React.ReactNode }) {
   const [showIntro, setShowIntro] = useState(false);
-  const [introPlayed, setIntroPlayed] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
 
   useEffect(() => {
     if (!sessionStorage.getItem(SESSION_KEY)) {
       setShowIntro(true);
-    } else {
-      setIntroPlayed(true);
+      setPageVisible(false);
     }
   }, []);
 
   const handleComplete = () => {
     sessionStorage.setItem(SESSION_KEY, "1");
-    setIntroPlayed(true);
+    setPageVisible(true);
   };
 
   return (
     <>
-      {showIntro && !introPlayed && (
-        <LogoIntro onComplete={handleComplete} />
-      )}
-      {children}
+      {showIntro && <LogoIntro onComplete={handleComplete} />}
+      <div className={`${styles.pageWrap} ${pageVisible ? styles.pageVisible : ""}`}>
+        {children}
+      </div>
     </>
   );
 }
