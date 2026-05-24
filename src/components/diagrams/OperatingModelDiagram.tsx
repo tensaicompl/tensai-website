@@ -22,7 +22,7 @@ export function OperatingModelDiagram() {
   }, []);
 
   const W = 1200;
-  const H = 420;
+  const H = 450;
   const stageW = 220;
   const stageGap = 60;
   const totalW = stageW * 4 + stageGap * 3;
@@ -48,14 +48,23 @@ export function OperatingModelDiagram() {
     { dx: 20, dy: 50 },
     { dx: 55, dy: 65 },
   ];
-  const loopRight = stageX(3) + barW / 2 + 6;
+  const coeR = 18;
+  const coeY = barY - 38;
+  const usersY = barY + 115;
+  const usersW = 60;
+  const usersH = 22;
 
   const flowPaths = [
     { id: "om-flow-12", d: `M${stageX(0) + stageW / 2 + 4},${midY} L${stageX(1) - stageW / 2 - 4},${midY}`, color: "var(--color-midnight)", dur: "2.5s", r: 3.5 },
     { id: "om-flow-2w", d: `M${stageX(1) + stageW / 2 + 4},${midY} L${wallX - wallW / 2 - 4},${midY}`, color: "var(--accent)", dur: "1.5s", r: 3 },
     { id: "om-flow-w3", d: `M${wallX + wallW / 2 + 4},${midY} L${stageX(2) - stageW / 2 - 4},${midY}`, color: "var(--accent)", dur: "1.5s", r: 3 },
     { id: "om-flow-34", d: `M${stageX(2) + stageW / 2 + 4},${midY} L${stageX(3) - stageW / 2 - 4},${midY}`, color: "var(--color-midnight)", dur: "2.5s", r: 3.5 },
-    { id: "om-flow-loop", d: `M${stageX(3) + barW / 2 - 8},${barY + barH} C${loopRight},${barY + 30} ${loopRight},${barY + 80} ${stageX(3)},${barY + 100} C${stageX(3) - barW / 2 + 8},${barY + 80} ${stageX(3) - barW / 2 - 6},${barY + 30} ${stageX(3) - barW / 2 + 8},${barY + barH}`, color: "var(--color-midnight)", dur: "3.5s", r: 2.5 },
+    // CoE ↔ Platform feedback (above platform)
+    { id: "om-flow-coe-plat", d: `M${stageX(3) - 20},${coeY + coeR} L${stageX(3) - 20},${barY}`, color: "var(--color-midnight)", dur: "1.8s", r: 2.5 },
+    { id: "om-flow-plat-coe", d: `M${stageX(3) + 20},${barY} L${stageX(3) + 20},${coeY + coeR}`, color: "var(--color-midnight)", dur: "1.8s", r: 2.5 },
+    // Platform ↔ Users feedback (below dots)
+    { id: "om-flow-plat-users", d: `M${stageX(3) - 20},${barY + barH} C${stageX(3) - 20},${barY + 60} ${stageX(3) - 20},${usersY - 10} ${stageX(3) - 20},${usersY}`, color: "var(--color-midnight)", dur: "2.5s", r: 2.5 },
+    { id: "om-flow-users-plat", d: `M${stageX(3) + 20},${usersY} C${stageX(3) + 20},${usersY - 10} ${stageX(3) + 20},${barY + 60} ${stageX(3) + 20},${barY + barH}`, color: "var(--color-midnight)", dur: "2.5s", r: 2.5 },
   ];
 
   const stageEntrance = (i: number) => ({
@@ -122,7 +131,7 @@ export function OperatingModelDiagram() {
           ].map((d, i) => (
             <circle key={`s1d-${i}`} cx={stageX(0) + d.dx} cy={dotZoneY + d.dy} r={10} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" />
           ))}
-          <text x={stageX(0)} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">isolated pilots</text>
+          <text x={stageX(0)} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">Isolated Pilots</text>
         </g>
 
         {/* ── Stage 2 — hub-and-spoke (CoE) ───────────────── */}
@@ -149,36 +158,68 @@ export function OperatingModelDiagram() {
               })}
               <circle cx={cx} cy={hubY} r={hubR} stroke="var(--color-midnight)" strokeWidth="2" fill="var(--bg-card)" />
               <text x={cx} y={hubY + 1} fontFamily="var(--font-display)" fontSize="12" fill="var(--color-midnight)" textAnchor="middle" dominantBaseline="middle" fontWeight="700" letterSpacing="-0.01em">CoE</text>
-              <text x={cx} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">central hub</text>
+              <text x={cx} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">Central Hub</text>
             </g>
           );
         })()}
 
-        {/* ── Stage 3 — platform + hanging dots ───────────── */}
+        {/* ── Stage 3 — CoE above platform, dots below ────── */}
         <g style={stageEntrance(2)}>
+          {/* CoE circle */}
+          <circle cx={stageX(2)} cy={coeY} r={coeR} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
+          <text x={stageX(2)} y={coeY + 1} fontFamily="var(--font-display)" fontSize="11" fill="var(--color-midnight)" textAnchor="middle" dominantBaseline="middle" fontWeight="700">CoE</text>
+          {/* Connector CoE → Platform */}
+          <line x1={stageX(2)} y1={coeY + coeR} x2={stageX(2)} y2={barY} stroke="var(--border)" strokeWidth="1" strokeDasharray="4 3" />
+          {/* Platform bar */}
           <rect x={stageX(2) - barW / 2} y={barY} width={barW} height={barH} rx={3} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
           <text x={stageX(2)} y={barY + 9} fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600" letterSpacing="0.1em">PLATFORM</text>
+          {/* Hanging dots */}
           {hangDots.map((d, i) => (
             <g key={`s3d-${i}`}>
               <line x1={stageX(2) + d.dx} y1={barY + barH} x2={stageX(2) + d.dx} y2={barY + d.dy - 8} stroke="var(--border)" strokeWidth="1" />
               <circle cx={stageX(2) + d.dx} cy={barY + d.dy} r={8} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" />
             </g>
           ))}
-          <text x={stageX(2)} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">self-serve</text>
+          <text x={stageX(2)} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">Self-Serve</text>
         </g>
 
-        {/* ── Stage 4 — platform + feedback loop ──────────── */}
+        {/* ── Stage 4 — CoE + Platform + Users with feedback ─ */}
         <g style={stageEntrance(3)}>
+          {/* CoE circle */}
+          <circle cx={stageX(3)} cy={coeY} r={coeR} stroke="var(--color-midnight)" strokeWidth="2" fill="var(--bg-card)" />
+          <text x={stageX(3)} y={coeY + 1} fontFamily="var(--font-display)" fontSize="11" fill="var(--color-midnight)" textAnchor="middle" dominantBaseline="middle" fontWeight="700">CoE</text>
+
+          {/* Static feedback rails: CoE ↔ Platform (vertical pair) */}
+          <line x1={stageX(3) - 20} y1={coeY + coeR} x2={stageX(3) - 20} y2={barY} stroke="var(--fg-3)" strokeWidth="1" opacity="0.2" />
+          <line x1={stageX(3) + 20} y1={barY} x2={stageX(3) + 20} y2={coeY + coeR} stroke="var(--fg-3)" strokeWidth="1" opacity="0.2" />
+          {/* Arrow labels */}
+          <text x={stageX(3) - 28} y={coeY + coeR + 14} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="end">govern</text>
+          <text x={stageX(3) + 28} y={coeY + coeR + 14} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="start">report</text>
+
+          {/* Platform bar */}
           <rect x={stageX(3) - barW / 2} y={barY} width={barW} height={barH} rx={3} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
           <text x={stageX(3)} y={barY + 9} fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600" letterSpacing="0.1em">PLATFORM</text>
+
+          {/* Hanging dots (teams) */}
           {hangDots.map((d, i) => (
             <g key={`s4d-${i}`}>
               <line x1={stageX(3) + d.dx} y1={barY + barH} x2={stageX(3) + d.dx} y2={barY + d.dy - 8} stroke="var(--border)" strokeWidth="1" />
               <circle cx={stageX(3) + d.dx} cy={barY + d.dy} r={8} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" />
             </g>
           ))}
-          <path d={flowPaths[4].d} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" opacity="0.2" />
-          <text x={stageX(3)} y={dotZoneY + 160} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">continuous feedback</text>
+
+          {/* Static feedback rails: Platform ↔ Users (vertical pair) */}
+          <line x1={stageX(3) - 20} y1={barY + barH} x2={stageX(3) - 20} y2={usersY} stroke="var(--fg-3)" strokeWidth="1" opacity="0.2" />
+          <line x1={stageX(3) + 20} y1={usersY + usersH} x2={stageX(3) + 20} y2={barY + barH} stroke="var(--fg-3)" strokeWidth="1" opacity="0.2" />
+          {/* Arrow labels */}
+          <text x={stageX(3) - 28} y={usersY - 6} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="end">deliver</text>
+          <text x={stageX(3) + 28} y={usersY - 6} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="start">feedback</text>
+
+          {/* Users box */}
+          <rect x={stageX(3) - usersW / 2} y={usersY} width={usersW} height={usersH} rx={3} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
+          <text x={stageX(3)} y={usersY + usersH / 2 + 1} fontFamily="var(--font-display)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle" dominantBaseline="middle" fontWeight="600">Users</text>
+
+          <text x={stageX(3)} y={dotZoneY + 180} fontFamily="var(--font-body)" fontSize="12" fill="var(--fg-3)" textAnchor="middle">Continuous Feedback</text>
         </g>
 
         {/* ── Static connector rails ──────────────────────── */}
