@@ -280,10 +280,11 @@ export default async function OperatingModelConceptPage({
         }
 
         .concept-body {
-          max-width: 720px;
+          max-width: 960px;
           font-size: 16px;
           line-height: 1.7;
           color: var(--fg-2);
+          text-align: justify;
         }
 
         .concept-body h2 {
@@ -294,6 +295,7 @@ export default async function OperatingModelConceptPage({
           margin-top: 40px;
           margin-bottom: 12px;
           letter-spacing: -0.015em;
+          text-align: left;
         }
 
         .concept-body h3 {
@@ -303,6 +305,7 @@ export default async function OperatingModelConceptPage({
           color: var(--fg-1);
           margin-top: 28px;
           margin-bottom: 8px;
+          text-align: left;
         }
 
         .concept-body p {
@@ -318,6 +321,37 @@ export default async function OperatingModelConceptPage({
 
         .concept-body li {
           margin-top: 6px;
+        }
+
+        .concept-body table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 24px;
+          margin-bottom: 24px;
+          font-size: 14px;
+        }
+
+        .concept-body th,
+        .concept-body td {
+          border: 1px solid var(--border);
+          padding: 10px 14px;
+          text-align: left;
+          vertical-align: top;
+        }
+
+        .concept-body th {
+          background: var(--bg-surface);
+          font-weight: 600;
+          color: var(--fg-1);
+          font-size: 13px;
+        }
+
+        .concept-body td {
+          color: var(--fg-2);
+        }
+
+        .concept-body tr:hover td {
+          background: rgba(241, 245, 249, 0.5);
         }
 
         .concept-nav-link {
