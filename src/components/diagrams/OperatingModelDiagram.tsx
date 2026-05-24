@@ -76,14 +76,14 @@ export function OperatingModelDiagram() {
     })(), color: "var(--color-midnight)", dur: "2s", r: 2.5 },
     // deliver: Platform bottom → DOWN → 90° elbow left → into Users left
     { id: "om-flow-plat-users", d: (() => {
-      const R = 12, off = 35;
+      const R = 12, off = 75;
       const sx = stageX(3) - off, sy = barY + barH;
       const ey = usersY + usersH / 2, ex = stageX(3) - usersW / 2;
       return `M${sx},${sy} L${sx},${ey - R} Q${sx},${ey} ${sx + R},${ey} L${ex},${ey}`;
     })(), color: "var(--color-midnight)", dur: "2.5s", r: 2.5 },
     // feedback: Users right → right → 90° elbow up → into Platform bottom
     { id: "om-flow-users-plat", d: (() => {
-      const R = 12, off = 35;
+      const R = 12, off = 75;
       const sx = stageX(3) + usersW / 2, sy = usersY + usersH / 2;
       const ex = stageX(3) + off, ey = barY + barH;
       return `M${sx},${sy} L${ex - R},${sy} Q${ex},${sy} ${ex},${sy - R} L${ex},${ey}`;
@@ -235,8 +235,8 @@ export function OperatingModelDiagram() {
           <path d={flowPaths[6].d} stroke="var(--fg-3)" strokeWidth="1" fill="none" opacity="0.2" />
           <path d={flowPaths[7].d} stroke="var(--fg-3)" strokeWidth="1" fill="none" opacity="0.2" />
           {/* Arrow labels */}
-          <text x={stageX(3) - 35 - 6} y={(barY + barH + usersY + usersH / 2) / 2} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="end">deliver</text>
-          <text x={stageX(3) + 35 + 6} y={(barY + barH + usersY + usersH / 2) / 2} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="start">feedback</text>
+          <text x={stageX(3) - 75 - 6} y={(barY + barH + usersY + usersH / 2) / 2} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="end">deliver</text>
+          <text x={stageX(3) + 75 + 6} y={(barY + barH + usersY + usersH / 2) / 2} fontFamily="var(--font-mono)" fontSize="7" fill="var(--fg-3)" textAnchor="start">feedback</text>
 
           {/* Users box */}
           <rect x={stageX(3) - usersW / 2} y={usersY} width={usersW} height={usersH} rx={3} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
