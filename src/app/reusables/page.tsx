@@ -233,7 +233,7 @@ export default function ReusablesPage() {
               margin: "0 auto",
               display: "grid",
               gridTemplateColumns: "1.1fr 1fr",
-              alignItems: "center",
+              alignItems: "start",
               gap: "48px",
             }}
           >
