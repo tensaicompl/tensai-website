@@ -138,9 +138,11 @@ export function StageIllustration({ stage }: { stage: number | string }) {
   const StageComponent = STAGES[Number(stage)];
   if (!StageComponent) return null;
   return (
-    <figure
+    <span
       style={{
+        display: "block",
         float: "right",
+        clear: "right",
         margin: "0 0 16px 24px",
         width: `${STAGE_W}px`,
       }}
@@ -149,6 +151,7 @@ export function StageIllustration({ stage }: { stage: number | string }) {
         viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        role="img"
         style={{
           width: "100%",
           height: "auto",
@@ -161,6 +164,6 @@ export function StageIllustration({ stage }: { stage: number | string }) {
       >
         <StageComponent />
       </svg>
-    </figure>
+    </span>
   );
 }
