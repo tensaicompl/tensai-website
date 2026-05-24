@@ -277,9 +277,9 @@ export default function ReusablesPage() {
                 }}
               />
               <img
-                src="/logos/icon-black.svg"
+                src="/logos/icon-black-cropped.svg"
                 alt=""
-                style={{ width: "min(680px, 42vw)", height: "auto", objectFit: "contain", display: "block", position: "relative", margin: "-18% -10% -22% -10%" }}
+                style={{ width: "min(320px, 28vw)", height: "auto", objectFit: "contain", display: "block", position: "relative" }}
               />
             </div>
           </div>
