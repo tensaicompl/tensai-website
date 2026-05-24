@@ -10,13 +10,30 @@ interface NavLink {
   href: string;
 }
 
-const NAV_LINKS: NavLink[] = [
-  { label: "The Map", href: "/" },
-  { label: "Spine", href: "/spine" },
-  { label: "Groundwork", href: "/groundwork" },
-  { label: "Operating Model", href: "/operating-model" },
-  { label: "Craft", href: "/craft" },
-  { label: "Notes", href: "/notes" },
+interface DropdownItem {
+  label: string;
+  href: string;
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  dropdown?: DropdownItem[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    label: "The AI Map",
+    href: "/",
+    dropdown: [
+      { label: "The Groundwork", href: "/groundwork" },
+      { label: "The Operating Model", href: "/operating-model" },
+      { label: "The Craft", href: "/craft" },
+      { label: "The Spine", href: "/spine" },
+    ],
+  },
+  { label: "Blog", href: "/notes" },
+  { label: "Resources", href: "/resources" },
   { label: "About", href: "/about" },
 ];
 
@@ -142,20 +159,60 @@ export function SiteNav() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "24px",
+              gap: "28px",
             }}
             className="hidden-mobile"
           >
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
+            {NAV_ITEMS.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                item.dropdown?.some((d) => pathname.startsWith(d.href));
+
+              if (item.dropdown) {
+                return (
+                  <div key={item.href} className="nav-dropdown-wrap">
+                    <Link
+                      href={item.href}
+                      className={`nav-link ${isActive ? "nav-link-active" : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      {item.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        style={{ marginLeft: "4px", display: "inline" }}
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </Link>
+                    <div className="nav-dropdown">
+                      {item.dropdown.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="nav-dropdown-item"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  key={item.href}
+                  href={item.href}
                   className={`nav-link ${isActive ? "nav-link-active" : ""}`}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  {link.label}
+                  {item.label}
                 </Link>
               );
             })}
@@ -254,28 +311,32 @@ export function SiteNav() {
           className="show-mobile"
         >
           <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "16px",
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? "var(--fg-1)" : "var(--fg-2)",
-                    textDecoration: "none",
-                    padding: "12px 8px",
-                    borderRadius: "8px",
-                    transition: "background-color 120ms var(--ease-out)",
-                    display: "block",
-                  }}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  {link.label}
-                </Link>
-              );
+            {NAV_ITEMS.flatMap((item) => {
+              const links = [item, ...(item.dropdown || [])];
+              return links.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    style={{
+                      fontFamily: "var(--font-body)",
+                      fontSize: "16px",
+                      fontWeight: isActive ? 600 : 500,
+                      color: isActive ? "var(--fg-1)" : "var(--fg-2)",
+                      textDecoration: "none",
+                      padding: "12px 8px",
+                      paddingLeft: item.dropdown && link !== item ? "24px" : "8px",
+                      borderRadius: "8px",
+                      transition: "background-color 120ms var(--ease-out)",
+                      display: "block",
+                    }}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              });
             })}
           </nav>
         </div>
@@ -295,6 +356,42 @@ export function SiteNav() {
         .nav-link:hover { color: var(--fg-1); }
         .nav-link-active { font-weight: 600; color: var(--fg-1); }
         .nav-signin:hover { background: var(--accent-hover); }
+        .nav-dropdown-wrap { position: relative; }
+        .nav-dropdown {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          padding-top: 8px;
+          z-index: 60;
+        }
+        .nav-dropdown-wrap:hover .nav-dropdown { display: block; }
+        .nav-dropdown-item {
+          display: block;
+          white-space: nowrap;
+          padding: 10px 20px;
+          font-family: var(--font-body);
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--fg-2);
+          text-decoration: none;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-top: none;
+          transition: color 120ms var(--ease-out), background 120ms var(--ease-out);
+        }
+        .nav-dropdown-item:first-child {
+          border-top: 1px solid var(--border);
+          border-radius: 8px 8px 0 0;
+        }
+        .nav-dropdown-item:last-child {
+          border-radius: 0 0 8px 8px;
+        }
+        .nav-dropdown-item:hover {
+          color: var(--fg-1);
+          background: var(--bg-surface);
+        }
         @media (min-width: 768px) {
           .hidden-mobile { display: flex !important; }
           .show-mobile { display: none !important; }
