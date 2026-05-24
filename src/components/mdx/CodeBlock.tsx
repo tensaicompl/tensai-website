@@ -46,7 +46,7 @@ export function CodeBlock({ children, language, className }: CodeBlockProps) {
           style={{
             position: "absolute",
             top: "var(--space-2)",
-            right: "var(--space-12)",
+            left: "var(--space-4)",
             fontSize: "var(--fs-caption)",
             fontFamily: "var(--font-mono)",
             color: "var(--fg-3)",
