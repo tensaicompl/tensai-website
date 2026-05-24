@@ -12,6 +12,7 @@ interface NavLink {
 
 interface DropdownItem {
   label: string;
+  subtitle: string;
   href: string;
 }
 
@@ -26,16 +27,96 @@ const NAV_ITEMS: NavItem[] = [
     label: "The AI Map",
     href: "/",
     dropdown: [
-      { label: "The Groundwork", href: "/groundwork" },
-      { label: "The Operating Model", href: "/operating-model" },
-      { label: "The Craft", href: "/craft" },
-      { label: "The Spine", href: "/spine" },
+      { label: "The Groundwork", subtitle: "Data, infra, and governance foundations", href: "/groundwork" },
+      { label: "The Operating Model", subtitle: "Teams, process, and organisational design", href: "/operating-model" },
+      { label: "The Craft", subtitle: "Prompt engineering, evaluation, and deployment", href: "/craft" },
+      { label: "The Spine", subtitle: "All 18 concepts on one page", href: "/spine" },
     ],
   },
   { label: "Blog", href: "/notes" },
   { label: "Resources", href: "/resources" },
   { label: "About", href: "/about" },
 ];
+
+function NavDropdown({
+  item,
+  isActive,
+  pathname,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  pathname: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  return (
+    <div
+      className="nav-dropdown-wrap"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <Link
+        href={item.href}
+        className={`nav-link ${isActive ? "nav-link-active" : ""}`}
+        aria-current={isActive ? "page" : undefined}
+      >
+        {item.label}
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          className={`nav-chevron ${open ? "nav-chevron-open" : ""}`}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </Link>
+      {/* Hover bridge */}
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            height: "16px",
+          }}
+        />
+      )}
+      <div className={`nav-dropdown ${open ? "nav-dropdown-open" : ""}`}>
+        {item.dropdown!.map((sub) => {
+          const subActive = pathname.startsWith(sub.href);
+          return (
+            <Link
+              key={sub.href}
+              href={sub.href}
+              className={`nav-dropdown-item ${subActive ? "nav-dropdown-item-active" : ""}`}
+            >
+              <span className="nav-dropdown-dot" />
+              <span>
+                <span className="nav-dropdown-label">{sub.label}</span>
+                <span className="nav-dropdown-subtitle">{sub.subtitle}</span>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function SiteNav() {
   const pathname = usePathname();
@@ -166,42 +247,16 @@ export function SiteNav() {
             {NAV_ITEMS.map((item) => {
               const isActive =
                 pathname === item.href ||
-                item.dropdown?.some((d) => pathname.startsWith(d.href));
+                (item.dropdown?.some((d) => pathname.startsWith(d.href)) ?? false);
 
               if (item.dropdown) {
                 return (
-                  <div key={item.href} className="nav-dropdown-wrap">
-                    <Link
-                      href={item.href}
-                      className={`nav-link ${isActive ? "nav-link-active" : ""}`}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      {item.label}
-                      <svg
-                        width="10"
-                        height="10"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        style={{ marginLeft: "4px", display: "inline" }}
-                      >
-                        <path d="M6 9l6 6 6-6" />
-                      </svg>
-                    </Link>
-                    <div className="nav-dropdown">
-                      {item.dropdown.map((sub) => (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className="nav-dropdown-item"
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
+                  <NavDropdown
+                    key={item.href}
+                    item={item}
+                    isActive={isActive}
+                    pathname={pathname}
+                  />
                 );
               }
 
@@ -357,40 +412,79 @@ export function SiteNav() {
         .nav-link-active { font-weight: 600; color: var(--fg-1); }
         .nav-signin:hover { background: var(--accent-hover); }
         .nav-dropdown-wrap { position: relative; }
-        .nav-dropdown {
-          display: none;
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          padding-top: 8px;
-          z-index: 60;
+        .nav-chevron {
+          margin-left: 4px;
+          display: inline-block;
+          transition: transform 200ms var(--ease-out);
         }
-        .nav-dropdown-wrap:hover .nav-dropdown { display: block; }
+        .nav-chevron-open { transform: rotate(180deg); }
+        .nav-dropdown {
+          position: absolute;
+          top: calc(100% + 12px);
+          left: 50%;
+          transform: translateX(-50%) scale(0.96);
+          width: 300px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-lg);
+          padding: 6px;
+          z-index: 60;
+          opacity: 0;
+          pointer-events: none;
+          transform-origin: top center;
+          transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+        }
+        .nav-dropdown-open {
+          opacity: 1;
+          transform: translateX(-50%) scale(1);
+          pointer-events: auto;
+        }
         .nav-dropdown-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 10px 12px;
+          border-radius: var(--radius-sm);
+          text-decoration: none;
+          transition: background 150ms var(--ease-out);
+        }
+        .nav-dropdown-item:hover {
+          background: var(--bg-surface);
+        }
+        .nav-dropdown-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--accent);
+          flex-shrink: 0;
+          margin-top: 7px;
+          opacity: 0.3;
+          transition: opacity 150ms var(--ease-out);
+        }
+        .nav-dropdown-item:hover .nav-dropdown-dot,
+        .nav-dropdown-item-active .nav-dropdown-dot {
+          opacity: 1;
+        }
+        .nav-dropdown-label {
           display: block;
-          white-space: nowrap;
-          padding: 10px 20px;
           font-family: var(--font-body);
           font-size: 14px;
           font-weight: 500;
-          color: var(--fg-2);
-          text-decoration: none;
-          background: var(--bg-card);
-          border: 1px solid var(--border);
-          border-top: none;
-          transition: color 120ms var(--ease-out), background 120ms var(--ease-out);
-        }
-        .nav-dropdown-item:first-child {
-          border-top: 1px solid var(--border);
-          border-radius: 8px 8px 0 0;
-        }
-        .nav-dropdown-item:last-child {
-          border-radius: 0 0 8px 8px;
-        }
-        .nav-dropdown-item:hover {
           color: var(--fg-1);
-          background: var(--bg-surface);
+          line-height: 1.3;
+        }
+        .nav-dropdown-subtitle {
+          display: block;
+          font-family: var(--font-body);
+          font-size: 12px;
+          font-weight: 400;
+          color: var(--fg-3);
+          margin-top: 2px;
+          line-height: 1.3;
+        }
+        .nav-dropdown-item-active .nav-dropdown-label {
+          font-weight: 600;
         }
         @media (min-width: 768px) {
           .hidden-mobile { display: flex !important; }

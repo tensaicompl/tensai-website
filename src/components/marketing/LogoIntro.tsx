@@ -162,15 +162,14 @@ export function LogoIntro({ onComplete }: { onComplete?: () => void }) {
         if (nameEl) {
           const nameRect = nameEl.getBoundingClientRect();
           const wordScale = navWordmarkRect.height / nameRect.height;
-          const nameCX = nameRect.left + nameRect.width / 2;
           const nameCY = nameRect.top + nameRect.height / 2;
-          const navWmCX = navWordmarkRect.left + navWordmarkRect.width / 2;
           const navWmCY = navWordmarkRect.top + navWordmarkRect.height / 2;
 
           flyTl.to(nameEl, {
-            x: navWmCX - nameCX,
+            x: navWordmarkRect.left - nameRect.left,
             y: navWmCY - nameCY,
             scale: wordScale,
+            transformOrigin: "left center",
             duration: 1.2,
             ease: "power3.inOut",
           }, 0.15);
