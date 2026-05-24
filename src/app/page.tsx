@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteNav } from "@/components/layout/SiteNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { TheMap } from "@/components/marketing/TheMap";
+import { TheIndex } from "@/components/marketing/TheIndex";
 
 const GATEWAYS = [
   {
@@ -194,7 +194,7 @@ export default function Home() {
             </p>
           </div>
 
-          <TheMap />
+          <TheIndex />
         </section>
 
         {/* Fractal Rule */}
