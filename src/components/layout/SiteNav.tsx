@@ -25,7 +25,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   {
     label: "The AI Map",
-    href: "/",
+    href: "/ai-map",
     dropdown: [
       { label: "The Groundwork", subtitle: "Data, infra, and governance foundations", href: "/groundwork" },
       { label: "The Operating Model", subtitle: "Teams, process, and organisational design", href: "/operating-model" },
