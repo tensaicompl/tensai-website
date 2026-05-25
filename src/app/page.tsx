@@ -128,7 +128,7 @@ export default function Home() {
                 alt=""
                 className="relative"
                 style={{
-                  width: "min(260px, 50%)",
+                  width: "min(320px, 28vw)",
                   height: "auto",
                   objectFit: "contain",
                   animation: "ensoIn 1.2s var(--ease-out) both",
