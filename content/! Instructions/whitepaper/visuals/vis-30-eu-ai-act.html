@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-30 — EU AI Act Regulatory Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 880px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .timeline-container {
+    position: relative;
+    width: 100%;
+    padding: 60px 20px 120px;
+  }
+
+  /* Main horizontal line */
+  .timeline-line {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: #E2E8F0;
+  }
+
+  /* Year markers */
+  .year-markers {
+    position: absolute;
+    top: 72px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .year-mark {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: #9CA3AF;
+  }
+
+  /* Milestone markers */
+  .milestone {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .milestone-diamond {
+    width: 14px;
+    height: 14px;
+    position: relative;
+    top: 53px;
+    z-index: 2;
+  }
+
+  .milestone-diamond svg {
+    display: block;
+  }
+
+  /* Alternating above/below labels */
+  .milestone-above .milestone-content {
+    position: absolute;
+    bottom: calc(100% + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 80px;
+    text-align: center;
+    width: 160px;
+  }
+
+  .milestone-below .milestone-content {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    width: 160px;
+  }
+
+  .milestone-date {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+
+  .milestone-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #334155;
+    line-height: 1.4;
+  }
+
+  .milestone-status {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 9px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+  }
+
+  .milestone-status.active {
+    color: #10B981;
+  }
+
+  /* Today marker */
+  .today-marker {
+    position: absolute;
+    top: 42px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 3;
+  }
+
+  .today-line {
+    width: 2px;
+    height: 36px;
+    background: #6D28D9;
+  }
+
+  .today-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: #6D28D9;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .today-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6D28D9;
+  }
+
+  /* Digital Omnibus note */
+  .omnibus-note {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 200px;
+  }
+
+  .omnibus-bracket {
+    border-right: 1.5px solid #9CA3AF;
+    border-bottom: 1.5px solid #9CA3AF;
+    border-top: 1.5px solid #9CA3AF;
+    height: 20px;
+    width: 20px;
+    position: absolute;
+    right: 0;
+    top: -24px;
+  }
+
+  .omnibus-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #6B7280;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* Penalty summary */
+  .penalty {
+    margin-top: 16px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .penalty-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .penalty-values {
+    display: flex;
+    gap: 24px;
+  }
+
+  .penalty-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .penalty-amount {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+  }
+
+  .penalty-or {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+  }
+
+  .penalty-context {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    margin-left: auto;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">EU AI Act Regulatory Timeline</div>
+  <div class="subtitle">Updated for Digital Omnibus amendments</div>
+
+  <div class="timeline-container">
+    <!-- Main line -->
+    <div class="timeline-line"></div>
+
+    <!-- Year markers -->
+    <div class="year-markers">
+      <span class="year-mark">2025</span>
+      <span class="year-mark">2026</span>
+      <span class="year-mark">2027</span>
+      <span class="year-mark">2028</span>
+    </div>
+
+    <!-- Milestone 1: Feb 2025 (above) -->
+    <div class="milestone milestone-above" style="left: 4%;">
+      <div class="milestone-content">
+        <div class="milestone-date">Feb 2025</div>
+        <div class="milestone-desc">Prohibited practices in effect</div>
+        <div class="milestone-status active">In force</div>
+      </div>
+      <div class="milestone-diamond">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="#0F172A"/></svg>
+      </div>
+    </div>
+
+    <!-- Milestone 2: Aug 2025 (below) -->
+    <div class="milestone milestone-below" style="left: 22%;">
+      <div class="milestone-diamond">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="#0F172A"/></svg>
+      </div>
+      <div class="milestone-content">
+        <div class="milestone-date">Aug 2025</div>
+        <div class="milestone-desc">GPAI model obligations apply</div>
+        <div class="milestone-status active">In force</div>
+      </div>
+    </div>
+
+    <!-- Today marker: May 2025 -->
+    <div class="today-marker" style="left: 14%;">
+      <div class="today-label">Today</div>
+      <div class="today-line"></div>
+      <div class="today-dot"></div>
+    </div>
+
+    <!-- Milestone 3: Aug 2026 (above) -->
+    <div class="milestone milestone-above" style="left: 50%;">
+      <div class="milestone-content">
+        <div class="milestone-date">Aug 2026</div>
+        <div class="milestone-desc">Most AI Act provisions apply</div>
+        <div class="milestone-status">Upcoming</div>
+      </div>
+      <div class="milestone-diamond">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="#E2E8F0" stroke="#0F172A" stroke-width="1.5"/></svg>
+      </div>
+    </div>
+
+    <!-- Milestone 4: Dec 2027 (below) -->
+    <div class="milestone milestone-below" style="left: 82%;">
+      <div class="milestone-diamond">
+        <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="#E2E8F0" stroke="#0F172A" stroke-width="1.5"/></svg>
+      </div>
+      <div class="milestone-content">
+        <div class="milestone-date">Dec 2027</div>
+        <div class="milestone-desc">High-risk Annex III obligations (delayed by Digital Omnibus)</div>
+        <div class="milestone-status">Deferred</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Penalty summary -->
+  <div class="penalty">
+    <span class="penalty-label">Penalties</span>
+    <div class="penalty-values">
+      <div class="penalty-item">
+        <span class="penalty-amount">EUR 35M</span>
+        <span class="penalty-or">or</span>
+        <span class="penalty-amount">7%</span>
+        <span class="penalty-or">of global revenue</span>
+      </div>
+    </div>
+    <span class="penalty-context">Double GDPR maximums</span>
+  </div>
+
+  <div class="caption">EU AI Act regulatory timeline, updated for Digital Omnibus amendments. Penalties up to EUR 35M or 7% of global revenue -- double GDPR maximums.</div>
+</div>
+</body>
+</html>

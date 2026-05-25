@@ -3,19 +3,20 @@
 /**
  * AfkAutonomousDiagram — The Ralph Loop + Autonomy Gradient
  *
- * Zone 1 (upper): Five-node clockwise pentagon loop
+ * Zone 1 (upper): Five-node clockwise loop (regular pentagon)
  * Plan -> Act -> Observe -> Reflect -> Decide -> Plan
- * with an exit arrow from Decide labeled "terminate".
+ * All 5 nodes equally spaced on a circle at angles
+ * [162, 234, 306, 18, 90] degrees (Decide at bottom, Plan/Reflect at sides).
  *
  * Zone 2 (lower): Horizontal autonomy gradient bar
  * HITL | On-rails | AFK with increasing opacity fills.
+ * Segment labels rendered INSIDE their boxes.
  *
+ * Edges are plain lines at 25% opacity (static rails) with SMIL animated
+ * dots flowing along each edge to convey direction. No arrowhead markers.
+ *
+ * Dashed drop lines from Decide to each autonomy bar segment.
  * Single accent: var(--accent) on the Decide node border only.
- *
- * Animations:
- * - Pentagon nodes appear staggered clockwise via CSS transitions
- * - Gradient bar segments fill left-to-right with CSS opacity transitions
- * - SMIL dot continuously circles the pentagon when visible
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -49,13 +50,13 @@ export function AfkAutonomousDiagram() {
     return () => observer.disconnect();
   }, []);
 
-  /* ── Pentagon geometry (scaled to 1200x480 viewBox) ──── */
+  /* ── Pentagon geometry ───────────────────────────────── */
   const cx = 600;
-  const cy = 160;
+  const cy = 200;
   const r = 120;
 
-  // Pentagon vertices (clockwise from top centre)
-  const angles = [-90, -18, 54, 126, 198];
+  /* Regular pentagon: all 5 nodes equally spaced */
+  const angles = [162, 234, 306, 18, 90];
   const rad = (deg: number) => (deg * Math.PI) / 180;
   const pts = angles.map((a) => ({
     x: cx + r * Math.cos(rad(a)),
@@ -72,7 +73,7 @@ export function AfkAutonomousDiagram() {
 
   const nodeR = 36;
 
-  /* ── Arrow edge helper (circle border to circle border) ── */
+  /* ── Edge helper (circle border to circle border) ────── */
   function edgePath(from: { x: number; y: number }, to: { x: number; y: number }) {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -82,34 +83,27 @@ export function AfkAutonomousDiagram() {
     return {
       x1: from.x + ux * (nodeR + 2),
       y1: from.y + uy * (nodeR + 2),
-      x2: to.x - ux * (nodeR + 6),
-      y2: to.y - uy * (nodeR + 6),
+      x2: to.x - ux * (nodeR + 2),
+      y2: to.y - uy * (nodeR + 2),
     };
   }
 
-  /* ── Build the full pentagon loop path for SMIL dot ──── */
-  function buildLoopPath(): string {
-    const segments: string[] = [];
-    for (let i = 0; i < 5; i++) {
-      const next = (i + 1) % 5;
-      const e = edgePath(pts[i], pts[next]);
-      if (i === 0) {
-        segments.push(`M ${e.x1} ${e.y1}`);
-      } else {
-        segments.push(`L ${e.x1} ${e.y1}`);
-      }
-      segments.push(`L ${e.x2} ${e.y2}`);
-    }
-    // Close back to start
-    const e0 = edgePath(pts[0], pts[1]);
-    segments.push(`L ${e0.x1} ${e0.y1}`);
-    return segments.join(" ");
-  }
+  /* ── Build per-edge motion paths for SMIL dots ───────── */
+  const edges = [0, 1, 2, 3, 4].map((i) => {
+    const next = (i + 1) % 5;
+    const e = edgePath(pts[i], pts[next]);
+    return {
+      id: `afkEdge${i}`,
+      d: `M ${e.x1} ${e.y1} L ${e.x2} ${e.y2}`,
+      ...e,
+    };
+  });
 
-  const loopPathD = buildLoopPath();
+  /* ── SMIL dot stagger (5 dots, 0.4s apart, 2s duration) ─ */
+  const dotBegin = (i: number) => `${i * 0.4}s`;
 
   /* ── Autonomy gradient bar ───────────────────────────── */
-  const barY = 350;
+  const barY = 420;
   const barH = 54;
   const barX = 160;
   const barW = 880;
@@ -133,9 +127,27 @@ export function AfkAutonomousDiagram() {
     },
   ];
 
-  /* ── Dashed drop lines from Decide to each segment centre ── */
-  const decideNode = pts[4];
-  const dropTargets = segments.map((_, i) => barX + segW * i + segW / 2);
+  /* ── Dashed drop lines from Decide to each segment top-centre ── */
+  const decideNode = pts[4]; // Decide at angle 90 (bottom)
+  const dropTargets = segments.map((_, i) => ({
+    x: barX + segW * i + segW / 2,
+    y: barY,
+  }));
+
+  /* ── Terminate exit arrow from Decide ──────────────── */
+  const terminateArrowLen = 44;
+  // Point outward from pentagon centre (away from cx, cy)
+  const decideAngleRad = rad(0);
+  const exitDx = Math.cos(decideAngleRad);
+  const exitDy = Math.sin(decideAngleRad);
+  const exitStart = {
+    x: decideNode.x + exitDx * (nodeR + 3),
+    y: decideNode.y + exitDy * (nodeR + 3),
+  };
+  const exitEnd = {
+    x: exitStart.x + exitDx * terminateArrowLen,
+    y: exitStart.y + exitDy * terminateArrowLen,
+  };
 
   /* ── Stagger delays ──────────────────────────────────── */
   const nodeDelay = (i: number) => `${i * 120}ms`;
@@ -153,29 +165,14 @@ export function AfkAutonomousDiagram() {
       style={{ margin: 0, width: "100%", marginInline: "auto" }}
     >
       <svg
-        viewBox="0 0 1200 480"
+        viewBox="0 -24 1200 580"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
       >
-        {/* ── Marker definitions ──────────────────────────── */}
+        {/* ── Motion path definitions (no arrow markers) ─── */}
         <defs>
-          <marker
-            id="afkArrow"
-            viewBox="0 0 10 10"
-            refX="10"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path
-              d="M 0 1.5 L 10 5 L 0 8.5"
-              fill="none"
-              stroke="var(--color-midnight)"
-              strokeWidth="1.5"
-            />
-          </marker>
+          {/* Small arrowhead only for the autonomy arrow and terminate */}
           <marker
             id="afkArrowSmall"
             viewBox="0 0 10 10"
@@ -192,6 +189,11 @@ export function AfkAutonomousDiagram() {
               strokeWidth="1.5"
             />
           </marker>
+
+          {/* Invisible motion paths for per-edge SMIL dots */}
+          {edges.map((edge) => (
+            <path key={edge.id} id={edge.id} d={edge.d} />
+          ))}
         </defs>
 
         {/* ── Zone 1: The Ralph Loop ─────────────────────── */}
@@ -199,7 +201,7 @@ export function AfkAutonomousDiagram() {
         {/* Zone title */}
         <text
           x={cx}
-          y={18}
+          y={-6}
           fontFamily="var(--font-display)"
           fontSize="14"
           fontWeight="600"
@@ -210,29 +212,24 @@ export function AfkAutonomousDiagram() {
           The Ralph Loop
         </text>
 
-        {/* Clockwise arrows: 0->1, 1->2, 2->3, 3->4, 4->0 */}
-        {[0, 1, 2, 3, 4].map((i) => {
-          const next = (i + 1) % 5;
-          const e = edgePath(pts[i], pts[next]);
-          return (
-            <line
-              key={`edge-${i}`}
-              x1={e.x1}
-              y1={e.y1}
-              x2={e.x2}
-              y2={e.y2}
-              stroke="var(--color-midnight)"
-              strokeWidth="1.5"
-              markerEnd="url(#afkArrow)"
-              style={{
-                opacity: showNodes ? 1 : 0,
-                transition: skipAnimation
-                  ? "none"
-                  : `opacity 400ms ease ${nodeDelay(i)}`,
-              }}
-            />
-          );
-        })}
+        {/* Static edge rails — plain lines at 25% opacity, no arrows */}
+        {edges.map((edge, i) => (
+          <line
+            key={`rail-${i}`}
+            x1={edge.x1}
+            y1={edge.y1}
+            x2={edge.x2}
+            y2={edge.y2}
+            stroke="var(--color-midnight)"
+            strokeWidth="1.5"
+            style={{
+              opacity: showNodes ? 0.25 : 0,
+              transition: skipAnimation
+                ? "none"
+                : `opacity 400ms ease ${nodeDelay(i)}`,
+            }}
+          />
+        ))}
 
         {/* Node circles + labels (staggered clockwise entrance) */}
         {nodes.map((node, i) => {
@@ -274,43 +271,51 @@ export function AfkAutonomousDiagram() {
           );
         })}
 
-        {/* ── SMIL dot circling the pentagon ────────────── */}
-        <path id="ralphLoopPath" d={loopPathD} fill="none" stroke="none" />
-        {visible && !reducedMotion && (
-          <circle r="5" fill="var(--accent)" opacity="0.85">
+        {/* ── Per-edge SMIL animated dots (2s, staggered 0.4s) ── */}
+        {visible && !reducedMotion && edges.map((edge, i) => (
+          <circle
+            key={`dot-${i}`}
+            r="5"
+            fill="var(--accent)"
+            opacity="0.85"
+          >
             <animateMotion
-              dur="4s"
+              dur="2s"
               repeatCount="indefinite"
-              rotate="auto"
+              keyPoints="0;1"
+              keyTimes="0;1"
+              calcMode="linear"
+              begin={dotBegin(i)}
             >
-              <mpath href="#ralphLoopPath" />
+              <mpath href={`#${edge.id}`} />
             </animateMotion>
           </circle>
-        )}
+        ))}
 
-        {/* Exit arrow from Decide downward, labeled "terminate" */}
+        {/* ── Terminate exit arrow from Decide ────────────── */}
         <line
-          x1={decideNode.x}
-          y1={decideNode.y + nodeR + 2}
-          x2={decideNode.x}
-          y2={barY - 50}
+          x1={exitStart.x}
+          y1={exitStart.y}
+          x2={exitEnd.x}
+          y2={exitEnd.y}
           stroke="var(--color-midnight)"
           strokeWidth="1.5"
-          markerEnd="url(#afkArrow)"
+          markerEnd="url(#afkArrowSmall)"
           style={{
-            opacity: showNodes ? 1 : 0,
+            opacity: showNodes ? 0.7 : 0,
             transition: skipAnimation
               ? "none"
               : `opacity 400ms ease ${nodeDelay(4)}`,
           }}
         />
         <text
-          x={decideNode.x + 8}
-          y={(decideNode.y + nodeR + barY - 50) / 2}
+          x={exitEnd.x + 6}
+          y={exitEnd.y - 4}
           fontFamily="var(--font-mono)"
           fontSize="10"
           fill="var(--fg-2)"
           letterSpacing="0.04em"
+          textAnchor="start"
           style={{
             opacity: showNodes ? 1 : 0,
             transition: skipAnimation
@@ -321,18 +326,17 @@ export function AfkAutonomousDiagram() {
           terminate
         </text>
 
-        {/* ── Dashed lines from Decide to segment centres ── */}
-        {dropTargets.map((tx, i) => (
+        {/* ── Dashed drop lines from Decide to segment tops ── */}
+        {dropTargets.map((target, i) => (
           <line
             key={`drop-${i}`}
             x1={decideNode.x}
             y1={decideNode.y + nodeR + 2}
-            x2={tx}
-            y2={barY}
+            x2={target.x}
+            y2={target.y}
             stroke="var(--color-midnight)"
             strokeWidth="1"
             strokeDasharray="5 4"
-            opacity="0.4"
             style={{
               opacity: showBar ? 0.4 : 0,
               transition: skipAnimation
@@ -343,31 +347,6 @@ export function AfkAutonomousDiagram() {
         ))}
 
         {/* ── Zone 2: Autonomy Gradient ──────────────────── */}
-
-        {/* Segment labels above bar */}
-        {segments.map((seg, i) => {
-          const sx = barX + segW * i;
-          return (
-            <text
-              key={`lbl-${i}`}
-              x={sx + segW / 2}
-              y={barY - 8}
-              fontFamily="var(--font-display)"
-              fontSize="14"
-              fontWeight="700"
-              fill="var(--color-midnight)"
-              textAnchor="middle"
-              style={{
-                opacity: showBar ? 1 : 0,
-                transition: skipAnimation
-                  ? "none"
-                  : `opacity 400ms ease ${segDelay(i)}`,
-              }}
-            >
-              {seg.label}
-            </text>
-          );
-        })}
 
         {/* Bar segments — opacity animated left-to-right */}
         {segments.map((seg, i) => {
@@ -389,6 +368,32 @@ export function AfkAutonomousDiagram() {
                   : `opacity 600ms ease ${segDelay(i)}`,
               }}
             />
+          );
+        })}
+
+        {/* Segment labels INSIDE bar boxes */}
+        {segments.map((seg, i) => {
+          const sx = barX + segW * i;
+          return (
+            <text
+              key={`lbl-${i}`}
+              x={sx + segW / 2}
+              y={barY + barH / 2}
+              fontFamily="var(--font-display)"
+              fontSize="14"
+              fontWeight="700"
+              fill="var(--color-midnight)"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{
+                opacity: showBar ? 1 : 0,
+                transition: skipAnimation
+                  ? "none"
+                  : `opacity 400ms ease ${segDelay(i)}`,
+              }}
+            >
+              {seg.label}
+            </text>
           );
         })}
 
@@ -417,7 +422,7 @@ export function AfkAutonomousDiagram() {
           );
         })}
 
-        {/* Horizontal arrow below annotations */}
+        {/* Horizontal "increasing autonomy" arrow below annotations */}
         <line
           x1={barX}
           y1={barY + barH + 40}
@@ -425,7 +430,7 @@ export function AfkAutonomousDiagram() {
           y2={barY + barH + 40}
           stroke="var(--color-midnight)"
           strokeWidth="1.5"
-          markerEnd="url(#afkArrow)"
+          markerEnd="url(#afkArrowSmall)"
           style={{
             opacity: showBar ? 1 : 0,
             transition: skipAnimation

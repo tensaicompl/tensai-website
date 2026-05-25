@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-36 — LLM API Price Deflation Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .chart {
+    width: 720px;
+    margin: 0 auto;
+    position: relative;
+    height: 360px;
+    border-left: 2px solid var(--midnight);
+    border-bottom: 2px solid var(--midnight);
+  }
+
+  /* Y-axis labels (price, left) */
+  .y-label {
+    position: absolute;
+    left: -68px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--gray);
+    transform: translateY(50%);
+  }
+  .y-title {
+    position: absolute;
+    left: -90px;
+    top: 50%;
+    transform: rotate(-90deg) translateX(50%);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  /* Y-axis right labels (spending) */
+  .y2-label {
+    position: absolute;
+    right: -64px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--violet);
+    transform: translateY(50%);
+  }
+  .y2-title {
+    position: absolute;
+    right: -90px;
+    top: 50%;
+    transform: rotate(90deg) translateX(-50%);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--violet);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  /* X-axis labels */
+  .x-label {
+    position: absolute;
+    bottom: -24px;
+    font-size: 10px;
+    color: var(--gray);
+    transform: translateX(-50%);
+    font-weight: 500;
+  }
+
+  /* Grid lines */
+  .grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Price points (midnight line) */
+  .price-point {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--midnight);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+  .price-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--midnight-muted);
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  /* Price line segments */
+  .price-line {
+    position: absolute;
+    background: var(--midnight);
+    height: 2px;
+    transform-origin: left center;
+    z-index: 1;
+  }
+
+  /* Spending line (violet) - shown as stepped bars */
+  .spend-bar {
+    position: absolute;
+    bottom: 0;
+    background: var(--violet-wash);
+    border-top: 2px solid var(--violet);
+    opacity: 0.7;
+  }
+
+  /* Annotation boxes */
+  .annotation {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 4;
+  }
+  .ann-price { color: var(--midnight); }
+  .ann-spend { color: var(--violet); }
+
+  /* Legend */
+  .legend {
+    width: 720px;
+    margin: 36px auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gray);
+    font-weight: 500;
+  }
+  .legend-swatch {
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .swatch-price { background: var(--midnight); }
+  .swatch-spend { background: var(--violet); }
+
+  /* Jevons callout */
+  .jevons {
+    width: 720px;
+    margin: 16px auto 0;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--midnight-muted);
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 700px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">LLM API Price Deflation Timeline</div>
+
+    <div style="width: 720px; margin: 0 auto; padding: 0 100px;">
+      <div class="chart">
+        <!-- Grid lines (log scale approximation) -->
+        <div class="grid-line" style="bottom: 95%;"></div>
+        <div class="grid-line" style="bottom: 75%;"></div>
+        <div class="grid-line" style="bottom: 55%;"></div>
+        <div class="grid-line" style="bottom: 35%;"></div>
+        <div class="grid-line" style="bottom: 15%;"></div>
+
+        <!-- Y-axis left: Price -->
+        <div class="y-title">Price / M Tokens</div>
+        <div class="y-label" style="bottom: 93%;">$60</div>
+        <div class="y-label" style="bottom: 73%;">$10</div>
+        <div class="y-label" style="bottom: 53%;">$5</div>
+        <div class="y-label" style="bottom: 25%;">$0.15</div>
+        <div class="y-label" style="bottom: 8%;">$0.075</div>
+
+        <!-- Y-axis right: Spending -->
+        <div class="y2-title">Total AI Spend</div>
+        <div class="y2-label" style="bottom: 20%;">Low</div>
+        <div class="y2-label" style="bottom: 90%;">High</div>
+
+        <!-- X-axis labels -->
+        <div class="x-label" style="left: 5%;">Q1 2023</div>
+        <div class="x-label" style="left: 25%;">Q4 2023</div>
+        <div class="x-label" style="left: 45%;">Q2 2024</div>
+        <div class="x-label" style="left: 60%;">Q3 2024</div>
+        <div class="x-label" style="left: 80%;">2025</div>
+        <div class="x-label" style="left: 95%;">2026</div>
+
+        <!-- Spending bars (violet, rising) -->
+        <div class="spend-bar" style="left: 2%; width: 18%; height: 20%;"></div>
+        <div class="spend-bar" style="left: 22%; width: 18%; height: 35%;"></div>
+        <div class="spend-bar" style="left: 42%; width: 16%; height: 50%;"></div>
+        <div class="spend-bar" style="left: 58%; width: 16%; height: 65%;"></div>
+        <div class="spend-bar" style="left: 74%; width: 14%; height: 80%;"></div>
+        <div class="spend-bar" style="left: 88%; width: 12%; height: 92%;"></div>
+
+        <!-- Price points -->
+        <!-- GPT-4 launch: $60 -->
+        <div class="price-point" style="left: 5%; bottom: 95%;"></div>
+        <div class="price-label" style="left: 9%; bottom: 93%;">GPT-4<br>$60/M</div>
+
+        <!-- GPT-4 Turbo: $10 -->
+        <div class="price-point" style="left: 25%; bottom: 75%;"></div>
+        <div class="price-label" style="left: 29%; bottom: 73%;">GPT-4 Turbo<br>$10/M</div>
+
+        <!-- GPT-4o: $5 -->
+        <div class="price-point" style="left: 45%; bottom: 55%;"></div>
+        <div class="price-label" style="left: 49%; bottom: 52%;">GPT-4o<br>$5/M</div>
+
+        <!-- GPT-4o-mini: $0.15 -->
+        <div class="price-point" style="left: 60%; bottom: 27%;"></div>
+        <div class="price-label" style="left: 64%; bottom: 24%;">4o-mini<br>$0.15/M</div>
+
+        <!-- Gemini Flash: $0.075 -->
+        <div class="price-point" style="left: 75%; bottom: 12%;"></div>
+        <div class="price-label" style="left: 79%; bottom: 9%;">Gemini Flash<br>$0.075/M</div>
+
+        <!-- Current frontier -->
+        <div class="price-point" style="left: 92%; bottom: 15%;"></div>
+        <div class="price-label" style="left: 78%; bottom: 2%;">Gemini 2.0<br>$0.10/M</div>
+
+        <!-- Annotation: price decline -->
+        <div class="annotation ann-price" style="top: 8px; right: 40px;">94--99% price decline</div>
+
+        <!-- Annotation: spending increase -->
+        <div class="annotation ann-spend" style="bottom: 8px; right: 20px;">320% spending increase</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch swatch-price"></div>
+        Price per million tokens (falling)
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch swatch-spend"></div>
+        Total enterprise AI spending (rising)
+      </div>
+    </div>
+
+    <div class="jevons">The Jevons Paradox: per-unit costs fall, total spending rises.</div>
+  </div>
+  <div class="caption">The Jevons Paradox in action. LLM API costs fell 94--99% since 2023. Enterprise AI spending increased 320%. Per-token deflation drives total cost inflation. Sources: Epoch AI, company pricing pages.</div>
+</body>
+</html>

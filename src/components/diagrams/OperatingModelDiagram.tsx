@@ -5,14 +5,19 @@ import { useEffect, useRef, useState } from "react";
 export function OperatingModelDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mql.matches);
+    const motionHandler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mql.addEventListener("change", motionHandler);
+    return () => mql.removeEventListener("change", motionHandler);
+  }, []);
 
   useEffect(() => {
     const el = figRef.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
-    }
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { threshold: 0.2 }
@@ -263,7 +268,7 @@ export function OperatingModelDiagram() {
         </g>
 
         {/* ── Animated flow dots ───────────────────────────── */}
-        {visible && flowPaths.map((fp, i) => (
+        {visible && !reducedMotion && flowPaths.map((fp, i) => (
           <g key={`dots-${fp.id}`}>
             <circle r={fp.r} fill={fp.color} opacity="0.8">
               <animateMotion dur={fp.dur} repeatCount="indefinite" begin={`${i * 0.3}s`}>

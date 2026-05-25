@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-02 — The Trillion-Dollar Paradox — Key Numbers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 920px;
+    width: 100%;
+    padding: 56px 48px 44px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 0;
+  }
+
+  .stat {
+    flex: 1;
+    text-align: center;
+    padding: 0 24px;
+  }
+
+  .stat + .stat {
+    border-left: 1px solid #E2E8F0;
+  }
+
+  .stat-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 60px;
+    line-height: 1;
+    color: #0F172A;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  .stat-number.accent {
+    color: #6D28D9;
+  }
+
+  .stat-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+
+  .stat-source {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+  }
+
+  .divider {
+    height: 1px;
+    background: #E2E8F0;
+    margin: 36px 0 28px;
+  }
+
+  .summary {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: -0.01em;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    .stats { flex-direction: column; gap: 32px; }
+    .stat + .stat { border-left: none; border-top: 1px solid #E2E8F0; padding-top: 32px; }
+    .stat-number { font-size: 48px; }
+    .card { padding: 40px 28px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-number">$2.59T</div>
+      <div class="stat-desc">Global AI spending</div>
+      <div class="stat-source">Gartner 2026</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number accent">80--95%</div>
+      <div class="stat-desc">Projects fail to deliver intended value</div>
+      <div class="stat-source">RAND, MIT</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">74%</div>
+      <div class="stat-desc">Economic value captured by just 20% of organisations</div>
+      <div class="stat-source">PwC 2026</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="summary">The largest misallocation of technology capital in history.</div>
+
+  <div class="caption">The paradox in three numbers. Sources: Gartner Market Guide 2026, RAND Corporation meta-analysis, PwC Global AI Study 2026.</div>
+</div>
+
+</body>
+</html>

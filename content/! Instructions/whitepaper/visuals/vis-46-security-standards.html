@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-46 — AI Security Standards Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 960px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 760px;
+  }
+
+  /* Standards grid */
+  .standards-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .standards-grid thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 14px 10px;
+    text-align: center;
+    border-bottom: 2px solid #E2E8F0;
+    line-height: 1.4;
+  }
+  .standards-grid thead th.domain-col {
+    background: #F1F5F9;
+    color: #6B7280;
+    text-align: left;
+    width: 140px;
+    padding-left: 16px;
+    border-right: 2px solid #E2E8F0;
+  }
+  .standards-grid thead th.framework-col {
+    background: #0F172A;
+    color: #FAFAFA;
+    border-right: 1px solid #1E293B;
+    width: calc((100% - 140px) / 6);
+  }
+  .standards-grid thead th.framework-col:last-child {
+    border-right: none;
+  }
+  .fw-sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.6;
+    margin-top: 3px;
+  }
+
+  /* Body */
+  .standards-grid tbody td {
+    padding: 12px 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .standards-grid tbody td:last-child {
+    border-right: none;
+  }
+  .standards-grid tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .standards-grid tbody tr:nth-child(odd) td {
+    background: #FFFFFF;
+  }
+  .standards-grid tbody tr:nth-child(even) td {
+    background: #F1F5F9;
+  }
+
+  .domain-name {
+    text-align: left;
+    padding-left: 16px;
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    border-right: 2px solid #E2E8F0;
+  }
+
+  /* Coverage indicators */
+  .cov-full {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #0F172A;
+    vertical-align: middle;
+  }
+  .cov-partial {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #0F172A 50%, #E2E8F0 50%);
+    vertical-align: middle;
+  }
+  .cov-none {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #E2E8F0;
+    background: transparent;
+    vertical-align: middle;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  /* Convergence note */
+  .convergence-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.5;
+  }
+  .convergence-note .note-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #0F172A;
+    flex-shrink: 0;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .standards-grid { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">AI Security Standards Map</h1>
+  <p class="subtitle">Six frameworks across seven security domains. Coverage indicators show where standards converge and where gaps remain.</p>
+
+  <table class="standards-grid">
+    <thead>
+      <tr>
+        <th class="domain-col">Security Domain</th>
+        <th class="framework-col">Google SAIF<span class="fw-sub">2023</span></th>
+        <th class="framework-col">NIST AI RMF<span class="fw-sub">2023</span></th>
+        <th class="framework-col">MAESTRO<span class="fw-sub">2025</span></th>
+        <th class="framework-col">NSA / Five Eyes<span class="fw-sub">2024</span></th>
+        <th class="framework-col">CoSAI / OASIS<span class="fw-sub">2025</span></th>
+        <th class="framework-col">Gartner AI TRiSM<span class="fw-sub">2024</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="domain-name">Governance</td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Risk Assessment</td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Data Security</td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Model Security</td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Operational Security</td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Incident Response</td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-partial"></span></td>
+      </tr>
+      <tr>
+        <td class="domain-name">Agent Security</td>
+        <td><span class="cov-none"></span></td>
+        <td><span class="cov-none"></span></td>
+        <td><span class="cov-full"></span></td>
+        <td><span class="cov-none"></span></td>
+        <td><span class="cov-partial"></span></td>
+        <td><span class="cov-partial"></span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="legend">
+    <div class="legend-item"><span class="cov-full"></span> Comprehensive coverage</div>
+    <div class="legend-item"><span class="cov-partial"></span> Partial coverage</div>
+    <div class="legend-item"><span class="cov-none"></span> Not covered</div>
+  </div>
+
+  <div class="convergence-note">
+    <span class="note-label">Convergence</span>
+    CoSAI donated SAIF to OASIS (September 2025) -- 40+ organisations unifying under one standard. Agent Security remains the key gap across most frameworks.
+  </div>
+
+  <p class="caption"><strong>Figure VIS-46.</strong> The AI Security Standards Map. Six frameworks across seven security domains. CoSAI/OASIS convergence is the most significant development -- 40+ organisations unifying under one standard. Agent Security is the key emerging gap. Sources: Google SAIF, NIST AI RMF, MAESTRO, NSA/Five Eyes, CoSAI/OASIS, Gartner AI TRiSM.</p>
+
+</div>
+</body>
+</html>

@@ -14,7 +14,13 @@
  * Animations:
  * - IntersectionObserver triggers entrance (fade+slide, staggered per column)
  * - Edges draw themselves via stroke-dashoffset CSS transitions
- * - The evaluator-optimiser loop has a circling SMIL dot in var(--accent)
+ * - Static rails at 25% opacity underlie all animated edges
+ * - SMIL flowing dots on every topology's edges (staggered begin times):
+ *   1. Chaining — three dots flowing sequentially down each segment
+ *   2. Routing — three dots fanning out from router to destinations
+ *   3. Parallelisation — six dots: three fan-out, three converge
+ *   4. Orchestrator-Workers — six dots: three dispatch, three return
+ *   5. Evaluator-Optimiser — one accent dot circling the loop
  * - All animation respects prefers-reduced-motion
  */
 
@@ -145,12 +151,40 @@ export function FivePatternsDiagram() {
             <path
               d="M 0 2 L 10 5 L 0 8"
               fill="none"
-              stroke="var(--accent)"
+              stroke="var(--color-midnight)"
               strokeWidth="1.5"
             />
           </marker>
 
-          {/* Loop motion path for the SMIL dot */}
+          {/* ── Motion paths for SMIL dots ─────────────────── */}
+
+          {/* 1. Chaining: node1 → gate → node2 → node3 (three segments) */}
+          <path id="fpChainSeg1" d={`M ${cx[0]} ${60 + nodeR} L ${cx[0]} 92`} />
+          <path id="fpChainSeg2" d={`M ${cx[0]} 108 L ${cx[0]} ${140 - nodeR}`} />
+          <path id="fpChainSeg3" d={`M ${cx[0]} ${140 + nodeR} L ${cx[0]} ${210 - nodeR}`} />
+
+          {/* 2. Routing: top → three bottom nodes */}
+          <path id="fpRouteFan0" d={`M ${cx[1]} ${60 + nodeR} L ${cx[1] - 56} ${200 - nodeR}`} />
+          <path id="fpRouteFan1" d={`M ${cx[1]} ${60 + nodeR} L ${cx[1]} ${200 - nodeR}`} />
+          <path id="fpRouteFan2" d={`M ${cx[1]} ${60 + nodeR} L ${cx[1] + 56} ${200 - nodeR}`} />
+
+          {/* 3. Parallelisation: top → three mid nodes, three mid → bottom */}
+          <path id="fpParaDown0" d={`M ${cx[2]} ${60 + nodeR} L ${cx[2] - 56} ${140 - nodeR}`} />
+          <path id="fpParaDown1" d={`M ${cx[2]} ${60 + nodeR} L ${cx[2]} ${140 - nodeR}`} />
+          <path id="fpParaDown2" d={`M ${cx[2]} ${60 + nodeR} L ${cx[2] + 56} ${140 - nodeR}`} />
+          <path id="fpParaUp0" d={`M ${cx[2] - 56} ${140 + nodeR} L ${cx[2]} ${210 - nodeR}`} />
+          <path id="fpParaUp1" d={`M ${cx[2]} ${140 + nodeR} L ${cx[2]} ${210 - nodeR}`} />
+          <path id="fpParaUp2" d={`M ${cx[2] + 56} ${140 + nodeR} L ${cx[2]} ${210 - nodeR}`} />
+
+          {/* 4. Orchestrator-Workers: orch → three workers, three workers → orch-bottom */}
+          <path id="fpOrchDown0" d={`M ${cx[3]} ${60 + nodeR} L ${cx[3] - 50} ${150 - nodeR}`} />
+          <path id="fpOrchDown1" d={`M ${cx[3]} ${60 + nodeR} L ${cx[3]} ${150 - nodeR}`} />
+          <path id="fpOrchDown2" d={`M ${cx[3]} ${60 + nodeR} L ${cx[3] + 50} ${150 - nodeR}`} />
+          <path id="fpOrchUp0" d={`M ${cx[3] - 50} ${150 + nodeR} L ${cx[3]} ${220 - nodeR}`} />
+          <path id="fpOrchUp1" d={`M ${cx[3]} ${150 + nodeR} L ${cx[3]} ${220 - nodeR}`} />
+          <path id="fpOrchUp2" d={`M ${cx[3] + 50} ${150 + nodeR} L ${cx[3]} ${220 - nodeR}`} />
+
+          {/* 5. Evaluator-Optimiser: loop path */}
           <path id="fpLoopMotion" d={loopFullD} fill="none" />
         </defs>
 
@@ -174,6 +208,24 @@ export function FivePatternsDiagram() {
                   />
                 ))}
 
+                {/* Static rails at 25% opacity */}
+                <line x1={x} y1={nodes[0] + nodeR} x2={x} y2={92} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                <line x1={x} y1={108} x2={x} y2={nodes[1] - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                <line x1={x} y1={nodes[1] + nodeR} x2={x} y2={nodes[2] - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+
+                {/* Gate marker (between node 1 and node 2) */}
+                <text
+                  x={x}
+                  y={104}
+                  fontFamily="var(--font-mono)"
+                  fontSize="12"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  ...
+                </text>
+
                 {/* Arrow: node 1 to gate */}
                 <line
                   x1={x}
@@ -184,17 +236,6 @@ export function FivePatternsDiagram() {
                   strokeWidth="1.5"
                   markerEnd="url(#fpArrow)"
                   style={edgeStyle(0, lineLen(x, nodes[0] + nodeR, x, 92))}
-                />
-
-                {/* Gate marker (dashed horizontal bar) */}
-                <line
-                  x1={x - 18}
-                  y1={100}
-                  x2={x + 18}
-                  y2={100}
-                  stroke="var(--color-midnight)"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 3"
                 />
 
                 {/* Arrow: gate to node 2 */}
@@ -223,6 +264,27 @@ export function FivePatternsDiagram() {
                     lineLen(x, nodes[1] + nodeR, x, nodes[2] - nodeR)
                   )}
                 />
+
+                {/* SMIL flowing dots */}
+                {visible && !reducedMotion && (
+                  <g>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0s">
+                        <mpath href="#fpChainSeg1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.4s">
+                        <mpath href="#fpChainSeg2" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.8s">
+                        <mpath href="#fpChainSeg3" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+                )}
 
                 {/* Label */}
                 <text
@@ -261,6 +323,11 @@ export function FivePatternsDiagram() {
                   fill="none"
                 />
 
+                {/* Static rails at 25% opacity */}
+                {bottoms.map((bx) => (
+                  <line key={`rail-${bx}`} x1={x} y1={topY + nodeR} x2={bx} y2={botY - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                ))}
+
                 {/* Fan-out arrows and bottom nodes */}
                 {bottoms.map((bx) => (
                   <g key={bx}>
@@ -287,6 +354,27 @@ export function FivePatternsDiagram() {
                     />
                   </g>
                 ))}
+
+                {/* SMIL flowing dots */}
+                {visible && !reducedMotion && (
+                  <g>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.4s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0s">
+                        <mpath href="#fpRouteFan0" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.4s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.3s">
+                        <mpath href="#fpRouteFan1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.4s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.6s">
+                        <mpath href="#fpRouteFan2" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+                )}
 
                 {/* Label */}
                 <text
@@ -325,6 +413,14 @@ export function FivePatternsDiagram() {
                   strokeWidth="1.5"
                   fill="none"
                 />
+
+                {/* Static rails at 25% opacity */}
+                {mids.map((mx) => (
+                  <g key={`rails-${mx}`}>
+                    <line x1={x} y1={topY + nodeR} x2={mx} y2={midY - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                    <line x1={mx} y1={midY + nodeR} x2={x} y2={botY - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                  </g>
+                ))}
 
                 {/* Fan-out arrows and middle nodes */}
                 {mids.map((mx) => (
@@ -366,6 +462,43 @@ export function FivePatternsDiagram() {
                     />
                   </g>
                 ))}
+
+                {/* SMIL flowing dots — fan-out (top → mid) */}
+                {visible && !reducedMotion && (
+                  <g>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0s">
+                        <mpath href="#fpParaDown0" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.2s">
+                        <mpath href="#fpParaDown1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.4s">
+                        <mpath href="#fpParaDown2" />
+                      </animateMotion>
+                    </circle>
+                    {/* Converge (mid → bottom) — staggered after fan-out */}
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1s">
+                        <mpath href="#fpParaUp0" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1.2s">
+                        <mpath href="#fpParaUp1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1.4s">
+                        <mpath href="#fpParaUp2" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+                )}
 
                 {/* Bottom node */}
                 <circle
@@ -425,6 +558,14 @@ export function FivePatternsDiagram() {
                   orch.
                 </text>
 
+                {/* Static rails at 25% opacity */}
+                {workers.map((wx) => (
+                  <g key={`rails-${wx}`}>
+                    <line x1={x} y1={topY + nodeR} x2={wx} y2={workerY - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                    <line x1={wx} y1={workerY + nodeR} x2={x} y2={botY - nodeR} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+                  </g>
+                ))}
+
                 {/* Worker nodes and connections down */}
                 {workers.map((wx) => (
                   <g key={wx}>
@@ -452,18 +593,6 @@ export function FivePatternsDiagram() {
                   </g>
                 ))}
 
-                {/* Ellipsis between last two workers */}
-                <text
-                  x={x + 25}
-                  y={workerY + 5}
-                  fontFamily="var(--font-mono)"
-                  fontSize="12"
-                  fill="var(--fg-3)"
-                  textAnchor="middle"
-                >
-                  ...
-                </text>
-
                 {/* Converge back to orchestrator (bottom) */}
                 {workers.map((wx) => (
                   <line
@@ -481,6 +610,43 @@ export function FivePatternsDiagram() {
                     )}
                   />
                 ))}
+
+                {/* SMIL flowing dots — dispatch (orch → workers) */}
+                {visible && !reducedMotion && (
+                  <g>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0s">
+                        <mpath href="#fpOrchDown0" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.25s">
+                        <mpath href="#fpOrchDown1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="0.5s">
+                        <mpath href="#fpOrchDown2" />
+                      </animateMotion>
+                    </circle>
+                    {/* Return (workers → orch-bottom) — staggered after dispatch */}
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1.1s">
+                        <mpath href="#fpOrchUp0" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1.35s">
+                        <mpath href="#fpOrchUp1" />
+                      </animateMotion>
+                    </circle>
+                    <circle r="3.5" fill="var(--color-midnight)" opacity="0.8">
+                      <animateMotion dur="2.2s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="1.6s">
+                        <mpath href="#fpOrchUp2" />
+                      </animateMotion>
+                    </circle>
+                  </g>
+                )}
 
                 {/* Orchestrator node (bottom, same node conceptually) */}
                 <circle
@@ -572,10 +738,15 @@ export function FivePatternsDiagram() {
                   eval.
                 </text>
 
+                {/* Static rails at 25% opacity */}
+                <path d={loopTopD} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" opacity="0.25" />
+                <path d={loopBotD} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" opacity="0.25" />
+                <line x1={x} y1={nodeY + 42} x2={x} y2={exitY} stroke="var(--color-midnight)" strokeWidth="1.5" opacity="0.25" />
+
                 {/* Circular loop arrow — top arc (accent colour) */}
                 <path
                   d={loopTopD}
-                  stroke="var(--accent)"
+                  stroke="var(--color-midnight)"
                   strokeWidth="1.5"
                   fill="none"
                   markerEnd="url(#fpArrowAccent)"
@@ -584,7 +755,7 @@ export function FivePatternsDiagram() {
                 {/* Circular loop arrow — bottom arc (accent colour) */}
                 <path
                   d={loopBotD}
-                  stroke="var(--accent)"
+                  stroke="var(--color-midnight)"
                   strokeWidth="1.5"
                   fill="none"
                   markerEnd="url(#fpArrowAccent)"
@@ -593,7 +764,7 @@ export function FivePatternsDiagram() {
 
                 {/* SMIL circling dot on the loop path */}
                 {visible && !reducedMotion && (
-                  <circle r="3.5" fill="var(--accent)">
+                  <circle r="3.5" fill="var(--color-midnight)">
                     <animateMotion
                       dur="3s"
                       repeatCount="indefinite"

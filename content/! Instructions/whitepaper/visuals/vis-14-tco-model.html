@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-14 — AI TCO Model: Visible vs Hidden Costs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 32px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .split-card {
+    width: 720px;
+    margin: 0 auto;
+    display: flex;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 380px;
+  }
+
+  .panel {
+    padding: 28px 24px;
+  }
+  .panel-visible {
+    width: 38%;
+    background: var(--bg);
+    border-right: 1.5px solid var(--border);
+  }
+  .panel-hidden {
+    width: 62%;
+    background: var(--surface);
+  }
+
+  .panel-header {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--midnight);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .panel-hidden .panel-header {
+    border-bottom-color: var(--midnight);
+  }
+
+  .cost-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .cost-item:last-child { border-bottom: none; }
+
+  .cost-name {
+    font-size: 13px;
+    color: var(--midnight-muted);
+    font-weight: 500;
+  }
+  .cost-range {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--midnight);
+    white-space: nowrap;
+    margin-left: 8px;
+  }
+
+  /* Multiplier callout between panels */
+  .multiplier-bridge {
+    position: relative;
+  }
+  .multiplier-badge {
+    width: 720px;
+    margin: 20px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .mult-line {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+  }
+  .mult-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--violet);
+    white-space: nowrap;
+    padding: 8px 20px;
+    border: 2px solid var(--violet);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+
+  .note {
+    width: 720px;
+    margin: 16px auto 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 700px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">AI TCO Model -- Visible vs Hidden Costs</div>
+
+    <div class="split-card">
+      <div class="panel panel-visible">
+        <div class="panel-header">Visible Costs</div>
+        <div class="cost-item">
+          <span class="cost-name">Model API / Compute</span>
+          <span class="cost-range">20--35%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Cloud Infrastructure</span>
+          <span class="cost-range">15--25%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Data Scientist Salaries</span>
+          <span class="cost-range">25--40%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Training Data Acquisition</span>
+          <span class="cost-range">5--15%</span>
+        </div>
+      </div>
+
+      <div class="panel panel-hidden">
+        <div class="panel-header">Hidden Costs</div>
+        <div class="cost-item">
+          <span class="cost-name">Data Pipeline Maintenance</span>
+          <span class="cost-range">10--20%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Model Retraining</span>
+          <span class="cost-range">8--15%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Monitoring Infrastructure</span>
+          <span class="cost-range">5--12%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Security and Compliance</span>
+          <span class="cost-range">8--15%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Change Management</span>
+          <span class="cost-range">15--30%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Shadow AI Remediation</span>
+          <span class="cost-range">5--10%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Technical Debt Servicing</span>
+          <span class="cost-range">10--20%</span>
+        </div>
+        <div class="cost-item">
+          <span class="cost-name">Integration Maintenance</span>
+          <span class="cost-range">8--15%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="multiplier-badge">
+      <div class="mult-line"></div>
+      <div class="mult-value">Hidden costs = 1.5--3x visible costs</div>
+      <div class="mult-line"></div>
+    </div>
+
+    <div class="note">Most enterprise AI budgets account only for the left column.</div>
+  </div>
+  <div class="caption">The AI TCO model. Hidden costs typically exceed visible costs by 1.5 to 3 times. Most enterprise AI budgets account only for the left column.</div>
+</body>
+</html>

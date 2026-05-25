@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-37 — AI TCO Calculator Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 880px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    max-width: 720px;
+  }
+  .callout-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    margin-bottom: 28px;
+    font-size: 13px;
+    color: #334155;
+  }
+  .callout-bar .stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: #0F172A;
+  }
+
+  /* Main TCO table */
+  .tco-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .tco-table thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    text-align: center;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .tco-table thead th.cat-col {
+    background: #F1F5F9;
+    color: #6B7280;
+    text-align: left;
+    width: 44%;
+    border-right: 2px solid #E2E8F0;
+  }
+  .tco-table thead th.year-col {
+    background: #0F172A;
+    color: #FAFAFA;
+    width: 18.66%;
+    border-right: 1px solid #1E293B;
+  }
+  .tco-table thead th.year-col:last-child {
+    border-right: none;
+  }
+  .year-sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+
+  /* Body rows */
+  .tco-table tbody td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    vertical-align: middle;
+    line-height: 1.45;
+  }
+  .tco-table tbody td:last-child {
+    border-right: none;
+  }
+  .tco-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .tco-table tbody td.cat-cell {
+    border-right: 2px solid #E2E8F0;
+  }
+  .tco-table tbody td.year-cell {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    color: #6B7280;
+  }
+
+  /* Category group headers */
+  .cat-group td {
+    background: #F1F5F9 !important;
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 10px 16px;
+  }
+  .cat-group td.cat-cell {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Line items */
+  .line-item td.cat-cell {
+    padding-left: 32px;
+    font-weight: 400;
+    color: #334155;
+    font-size: 13px;
+  }
+
+  /* Subtotal row */
+  .subtotal td {
+    background: #F8FAFC !important;
+    font-weight: 600;
+    color: #0F172A;
+    border-top: 1px solid #CBD5E1;
+  }
+  .subtotal td.cat-cell {
+    padding-left: 32px;
+    font-size: 12px;
+    font-style: italic;
+    color: #6B7280;
+  }
+
+  /* Total row */
+  .total-row td {
+    background: #0F172A !important;
+    color: #FAFAFA !important;
+    font-weight: 700;
+    font-size: 14px;
+    border-bottom: none;
+    padding: 14px 16px;
+  }
+  .total-row td.cat-cell {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: #6D28D9 !important;
+  }
+  .total-row td.year-cell {
+    color: #FAFAFA !important;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* Confidence row */
+  .confidence-row td {
+    background: #F1F5F9 !important;
+    font-size: 12px;
+    color: #6B7280;
+    font-style: italic;
+    border-bottom: none;
+  }
+
+  /* Alternating row fills for line items */
+  .tco-table tbody tr.line-item:nth-child(odd) td {
+    background: #FFFFFF;
+  }
+  .tco-table tbody tr.line-item:nth-child(even) td {
+    background: #FAFAFA;
+  }
+
+  /* Multiplier callout */
+  .multiplier {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .multiplier-formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+  }
+  .multiplier-x {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: #0F172A;
+  }
+  .multiplier-eq {
+    color: #9CA3AF;
+    font-size: 18px;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 16px; }
+    .tco-table { break-inside: avoid; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">AI TCO Calculator Template</h1>
+  <p class="subtitle">A three-year projection template covering seven cost categories. Most enterprise AI budgets account only for the first two.</p>
+  <div class="callout-bar"><span class="stat">68%</span> of organisations underestimate AI costs by more than 10%</div>
+
+  <table class="tco-table">
+    <thead>
+      <tr>
+        <th class="cat-col">Cost Category</th>
+        <th class="year-col">Year 1<span class="year-sub">Setup + ramp</span></th>
+        <th class="year-col">Year 2<span class="year-sub">Steady state</span></th>
+        <th class="year-col">Year 3<span class="year-sub">Scale</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 1. Infrastructure -->
+      <tr class="cat-group">
+        <td class="cat-cell">1. Infrastructure</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Compute (GPU / TPU)</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Storage</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Networking</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 2. Talent -->
+      <tr class="cat-group">
+        <td class="cat-cell">2. Talent</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">ML / AI Engineers</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Product Managers</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Governance roles</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 3. API / Model Costs -->
+      <tr class="cat-group">
+        <td class="cat-cell">3. API / Model Costs</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Inference (per-token / per-call)</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Training / Fine-tuning</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 4. Integration -->
+      <tr class="cat-group">
+        <td class="cat-cell">4. Integration</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Connectors / middleware</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Testing / validation</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 5. Operations -->
+      <tr class="cat-group">
+        <td class="cat-cell">5. Operations</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Monitoring infrastructure</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Maintenance / retraining</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 6. Governance -->
+      <tr class="cat-group">
+        <td class="cat-cell">6. Governance</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Compliance / auditing</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Documentation</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- 7. Change Management -->
+      <tr class="cat-group">
+        <td class="cat-cell">7. Change Management</td>
+        <td class="year-cell"></td><td class="year-cell"></td><td class="year-cell"></td>
+      </tr>
+      <tr class="line-item"><td class="cat-cell">Training / upskilling</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Communication / adoption</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+      <tr class="line-item"><td class="cat-cell">Workflow redesign</td><td class="year-cell">______</td><td class="year-cell">______</td><td class="year-cell">______</td></tr>
+
+      <!-- Confidence -->
+      <tr class="confidence-row">
+        <td class="cat-cell">Confidence range (+/-%)</td>
+        <td class="year-cell">+/- ___%</td>
+        <td class="year-cell">+/- ___%</td>
+        <td class="year-cell">+/- ___%</td>
+      </tr>
+
+      <!-- Total -->
+      <tr class="total-row">
+        <td class="cat-cell">Total AI TCO</td>
+        <td class="year-cell">______</td>
+        <td class="year-cell">______</td>
+        <td class="year-cell">______</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="multiplier">
+    <span class="multiplier-formula">Raw API spend</span>
+    <span class="multiplier-eq">&times;</span>
+    <span class="multiplier-x">2.3--4.1</span>
+    <span class="multiplier-eq">=</span>
+    <span class="multiplier-formula">Total LLMOps cost</span>
+  </div>
+
+  <p class="caption"><strong>Figure VIS-37.</strong> The AI TCO Calculator. A three-year projection template covering seven cost categories. 68% of organisations underestimate AI costs by more than 10%. Raw API spend multiplied by 2.3--4.1 equals total LLMOps cost. Sources: Deloitte 2025, a16z 2024.</p>
+
+</div>
+</body>
+</html>

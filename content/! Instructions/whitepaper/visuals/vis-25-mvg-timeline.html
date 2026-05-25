@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-25 — MVG 90-Day Implementation Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 880px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .gantt {
+    width: 100%;
+    position: relative;
+  }
+
+  /* Week header row */
+  .week-header {
+    display: flex;
+    margin-left: 100px;
+    margin-bottom: 8px;
+  }
+
+  .week-label {
+    flex: 1;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 9px;
+    color: #9CA3AF;
+    text-align: center;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Swim lane */
+  .swim-lane {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 6px;
+  }
+
+  .lane-label {
+    width: 100px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    display: flex;
+    align-items: center;
+    padding-right: 12px;
+  }
+
+  .lane-track {
+    flex: 1;
+    display: flex;
+    position: relative;
+    min-height: 1px;
+  }
+
+  /* Week grid cells */
+  .week-cell {
+    flex: 1;
+    border-left: 1px solid #F1F5F9;
+    min-height: 100%;
+  }
+
+  .week-cell:last-child {
+    border-right: 1px solid #F1F5F9;
+  }
+
+  /* Task bars */
+  .task-row {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 4px;
+  }
+
+  .task-spacer {
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .task-track {
+    flex: 1;
+    position: relative;
+    height: 28px;
+  }
+
+  .task-bar {
+    position: absolute;
+    height: 24px;
+    background: #0F172A;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    top: 2px;
+  }
+
+  .task-bar-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Milestone diamond */
+  .milestone {
+    position: absolute;
+    top: 2px;
+    width: 20px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .milestone svg {
+    display: block;
+  }
+
+  .milestone-label {
+    position: absolute;
+    top: -14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 8px;
+    white-space: nowrap;
+    color: #334155;
+  }
+
+  .milestone-final .milestone-label {
+    color: #6D28D9;
+  }
+
+  /* Section separator */
+  .section-sep {
+    height: 1px;
+    background: #E2E8F0;
+    margin: 10px 0 10px 100px;
+  }
+
+  /* Deliverables summary */
+  .deliverables {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 28px;
+    padding: 16px 0;
+    border-top: 1px solid #E2E8F0;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .deliverable {
+    text-align: center;
+  }
+
+  .deliverable-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    line-height: 1;
+  }
+
+  .deliverable-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">MVG 90-Day Implementation Timeline</div>
+  <div class="subtitle">Minimum viable governance established in 12 weeks</div>
+
+  <div class="gantt">
+    <!-- Week headers -->
+    <div class="week-header">
+      <div class="week-label">Wk 1</div>
+      <div class="week-label">Wk 2</div>
+      <div class="week-label">Wk 3</div>
+      <div class="week-label">Wk 4</div>
+      <div class="week-label">Wk 5</div>
+      <div class="week-label">Wk 6</div>
+      <div class="week-label">Wk 7</div>
+      <div class="week-label">Wk 8</div>
+      <div class="week-label">Wk 9</div>
+      <div class="week-label">Wk 10</div>
+      <div class="week-label">Wk 11</div>
+      <div class="week-label">Wk 12</div>
+    </div>
+
+    <!-- PEOPLE swim lane -->
+    <div class="swim-lane">
+      <div class="lane-label">People</div>
+      <div class="lane-track">
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+      </div>
+    </div>
+
+    <!-- People tasks -->
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- Name 3 roles: weeks 1-2 -->
+        <div class="task-bar" style="left: 0%; width: 16.66%;">
+          <span class="task-bar-label">Name 3 governance roles</span>
+        </div>
+        <div class="milestone" style="left: 14%;">
+          <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0 12,6 6,12 0,6" fill="#0F172A"/></svg>
+          <span class="milestone-label" style="left: 16px;">Roles named</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- RACI build: weeks 2-6 -->
+        <div class="task-bar" style="left: 8.33%; width: 33.33%; background: #334155;">
+          <span class="task-bar-label">RACI matrix and escalation paths</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- PROCESS swim lane -->
+    <div class="swim-lane">
+      <div class="lane-label">Process</div>
+      <div class="lane-track">
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+      </div>
+    </div>
+
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- Decision log setup: weeks 2-4 -->
+        <div class="task-bar" style="left: 8.33%; width: 25%; background: #334155;">
+          <span class="task-bar-label">Decision log setup</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- Workload review meetings: weeks 3-12 -->
+        <div class="task-bar" style="left: 16.66%; width: 75%; background: #0F172A;">
+          <span class="task-bar-label">Recurring workload review meetings</span>
+        </div>
+        <div class="milestone" style="left: 30%;">
+          <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0 12,6 6,12 0,6" fill="#0F172A"/></svg>
+          <span class="milestone-label" style="left: 16px;">First review</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep"></div>
+
+    <!-- TECHNOLOGY swim lane -->
+    <div class="swim-lane">
+      <div class="lane-label">Technology</div>
+      <div class="lane-track">
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+        <div class="week-cell"></div><div class="week-cell"></div><div class="week-cell"></div>
+      </div>
+    </div>
+
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- AI inventory: weeks 1-8 -->
+        <div class="task-bar" style="left: 0%; width: 66.66%;">
+          <span class="task-bar-label">AI system inventory build</span>
+        </div>
+        <div class="milestone" style="left: 63%;">
+          <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0 12,6 6,12 0,6" fill="#0F172A"/></svg>
+          <span class="milestone-label" style="left: 16px;">Inventory complete</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="task-row">
+      <div class="task-spacer"></div>
+      <div class="task-track">
+        <!-- Classification: weeks 6-12 -->
+        <div class="task-bar" style="left: 41.66%; width: 50%; background: #334155;">
+          <span class="task-bar-label">System classification (risk tiers)</span>
+        </div>
+        <!-- Final milestone -->
+        <div class="milestone milestone-final" style="left: 89%;">
+          <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0 14,7 7,14 0,7" fill="#6D28D9"/></svg>
+          <span class="milestone-label" style="left: 18px;">MVG Operational</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deliverables -->
+  <div class="deliverables">
+    <div class="deliverable">
+      <div class="deliverable-number">3</div>
+      <div class="deliverable-label">Named roles</div>
+    </div>
+    <div class="deliverable">
+      <div class="deliverable-number">2</div>
+      <div class="deliverable-label">Recurring meetings</div>
+    </div>
+    <div class="deliverable">
+      <div class="deliverable-number">1</div>
+      <div class="deliverable-label">Decision log</div>
+    </div>
+  </div>
+
+  <div class="caption">The MVG 90-Day Implementation Timeline. Minimum viable governance established in 12 weeks with three named roles, two recurring meetings, and one decision log.</div>
+</div>
+</body>
+</html>

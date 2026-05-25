@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-54 — Enterprise AI Scorecard Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .container {
+    max-width: 920px;
+    width: 100%;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #6D28D9;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .header-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .quadrant {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 28px 24px 24px;
+  }
+
+  .quadrant-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #0F172A;
+  }
+
+  .metric-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid #F1F5F9;
+  }
+
+  .metric-row:last-child {
+    border-bottom: none;
+  }
+
+  .metric-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: #0F172A;
+  }
+
+  .metric-method {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #9CA3AF;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .metric-target {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    background: #F1F5F9;
+    border-radius: 4px;
+    padding: 3px 8px;
+    white-space: nowrap;
+  }
+
+  .metric-cadence {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #9CA3AF;
+    white-space: nowrap;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+    .metric-row { grid-template-columns: 1fr; gap: 4px; }
+    .metric-target, .metric-cadence { justify-self: start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-title">Enterprise AI Scorecard</div>
+    <div class="header-subtitle">Four dimensions, 20 metrics. Adapted from balanced scorecard methodology.</div>
+  </div>
+
+  <div class="grid">
+
+    <!-- Financial -->
+    <div class="quadrant">
+      <div class="quadrant-label">Financial</div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Cost per inference</div>
+          <span class="metric-method">API billing / request count</span>
+        </div>
+        <div class="metric-target">Declining QoQ</div>
+        <div class="metric-cadence">Weekly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Cost per outcome</div>
+          <span class="metric-method">Total AI spend / business outcomes</span>
+        </div>
+        <div class="metric-target">Below threshold</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">ROI per use case</div>
+          <span class="metric-method">Value generated / investment</span>
+        </div>
+        <div class="metric-target">> 3:1</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Margin impact</div>
+          <span class="metric-method">Margin change attributable to AI</span>
+        </div>
+        <div class="metric-target">Positive</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Budget variance</div>
+          <span class="metric-method">Actual vs. forecasted AI spend</span>
+        </div>
+        <div class="metric-target">Within 10%</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+    </div>
+
+    <!-- Operational -->
+    <div class="quadrant">
+      <div class="quadrant-label">Operational</div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Workflow cycle time</div>
+          <span class="metric-method">Pre/post AI comparison</span>
+        </div>
+        <div class="metric-target">> 30% reduction</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Error rate change</div>
+          <span class="metric-method">Defect tracking system</span>
+        </div>
+        <div class="metric-target">Declining</div>
+        <div class="metric-cadence">Weekly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Throughput increase</div>
+          <span class="metric-method">Units processed / time</span>
+        </div>
+        <div class="metric-target">> 20% increase</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Automation rate</div>
+          <span class="metric-method">Automated / total tasks</span>
+        </div>
+        <div class="metric-target">Target per process</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Model reliability</div>
+          <span class="metric-method">Uptime and accuracy tracking</span>
+        </div>
+        <div class="metric-target">> 99.5% uptime</div>
+        <div class="metric-cadence">Weekly</div>
+      </div>
+    </div>
+
+    <!-- Strategic -->
+    <div class="quadrant">
+      <div class="quadrant-label">Strategic</div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">New capabilities enabled</div>
+          <span class="metric-method">Capability inventory</span>
+        </div>
+        <div class="metric-target">2+ per quarter</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Time-to-market</div>
+          <span class="metric-method">Release cycle duration</span>
+        </div>
+        <div class="metric-target">Accelerating</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Competitive positioning</div>
+          <span class="metric-method">Market intelligence</span>
+        </div>
+        <div class="metric-target">Improving</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Innovation velocity</div>
+          <span class="metric-method">Ideas to deployment pipeline</span>
+        </div>
+        <div class="metric-target">Increasing</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+    </div>
+
+    <!-- Human -->
+    <div class="quadrant">
+      <div class="quadrant-label">Human</div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Employee AI satisfaction</div>
+          <span class="metric-method">Pulse survey</span>
+        </div>
+        <div class="metric-target">> 70% positive</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Skill development velocity</div>
+          <span class="metric-method">Training completion + certification</span>
+        </div>
+        <div class="metric-target">On track per plan</div>
+        <div class="metric-cadence">Monthly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Adoption depth</div>
+          <span class="metric-method">Daily active usage / total eligible</span>
+        </div>
+        <div class="metric-target">> 60%</div>
+        <div class="metric-cadence">Weekly</div>
+      </div>
+      <div class="metric-row">
+        <div>
+          <div class="metric-name">Retention impact</div>
+          <span class="metric-method">AI team attrition vs. benchmark</span>
+        </div>
+        <div class="metric-target">Below industry avg</div>
+        <div class="metric-cadence">Quarterly</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="caption">The Enterprise AI Scorecard. Four dimensions, 20 metrics, each with measurement method, target, and review cadence. Adapted from balanced scorecard methodology for AI-specific measurement.</div>
+</div>
+
+</body>
+</html>

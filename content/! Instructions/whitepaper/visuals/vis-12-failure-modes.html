@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-12 — The Five Failure Modes Diagnostic</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+
+  .diagnostic-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .diagnostic-row {
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .diagnostic-row:last-child {
+    border-bottom: none;
+  }
+
+  .row-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px 0;
+    gap: 16px;
+  }
+
+  .row-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    color: #E2E8F0;
+    min-width: 36px;
+    line-height: 1;
+    padding-top: 2px;
+  }
+
+  .row-body {
+    flex: 1;
+  }
+
+  .mode-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+
+  .mode-stat {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: #334155;
+    margin-bottom: 8px;
+  }
+
+  .mode-ask {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    font-style: italic;
+  }
+
+  .severity-bar-container {
+    min-width: 120px;
+    padding-top: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .severity-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #9CA3AF;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .severity-bar-track {
+    width: 100px;
+    height: 6px;
+    background: #F1F5F9;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .severity-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: #0F172A;
+  }
+
+  .severity-bar-fill.critical {
+    background: #6D28D9;
+    width: 100%;
+  }
+
+  .severity-bar-fill.high {
+    width: 80%;
+  }
+
+  .severity-bar-fill.medium-high {
+    width: 65%;
+  }
+
+  /* Scoring note */
+  .scoring {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: #F1F5F9;
+    border-radius: 4px;
+  }
+
+  .scoring-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+
+  .scoring-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">The Five Failure Modes Diagnostic</div>
+
+  <!-- Row 1 -->
+  <div class="diagnostic-row">
+    <div class="row-content">
+      <div class="row-number">1</div>
+      <div class="row-body">
+        <div class="mode-name">Data Foundation</div>
+        <div class="mode-stat">58--85% cite data quality as the primary barrier</div>
+        <div class="mode-ask">Ask yourself: Can your data team deliver a clean, labelled dataset for a new use case within two weeks?</div>
+      </div>
+      <div class="severity-bar-container">
+        <div class="severity-label">High</div>
+        <div class="severity-bar-track">
+          <div class="severity-bar-fill high"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="diagnostic-row">
+    <div class="row-content">
+      <div class="row-number">2</div>
+      <div class="row-body">
+        <div class="mode-name">Organisational and Leadership</div>
+        <div class="mode-stat">77--95% of failures are organisational, not technical</div>
+        <div class="mode-ask">Ask yourself: Does your CEO review AI portfolio performance quarterly with the same rigour as financial results?</div>
+      </div>
+      <div class="severity-bar-container">
+        <div class="severity-label">Critical</div>
+        <div class="severity-bar-track">
+          <div class="severity-bar-fill critical"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3 -->
+  <div class="diagnostic-row">
+    <div class="row-content">
+      <div class="row-number">3</div>
+      <div class="row-body">
+        <div class="mode-name">Missing MLOps Infrastructure</div>
+        <div class="mode-stat">Production requires 5--10x pilot investment</div>
+        <div class="mode-ask">Ask yourself: Can you deploy a model update to production without manual intervention?</div>
+      </div>
+      <div class="severity-bar-container">
+        <div class="severity-label">High</div>
+        <div class="severity-bar-track">
+          <div class="severity-bar-fill high"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 4 -->
+  <div class="diagnostic-row">
+    <div class="row-content">
+      <div class="row-number">4</div>
+      <div class="row-body">
+        <div class="mode-name">Last Mile Problem</div>
+        <div class="mode-stat">7 frictions between capability and organisation</div>
+        <div class="mode-ask">Ask yourself: Have the end users of your AI systems been involved in design decisions?</div>
+      </div>
+      <div class="severity-bar-container">
+        <div class="severity-label">Medium-High</div>
+        <div class="severity-bar-track">
+          <div class="severity-bar-fill medium-high"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 5 -->
+  <div class="diagnostic-row">
+    <div class="row-content">
+      <div class="row-number">5</div>
+      <div class="row-body">
+        <div class="mode-name">Cost Escalation</div>
+        <div class="mode-stat">2.5--4x cost multiplier from pilot to production</div>
+        <div class="mode-ask">Ask yourself: Does your AI business case include change management and ongoing maintenance costs?</div>
+      </div>
+      <div class="severity-bar-container">
+        <div class="severity-label">High</div>
+        <div class="severity-bar-track">
+          <div class="severity-bar-fill high"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scoring">
+    <div class="scoring-title">Scoring</div>
+    <div class="scoring-text">Score your organisation 1--5 against each mode. Totals below 15 indicate structural readiness gaps that will prevent scaling regardless of technical capability. The organisational and leadership mode (row 2) is the single strongest predictor of failure.</div>
+  </div>
+
+  <div class="caption">The Five Failure Modes diagnostic. Each mode compounds the others. CTOs should score their organisation against each dimension. Sources: MIT 2025, Gartner 2026, Stanford 2026, RAND 2025.</div>
+</div>
+</body>
+</html>

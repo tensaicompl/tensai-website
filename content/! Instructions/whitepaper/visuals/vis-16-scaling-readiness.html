@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-16 — TensAI Scaling Readiness Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 980px;
+    width: 100%;
+    padding: 40px 36px 32px;
+    overflow-x: auto;
+  }
+
+  .card-header {
+    margin-bottom: 28px;
+  }
+
+  .card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+  }
+
+  thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 2px solid #0F172A;
+    color: #0F172A;
+    vertical-align: bottom;
+  }
+
+  thead th.level-header {
+    text-align: center;
+    width: 18%;
+  }
+
+  thead th.level-accent {
+    color: #6D28D9;
+  }
+
+  thead th.dimension-header {
+    width: 28%;
+  }
+
+  tbody td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    padding: 14px 14px;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+
+  tbody td.level-cell {
+    text-align: center;
+    color: #6B7280;
+    font-size: 11px;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #F8FAFC;
+  }
+
+  .dimension-name {
+    font-weight: 600;
+    color: #0F172A;
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+  }
+
+  .dimension-question {
+    font-style: italic;
+    color: #6B7280;
+    font-size: 11px;
+  }
+
+  .scoring {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .scoring-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+
+  .scoring-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .score-item {
+    text-align: center;
+    padding: 12px 8px;
+    border-radius: 8px;
+    background: #F1F5F9;
+  }
+
+  .score-range {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #0F172A;
+    display: block;
+  }
+
+  .score-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #6B7280;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 740px) {
+    .scoring-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">TensAI Scaling Readiness Assessment</div>
+    <div class="card-subtitle">Composite diagnostic: McKinsey + Stanford + BCG success factors</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="dimension-header">Dimension</th>
+        <th class="level-header">Level 1<br><span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">Ad hoc</span></th>
+        <th class="level-header">Level 2<br><span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">Emerging</span></th>
+        <th class="level-header">Level 3<br><span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">Structured</span></th>
+        <th class="level-header level-accent">Level 4<br><span style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0">Optimised</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="dimension-name">Workflow mapping maturity</span>
+          <span class="dimension-question">Are AI use cases mapped to workflows?</span>
+        </td>
+        <td class="level-cell">No formal mapping</td>
+        <td class="level-cell">Some workflows documented</td>
+        <td class="level-cell">All priority workflows mapped with KPIs</td>
+        <td class="level-cell">Continuous workflow optimisation with AI-native redesign</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Governance architecture</span>
+          <span class="dimension-question">Is governance operational or theatrical?</span>
+        </td>
+        <td class="level-cell">No AI governance</td>
+        <td class="level-cell">Policies exist, rarely enforced</td>
+        <td class="level-cell">MVG operational with named owners</td>
+        <td class="level-cell">Automated governance with continuous monitoring</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Observability infrastructure</span>
+          <span class="dimension-question">Can you detect drift within 24 hours?</span>
+        </td>
+        <td class="level-cell">No monitoring</td>
+        <td class="level-cell">Basic logging</td>
+        <td class="level-cell">Drift detection and alerting active</td>
+        <td class="level-cell">Full observability with automated remediation</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Leadership continuity</span>
+          <span class="dimension-question">Has the AI sponsor been in role 18+ months?</span>
+        </td>
+        <td class="level-cell">No AI sponsor</td>
+        <td class="level-cell">Sponsor named, limited authority</td>
+        <td class="level-cell">Empowered sponsor with budget authority</td>
+        <td class="level-cell">CAIO with board-level reporting</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Budget commitment</span>
+          <span class="dimension-question">Is AI funded as a programme, not projects?</span>
+        </td>
+        <td class="level-cell">Project-by-project funding</td>
+        <td class="level-cell">Annual budget, no multi-year</td>
+        <td class="level-cell">Multi-year commitment with TCO model</td>
+        <td class="level-cell">FinOps-integrated with cost attribution</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Workflow redesign depth</span>
+          <span class="dimension-question">Are workflows redesigned or just augmented?</span>
+        </td>
+        <td class="level-cell">AI bolted onto existing processes</td>
+        <td class="level-cell">Minor workflow adjustments</td>
+        <td class="level-cell">Workflows redesigned for AI-human collaboration</td>
+        <td class="level-cell">AI-native workflows with continuous iteration</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Skills programme maturity</span>
+          <span class="dimension-question">Is upskilling structured and measured?</span>
+        </td>
+        <td class="level-cell">No AI training</td>
+        <td class="level-cell">Ad hoc training available</td>
+        <td class="level-cell">Structured programme with role-specific tracks</td>
+        <td class="level-cell">Continuous learning with impact measurement</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dimension-name">Use case portfolio</span>
+          <span class="dimension-question">Are use cases prioritised by business value?</span>
+        </td>
+        <td class="level-cell">Opportunistic selection</td>
+        <td class="level-cell">Basic prioritisation</td>
+        <td class="level-cell">Portfolio managed with value/feasibility scoring</td>
+        <td class="level-cell">Dynamic portfolio with automated ROI tracking</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="scoring">
+    <div class="scoring-title">Scoring Rubric</div>
+    <div class="scoring-grid">
+      <div class="score-item">
+        <span class="score-range">8--12</span>
+        <span class="score-label">Not ready to scale</span>
+      </div>
+      <div class="score-item">
+        <span class="score-range">13--20</span>
+        <span class="score-label">Emerging capability</span>
+      </div>
+      <div class="score-item">
+        <span class="score-range">21--28</span>
+        <span class="score-label">Ready to scale</span>
+      </div>
+      <div class="score-item" style="background:#EDE9FE">
+        <span class="score-range" style="color:#6D28D9">29--32</span>
+        <span class="score-label">Leading practice</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">The TensAI Scaling Readiness Assessment. A composite diagnostic combining McKinsey, Stanford, and BCG success factors into a single scoring rubric.</div>
+</div>
+
+</body>
+</html>

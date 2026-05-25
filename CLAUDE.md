@@ -68,7 +68,7 @@ TensAI public website — a content architecture site with 18 canonical AI conce
 | `src/components/layout/` | SiteNav, SiteFooter, RevealOnScroll |
 | `src/components/mdx/` | MDX shortcodes: Callout, CodeBlock, ContentPlaceholder |
 | `src/components/content/` | Concept page blocks: ConceptConnections, CrossAltitudeStrip, LinkedNotes |
-| `src/components/diagrams/` | DiagramSlot (placeholder) — replace with SVG components |
+| `src/components/diagrams/` | SVG diagram components: SteeringDiagram, FinopsDiagram, HarnessDiagram, etc. All use IntersectionObserver entrance animations, CSS transition staggers, and SMIL flowing dots (gated on `visible && !reducedMotion`). Dashed research-frontier box in SteeringDiagram extends to x=904 to contain intervention labels. |
 | `src/components/notes/` | NoteCard, CategoryFilter |
 | `src/components/marketing/` | TheIndex (expandable map diagram) |
 

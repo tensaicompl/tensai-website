@@ -22,18 +22,24 @@ export function RagEvolutionsDiagram() {
   /* ── Intersection Observer ────────────────────────── */
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    if (prefersReduced) {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    mq.addEventListener("change", onMotionChange);
+
+    if (mq.matches) {
       setVisible(true);
-      return;
+      return () => mq.removeEventListener("change", onMotionChange);
     }
 
     const el = figRef.current;
-    if (!el) return;
+    if (!el) {
+      return () => mq.removeEventListener("change", onMotionChange);
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -46,7 +52,10 @@ export function RagEvolutionsDiagram() {
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      mq.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   /* ── Layout constants (scaled to 1200-wide viewBox) ── */
@@ -369,14 +378,16 @@ export function RagEvolutionsDiagram() {
             markerEnd="url(#ragArrowAccent)"
           />
           {/* Animated dot travelling along the arc */}
-          <circle r="2.5" fill="var(--accent)">
-            <animateMotion
-              dur="2s"
-              repeatCount="indefinite"
-              path={`M ${loopCx + loopR} ${loopCy - 3}
-                     A ${loopR} ${loopR} 0 1 0 ${loopCx + loopR} ${loopCy + 3}`}
-            />
-          </circle>
+          {visible && !reducedMotion && (
+            <circle r="2.5" fill="var(--accent)">
+              <animateMotion
+                dur="2s"
+                repeatCount="indefinite"
+                path={`M ${loopCx + loopR} ${loopCy - 3}
+                       A ${loopR} ${loopR} 0 1 0 ${loopCx + loopR} ${loopCy + 3}`}
+              />
+            </circle>
+          )}
         </g>
 
         {/* ── "Fixes" annotations between rungs ───────────── */}

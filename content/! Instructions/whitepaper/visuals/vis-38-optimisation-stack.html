@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-38 — Optimisation Stack Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .roadmap {
+    width: 740px;
+    margin: 0 auto;
+  }
+
+  /* Timeline header */
+  .timeline-header {
+    display: flex;
+    margin-bottom: 4px;
+    padding-left: 200px;
+  }
+  .th-cell {
+    flex: 1;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 0;
+    border-bottom: 2px solid var(--midnight);
+  }
+  .th-cell:first-child { border-left: 2px solid var(--midnight); }
+
+  /* Lever rows */
+  .lever-row {
+    display: flex;
+    align-items: stretch;
+    min-height: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .lever-row:last-child { border-bottom: none; }
+
+  .lever-info {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 12px 8px 0;
+    border-right: 2px solid var(--midnight);
+  }
+  .lever-num {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 10px;
+    color: var(--gray-light);
+    margin-bottom: 2px;
+  }
+  .lever-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--midnight);
+    line-height: 1.3;
+  }
+
+  .lever-timeline {
+    flex: 1;
+    display: flex;
+    position: relative;
+  }
+  .tl-cell {
+    flex: 1;
+    position: relative;
+    border-left: 1px solid var(--border);
+  }
+
+  /* Gantt bar */
+  .gantt-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gantt-default {
+    background: var(--surface);
+    border: 1.5px solid var(--midnight);
+  }
+  .gantt-accent {
+    background: var(--violet-wash);
+    border: 1.5px solid var(--violet);
+  }
+  .gantt-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--midnight);
+    white-space: nowrap;
+  }
+  .gantt-accent .gantt-label {
+    color: var(--violet);
+  }
+
+  /* Impact bars on the right */
+  .impact-col {
+    width: 100px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    border-left: 1px solid var(--border);
+  }
+  .impact-bar-wrap {
+    width: 100%;
+    height: 14px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .impact-bar-fill {
+    height: 100%;
+    background: var(--midnight);
+    border-radius: 3px;
+  }
+  .impact-bar-accent {
+    background: var(--violet);
+  }
+  .impact-pct {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    color: var(--midnight);
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  /* Headers for impact column */
+  .impact-header {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 0;
+    border-bottom: 2px solid var(--midnight);
+    border-left: 1px solid var(--border);
+  }
+
+  /* Key note */
+  .key-note {
+    width: 740px;
+    margin: 20px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .note-line {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+  }
+  .note-badge {
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 700px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">Optimisation Stack Roadmap</div>
+
+    <div class="roadmap">
+      <!-- Timeline header -->
+      <div class="timeline-header">
+        <div class="th-cell">Week 1</div>
+        <div class="th-cell">Week 2--4</div>
+        <div class="th-cell">Month 1</div>
+        <div class="th-cell">Quarter 1</div>
+        <div class="th-cell">Quarter 2</div>
+        <div class="impact-header">Savings</div>
+      </div>
+
+      <!-- Lever 1: Prompt Caching (violet accent) -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">01</div>
+          <div class="lever-name">Prompt Caching</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-accent" style="left: 8%; right: 20%;">
+              <span class="gantt-label">Deploy</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill impact-bar-accent" style="width: 90%;"></div>
+          </div>
+          <span class="impact-pct" style="color: var(--violet);">90%</span>
+        </div>
+      </div>
+
+      <!-- Lever 2: Model Routing/Tiering -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">02</div>
+          <div class="lever-name">Model Routing / Tiering</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell"></div>
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-default" style="left: 8%; right: 8%;">
+              <span class="gantt-label">Build</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill" style="width: 70%;"></div>
+          </div>
+          <span class="impact-pct">30--70%</span>
+        </div>
+      </div>
+
+      <!-- Lever 3: Semantic Caching -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">03</div>
+          <div class="lever-name">Semantic Caching</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-default" style="left: 8%; right: 8%;">
+              <span class="gantt-label">Deploy</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill" style="width: 80%;"></div>
+          </div>
+          <span class="impact-pct">40--80%</span>
+        </div>
+      </div>
+
+      <!-- Lever 4: Batch Processing -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">04</div>
+          <div class="lever-name">Batch Processing</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-default" style="left: 8%; right: 8%;">
+              <span class="gantt-label">Enable</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill" style="width: 50%;"></div>
+          </div>
+          <span class="impact-pct">50%</span>
+        </div>
+      </div>
+
+      <!-- Lever 5: Prompt Compression -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">05</div>
+          <div class="lever-name">Prompt Compression</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-default" style="left: 8%; right: 8%;">
+              <span class="gantt-label">Test</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill" style="width: 40%;"></div>
+          </div>
+          <span class="impact-pct">15--40%</span>
+        </div>
+      </div>
+
+      <!-- Lever 6: Model Distillation -->
+      <div class="lever-row">
+        <div class="lever-info">
+          <div class="lever-num">06</div>
+          <div class="lever-name">Model Distillation</div>
+        </div>
+        <div class="lever-timeline">
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell">
+            <div class="gantt-bar gantt-default" style="left: 4%; right: -100%;">
+              <span class="gantt-label">Research + Train</span>
+            </div>
+          </div>
+          <div class="tl-cell"></div>
+        </div>
+        <div class="impact-col">
+          <div class="impact-bar-wrap">
+            <div class="impact-bar-fill" style="width: 85%;"></div>
+          </div>
+          <span class="impact-pct">50--85%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-note">
+      <div class="note-line"></div>
+      <div class="note-badge">85% of enterprise queries handled by budget-tier models</div>
+      <div class="note-line"></div>
+    </div>
+  </div>
+  <div class="caption">The Optimisation Stack Roadmap. Six levers ranked by impact and implementation timeline. Prompt caching delivers 90% savings in Week 1. Model routing follows. 85% of enterprise queries can be handled by budget-tier models.</div>
+</body>
+</html>

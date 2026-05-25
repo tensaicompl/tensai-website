@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-57 — Agentic Readiness Assessment (Full)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 1040px;
+    width: 100%;
+    padding: 40px 36px 32px;
+    overflow-x: auto;
+  }
+
+  .card-header {
+    margin-bottom: 28px;
+  }
+
+  .card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  /* Assessment grid */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 780px;
+  }
+
+  thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 12px 12px;
+    text-align: left;
+    border-bottom: 2px solid #0F172A;
+    color: #0F172A;
+    vertical-align: bottom;
+  }
+
+  thead th.level-header {
+    text-align: center;
+    width: 17%;
+  }
+
+  thead th.level-accent {
+    color: #6D28D9;
+  }
+
+  thead th.dim-header {
+    width: 15%;
+  }
+
+  tbody td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #334155;
+    padding: 14px 12px;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+
+  tbody td.level-cell {
+    text-align: center;
+    color: #6B7280;
+    font-size: 11px;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #F8FAFC;
+  }
+
+  .dim-name {
+    font-weight: 600;
+    color: #0F172A;
+    display: block;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .dim-ref {
+    font-size: 10px;
+    color: #9CA3AF;
+  }
+
+  /* Shifts section */
+  .shifts {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 2px solid #0F172A;
+  }
+
+  .shifts-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+
+  .shifts-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #6B7280;
+    margin-bottom: 16px;
+  }
+
+  .shifts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .shift-card {
+    background: #F1F5F9;
+    border-radius: 10px;
+    padding: 16px 14px;
+  }
+
+  .shift-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+    margin-bottom: 8px;
+  }
+
+  .shift-from-to {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shift-from {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    flex: 1;
+  }
+
+  .shift-arrow {
+    color: #0F172A;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .shift-to {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #0F172A;
+    flex: 1;
+    text-align: right;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 740px) {
+    .shifts-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Agentic Readiness Assessment</div>
+    <div class="card-subtitle">Full version -- five dimensions, four readiness levels, six fundamental shifts</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="dim-header">Dimension</th>
+        <th class="level-header">Not Ready</th>
+        <th class="level-header">Emerging</th>
+        <th class="level-header">Prepared</th>
+        <th class="level-header level-accent">Leading</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <span class="dim-name">Governance</span>
+          <span class="dim-ref">Ch. 4</span>
+        </td>
+        <td class="level-cell">No AI governance framework. No named owners. No decision log.</td>
+        <td class="level-cell">Basic policies exist. Governance activates only during audits.</td>
+        <td class="level-cell">MVG operational. Per-agent permission scoping. Decision log maintained.</td>
+        <td class="level-cell">Automated governance. Real-time policy enforcement. Agent audit trails.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dim-name">Architecture</span>
+          <span class="dim-ref">Ch. 5</span>
+        </td>
+        <td class="level-cell">No AI gateway. Direct API access. No sandboxing.</td>
+        <td class="level-cell">Basic gateway. Manual routing. Limited observability.</td>
+        <td class="level-cell">AI gateway with six layers. Sandboxed execution. Multi-provider routing.</td>
+        <td class="level-cell">Zero-trust architecture. Automated failover. MCP/A2A protocol support.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dim-name">Skills</span>
+          <span class="dim-ref">Ch. 3</span>
+        </td>
+        <td class="level-cell">No AI training. Skills gap unquantified.</td>
+        <td class="level-cell">Ad hoc training. Power users only. No role-specific tracks.</td>
+        <td class="level-cell">Structured programme. Role-based tracks. Human-AI collaboration training.</td>
+        <td class="level-cell">Agentic workflow designers hired. Continuous learning with impact measurement.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dim-name">Culture</span>
+          <span class="dim-ref">Ch. 3</span>
+        </td>
+        <td class="level-cell">AI seen as threat. Resistance to adoption. No executive buy-in.</td>
+        <td class="level-cell">Pockets of enthusiasm. Limited executive sponsorship.</td>
+        <td class="level-cell">AI-positive culture. Executive sponsorship. Change management active.</td>
+        <td class="level-cell">AI-native mindset. Bounded delegation accepted. Continuous experimentation.</td>
+      </tr>
+      <tr>
+        <td>
+          <span class="dim-name">Economics</span>
+          <span class="dim-ref">Ch. 6</span>
+        </td>
+        <td class="level-cell">No cost tracking. No budget controls. Per-project funding only.</td>
+        <td class="level-cell">Basic cost visibility. Manual reporting. Annual budgets.</td>
+        <td class="level-cell">FinOps integrated. Cost attribution by team/product. Budget guardrails.</td>
+        <td class="level-cell">Automated cost governance. Per-agent budgets. Dynamic routing for cost optimisation.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="shifts">
+    <div class="shifts-title">Six Fundamental Shifts: Assistive to Agentic</div>
+    <div class="shifts-subtitle">What changes when agents act autonomously</div>
+    <div class="shifts-grid">
+      <div class="shift-card">
+        <div class="shift-name">Security Model</div>
+        <div class="shift-from-to">
+          <span class="shift-from">Perimeter defence</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Zero-trust per action</span>
+        </div>
+      </div>
+      <div class="shift-card">
+        <div class="shift-name">Cost Structure</div>
+        <div class="shift-from-to">
+          <span class="shift-from">Predictable usage</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Unbounded consumption</span>
+        </div>
+      </div>
+      <div class="shift-card">
+        <div class="shift-name">Governance Model</div>
+        <div class="shift-from-to">
+          <span class="shift-from">Periodic review</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Continuous monitoring</span>
+        </div>
+      </div>
+      <div class="shift-card">
+        <div class="shift-name">Organisational Design</div>
+        <div class="shift-from-to">
+          <span class="shift-from">Human teams</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Human-agent teams</span>
+        </div>
+      </div>
+      <div class="shift-card">
+        <div class="shift-name">Liability Model</div>
+        <div class="shift-from-to">
+          <span class="shift-from">User accountability</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Delegated authority</span>
+        </div>
+      </div>
+      <div class="shift-card">
+        <div class="shift-name">Trust Model</div>
+        <div class="shift-from-to">
+          <span class="shift-from">Verify then use</span>
+          <span class="shift-arrow">&rarr;</span>
+          <span class="shift-to">Bounded autonomy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">The Agentic Readiness Assessment (full version). Five dimensions, four readiness levels, six fundamental shifts. Self-score to identify gaps before deploying agentic AI.</div>
+</div>
+
+</body>
+</html>

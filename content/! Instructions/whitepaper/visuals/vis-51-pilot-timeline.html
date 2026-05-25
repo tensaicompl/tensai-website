@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-51 — Timeline Comparison (Pilot to Production)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 520px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .chart {
+    width: 100%;
+  }
+
+  /* Category sections */
+  .category {
+    margin-bottom: 24px;
+  }
+
+  .category:last-child {
+    margin-bottom: 0;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .category-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+  }
+
+  .category-range {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  /* Timeline scale */
+  .scale {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .scale-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Bar rows */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .bar-label {
+    width: 130px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    padding-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 24px;
+    position: relative;
+    background: #F1F5F9;
+    border-radius: 3px;
+  }
+
+  .bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #0F172A;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    justify-content: flex-end;
+  }
+
+  .bar-value {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 9px;
+    color: #FFFFFF;
+    white-space: nowrap;
+  }
+
+  /* Category separators */
+  .category-sep {
+    height: 1px;
+    background: #E2E8F0;
+    margin: 20px 0;
+  }
+
+  /* Benchmark callout */
+  .benchmark {
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .benchmark-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  .benchmark-text strong {
+    font-weight: 700;
+    color: #0F172A;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">Pilot to Production Timelines</div>
+  <div class="subtitle">Realistic deployment timelines by complexity level</div>
+
+  <div class="chart">
+    <!-- Scale -->
+    <div class="scale">
+      <span class="scale-label">0 months</span>
+      <span class="scale-label">6</span>
+      <span class="scale-label">12</span>
+      <span class="scale-label">18</span>
+      <span class="scale-label">24</span>
+      <span class="scale-label">30</span>
+      <span class="scale-label">36</span>
+    </div>
+
+    <!-- Simple -->
+    <div class="category">
+      <div class="category-header">
+        <span class="category-name">Simple</span>
+        <span class="category-range">3--6 months</span>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Goldman Sachs</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 8.33%;">
+            <span class="bar-value">2 wk</span>
+          </div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">UK GDS</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 13.89%;">
+            <span class="bar-value">5 mo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-sep"></div>
+
+    <!-- Complex -->
+    <div class="category">
+      <div class="category-header">
+        <span class="category-name">Complex</span>
+        <span class="category-range">9--18 months</span>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Morgan Stanley</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 25%;">
+            <span class="bar-value">9 months</span>
+          </div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Stripe</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 41.67%; background: #334155;">
+            <span class="bar-value">15 months</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-sep"></div>
+
+    <!-- Enterprise Transformation -->
+    <div class="category">
+      <div class="category-header">
+        <span class="category-name">Enterprise Transformation</span>
+        <span class="category-range">18--36 months</span>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Siemens</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 66.67%; background: #334155;">
+            <span class="bar-value">24 months</span>
+          </div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">JPMorgan</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: 100%; background: #0F172A;">
+            <span class="bar-value">36+ months (500+ use cases)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="benchmark">
+    <div class="benchmark-text">Morgan Stanley's <strong>9 months to 98% adoption</strong> is the benchmark for complex deployments.</div>
+  </div>
+
+  <div class="caption">Pilot-to-production timelines vary by complexity. Simple deployments: 3--6 months. Enterprise transformations: 18--36 months. Morgan Stanley's 9 months to 98% adoption is the benchmark for complex deployments.</div>
+</div>
+</body>
+</html>

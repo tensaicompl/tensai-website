@@ -22,16 +22,24 @@ export function BuildBuyBoostDiagram() {
   /* ── Visibility via IntersectionObserver ───────────── */
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    mq.addEventListener("change", onMotionChange);
+
     if (mq.matches) {
       setVisible(true);
-      return;
+      return () => mq.removeEventListener("change", onMotionChange);
     }
 
     const el = figRef.current;
-    if (!el) return;
+    if (!el) {
+      return () => mq.removeEventListener("change", onMotionChange);
+    }
 
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -44,12 +52,15 @@ export function BuildBuyBoostDiagram() {
     );
 
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      mq.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   /* ── Layout constants (scaled to 1200-wide viewBox) ── */
-  const barLeft = 200;
-  const barWidth = 800;
+  const barLeft = 160;
+  const barWidth = 760;
   const barHeight = 68;
   const rowGap = 34;
   const startY = 48;
@@ -100,7 +111,7 @@ export function BuildBuyBoostDiagram() {
       }}
     >
       <svg
-        viewBox="0 0 1200 340"
+        viewBox="0 0 1200 390"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
@@ -302,7 +313,7 @@ export function BuildBuyBoostDiagram() {
                 x={annotationX}
                 y={row.y + barHeight / 2}
                 fontFamily="var(--font-mono)"
-                fontSize="11"
+                fontSize="10"
                 fill={row.accent ? "var(--accent)" : "var(--fg-3)"}
                 dominantBaseline="middle"
                 letterSpacing="0.02em"
@@ -338,7 +349,7 @@ export function BuildBuyBoostDiagram() {
             fill="var(--color-midnight)"
             opacity={visible ? 0.7 : 0}
           >
-            {visible && (
+            {visible && !reducedMotion && (
               <animate
                 attributeName="cy"
                 from={arrowTop}
@@ -351,7 +362,7 @@ export function BuildBuyBoostDiagram() {
                 keyTimes="0;1"
               />
             )}
-            {visible && (
+            {visible && !reducedMotion && (
               <animate
                 attributeName="opacity"
                 values="0;0.7;0.7;0"

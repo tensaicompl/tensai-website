@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-13 — Pilot-to-Production Cost Multiplier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 36px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .waterfall {
+    width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 340px;
+    position: relative;
+    padding-bottom: 80px;
+  }
+
+  .wf-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .wf-bar {
+    width: 100%;
+    background: var(--midnight);
+    border-radius: 3px 3px 0 0;
+    position: relative;
+    min-height: 2px;
+  }
+  .wf-bar-start { background: var(--midnight); }
+  .wf-bar-add {
+    background: var(--surface);
+    border: 1.5px solid var(--midnight);
+    border-radius: 3px 3px 0 0;
+  }
+  .wf-bar-total {
+    background: var(--violet);
+    border-radius: 3px 3px 0 0;
+  }
+
+  /* Connector lines between bars */
+  .wf-connector {
+    position: absolute;
+    right: -8px;
+    top: 0;
+    width: 8px;
+    border-top: 1.5px dashed var(--gray-light);
+  }
+
+  .wf-pct {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--midnight);
+    margin-bottom: 4px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .wf-pct-total { color: var(--violet); }
+
+  .wf-label {
+    position: absolute;
+    bottom: -72px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--midnight-muted);
+    text-align: center;
+    width: 90px;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  /* Multiplier callout */
+  .multiplier {
+    width: 720px;
+    margin: 24px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .mult-line {
+    height: 1px;
+    width: 60px;
+    background: var(--border);
+  }
+  .mult-badge {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--midnight);
+  }
+
+  /* Baseline ruler */
+  .baseline {
+    width: 720px;
+    margin: 0 auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .caption {
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 700px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">Pilot-to-Production Cost Multiplier</div>
+
+    <div class="waterfall">
+      <!-- Pilot Cost (baseline) -->
+      <div class="wf-col">
+        <div class="wf-pct">Baseline</div>
+        <div class="wf-bar wf-bar-start" style="height: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Pilot Cost</div>
+      </div>
+
+      <!-- Integration Complexity -->
+      <div class="wf-col">
+        <div class="wf-pct">+25--40%</div>
+        <div class="wf-bar wf-bar-add" style="height: 80px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Integration Complexity</div>
+      </div>
+
+      <!-- Real-Time Requirements -->
+      <div class="wf-col">
+        <div class="wf-pct">+25--40%</div>
+        <div class="wf-bar wf-bar-add" style="height: 80px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Real-Time Requirements</div>
+      </div>
+
+      <!-- Monitoring -->
+      <div class="wf-col">
+        <div class="wf-pct">+15--25%</div>
+        <div class="wf-bar wf-bar-add" style="height: 50px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Monitoring &amp; Observability</div>
+      </div>
+
+      <!-- Governance -->
+      <div class="wf-col">
+        <div class="wf-pct">+10--20%</div>
+        <div class="wf-bar wf-bar-add" style="height: 38px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Governance &amp; Compliance</div>
+      </div>
+
+      <!-- Change Management -->
+      <div class="wf-col">
+        <div class="wf-pct">+100--200%</div>
+        <div class="wf-bar wf-bar-add" style="height: 120px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Change Management</div>
+      </div>
+
+      <!-- Ongoing Maintenance -->
+      <div class="wf-col">
+        <div class="wf-pct">+15--30%/yr</div>
+        <div class="wf-bar wf-bar-add" style="height: 56px; margin-bottom: 60px;">
+          <div class="wf-connector"></div>
+        </div>
+        <div class="wf-label">Ongoing Maintenance</div>
+      </div>
+
+      <!-- Total -->
+      <div class="wf-col">
+        <div class="wf-pct wf-pct-total">2.5--4x</div>
+        <div class="wf-bar wf-bar-total" style="height: 220px;"></div>
+        <div class="wf-label" style="font-weight: 700; color: var(--violet);">Total Production Cost</div>
+      </div>
+    </div>
+
+    <div class="baseline"></div>
+    <div class="multiplier">
+      <div class="mult-line"></div>
+      <div class="mult-badge">EUR 500K pilot &rarr; EUR 1.25M--2M production</div>
+      <div class="mult-line"></div>
+    </div>
+  </div>
+  <div class="caption">The pilot-to-production cost multiplier. Six hidden cost categories turn a EUR 500K pilot into a EUR 1.25M--2M production system. Sources: Deloitte 2025, a16z 2024.</div>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-08 — Regional Comparison Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 920px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 720px;
+  }
+
+  /* Table structure */
+  .comparison-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* Header row */
+  .comparison-grid thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .comparison-grid thead th.col-dimension {
+    background: #F1F5F9;
+    color: #6B7280;
+    width: 180px;
+  }
+  .comparison-grid thead th.col-region {
+    background: #0F172A;
+    color: #FAFAFA;
+    text-align: center;
+    width: 240px;
+  }
+  .comparison-grid thead th.col-region:not(:last-child) {
+    border-right: 1px solid #1E293B;
+  }
+
+  /* Region subtitle */
+  .region-sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #9CA3AF;
+    margin-top: 4px;
+  }
+
+  /* Body rows */
+  .comparison-grid tbody tr:nth-child(odd) {
+    background: #FFFFFF;
+  }
+  .comparison-grid tbody tr:nth-child(even) {
+    background: #F1F5F9;
+  }
+  .comparison-grid tbody td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .comparison-grid tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Dimension label column */
+  .dim-label {
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    letter-spacing: 0.2px;
+  }
+
+  /* Region data cells */
+  .region-cell {
+    text-align: center;
+  }
+  .region-cell:not(:last-child) {
+    border-right: 1px solid #E2E8F0;
+  }
+  .dim-cell {
+    border-right: 1px solid #E2E8F0;
+  }
+
+  /* Data highlight */
+  .stat {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 15px;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+  .detail {
+    font-size: 12px;
+    color: #6B7280;
+    line-height: 1.5;
+  }
+
+  /* Source badges */
+  .source-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    color: #9CA3AF;
+    background: rgba(156,163,175,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+    max-width: 800px;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .comparison-grid { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Regional Comparison Table</h1>
+  <p class="subtitle">Each region faces structurally different barriers, requiring different strategic responses.</p>
+
+  <table class="comparison-grid">
+    <thead>
+      <tr>
+        <th class="col-dimension">Dimension</th>
+        <th class="col-region">United States<span class="region-sub">Mature market</span></th>
+        <th class="col-region">European Union<span class="region-sub">Fastest growth</span></th>
+        <th class="col-region">Asia-Pacific<span class="region-sub">High intent</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Adoption Rate</span></td>
+        <td class="region-cell">
+          <span class="stat">88%</span>
+          <span class="detail">Broad enterprise adoption</span>
+          <span class="source-tag">McKinsey 2025</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">20%</span>
+          <span class="detail">Denmark 42%, Romania 5.2%</span>
+          <span class="source-tag">Eurostat 2025</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">High</span>
+          <span class="detail">Strong intent, rapid scaling</span>
+          <span class="source-tag">KPMG 2025</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Investment Level</span></td>
+        <td class="region-cell">
+          <span class="stat">$285.9B</span>
+          <span class="detail">Total private investment</span>
+          <span class="source-tag">Stanford HAI 2026</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">$157M avg</span>
+          <span class="detail">Per-enterprise average</span>
+          <span class="source-tag">Eurostat 2025</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">$245M avg</span>
+          <span class="detail">Per-enterprise average</span>
+          <span class="source-tag">KPMG 2025</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Agent Scaling</span></td>
+        <td class="region-cell">
+          <span class="stat">Mature</span>
+          <span class="detail">Established agent ecosystems</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Emerging</span>
+          <span class="detail">Early-stage deployments</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Leading (49%)</span>
+          <span class="detail">Highest agent adoption</span>
+          <span class="source-tag">KPMG 2025</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Primary Barrier</span></td>
+        <td class="region-cell">
+          <span class="stat">ROI</span>
+          <span class="detail">Accountability and measurement</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Regulation + Talent</span>
+          <span class="detail">Compliance cost, skills gap</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Talent + Infra</span>
+          <span class="detail">Infrastructure readiness</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Regulatory Posture</span></td>
+        <td class="region-cell">
+          <span class="stat">Permissive</span>
+          <span class="detail">State-level preemption model</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Binding</span>
+          <span class="detail">EU AI Act in force</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">Voluntary</span>
+          <span class="detail">Framework-based guidance</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-cell"><span class="dim-label">Growth Trajectory</span></td>
+        <td class="region-cell">
+          <span class="stat">Stable</span>
+          <span class="detail">Mature, incremental growth</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">+6.5pp YoY</span>
+          <span class="detail">Fastest growth globally</span>
+          <span class="source-tag">Eurostat 2025</span>
+        </td>
+        <td class="region-cell">
+          <span class="stat">High intent</span>
+          <span class="detail">Aggressive expansion plans</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="caption"><strong>Figure VIS-08.</strong> Regional AI landscape comparison. Each region faces structurally different barriers, requiring different strategic responses. Sources: Eurostat 2025, KPMG 2025, Stanford HAI 2026, McKinsey 2025.</p>
+
+</div>
+</body>
+</html>

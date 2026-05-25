@@ -74,7 +74,7 @@ export function FinopsDiagram() {
     { title: "Model routing", desc: "Route to cheapest capable tier" },
     { title: "Context management", desc: "Remove tokens that don't earn their place" },
     { title: "Prompt caching", desc: "Reuse processed prefixes at 10% cost" },
-    { title: "Semantic caching", desc: "Eliminate redundant calls entirely" },
+    { title: "Semantic caching", desc: "Eliminate redundant calls" },
   ];
 
   /* ── Right section: Metric ladder layout ────────────── */
@@ -94,8 +94,13 @@ export function FinopsDiagram() {
   /* Arrow alongside ladder */
   const arrowX = ladderX + ladderW + 44;
 
-  /* Animation helpers */
-  const skip = reduceMotion || !visible;
+  /* ── Entrance delay helpers ── */
+  const d = reduceMotion ? 0 : 1; // multiplier: 0 = instant
+  const entranceStyle = (delay: string): React.CSSProperties => ({
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(12px)",
+    transition: `opacity 0.5s ease ${delay}, transform 0.5s ease ${delay}`,
+  });
 
   return (
     <figure
@@ -144,7 +149,7 @@ export function FinopsDiagram() {
           }
         `}</style>
 
-        {/* ── Marker definitions ──────────────────────────────── */}
+        {/* ── Marker definitions & motion paths ────────────────── */}
         <defs>
           <marker
             id="foArrow"
@@ -168,6 +173,7 @@ export function FinopsDiagram() {
           >
             <path d="M 0 9 L 5 0 L 10 9" fill="none" stroke="var(--color-midnight)" strokeWidth="1.5" />
           </marker>
+
         </defs>
 
         {/* ════════════════════════════════════════════════════════
@@ -175,33 +181,37 @@ export function FinopsDiagram() {
             ════════════════════════════════════════════════════════ */}
 
         {/* Section title */}
-        <text
-          x={funnelCx}
-          y={28}
-          fontFamily="var(--font-display)"
-          fontSize="14"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          fontWeight="600"
-          letterSpacing="0.02em"
-        >
-          Four Levers
-        </text>
+        <g style={entranceStyle(`${0 * d}s`)}>
+          <text
+            x={funnelCx}
+            y={28}
+            fontFamily="var(--font-display)"
+            fontSize="14"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            fontWeight="600"
+            letterSpacing="0.02em"
+          >
+            Four Levers
+          </text>
+        </g>
 
         {/* Funnel bars — animated narrowing */}
         {levers.map((lever, i) => {
           const targetW = barWidths[i];
-          const currentW = skip ? targetW : visible ? targetW : maxBarW;
-          const x = funnelCx - currentW / 2;
+          // Before visible: full width; after visible: narrow to target (CSS transition handles it)
+          const currentW = reduceMotion ? targetW : (visible ? targetW : maxBarW);
+          const currentX = funnelCx - currentW / 2;
           const y = funnelTopY + i * (barH + barGap);
-          const delay = `${i * 0.15}s`;
+          const barDelay = `${(0.15 + i * 0.15) * d}s`;
+          const textDelay = `${(0.2 + i * 0.15) * d}s`;
 
           return (
             <g key={`fo-lever-${i}`}>
               {/* Bar rectangle — animates width */}
               <rect
                 className="fo-bar"
-                x={x}
+                x={currentX}
                 y={y}
                 width={currentW}
                 height={barH}
@@ -209,35 +219,39 @@ export function FinopsDiagram() {
                 stroke="var(--color-midnight)"
                 strokeWidth="1.5"
                 fill="var(--bg-surface)"
-                style={{ transitionDelay: delay }}
+                style={{ transitionDelay: barDelay }}
               />
 
               {/* Title */}
-              <text
-                x={funnelCx}
-                y={y + 16}
-                fontFamily="var(--font-mono)"
-                fontSize="11"
-                fill="var(--color-midnight)"
-                textAnchor="middle"
-                fontWeight="600"
-                letterSpacing="0.02em"
-              >
-                {lever.title}
-              </text>
+              <g style={entranceStyle(textDelay)}>
+                <text
+                  x={funnelCx}
+                  y={y + 16}
+                  fontFamily="var(--font-mono)"
+                  fontSize="11"
+                  fill="var(--color-midnight)"
+                  textAnchor="middle"
+                  fontWeight="600"
+                  letterSpacing="0.02em"
+                >
+                  {lever.title}
+                </text>
+              </g>
 
               {/* Description */}
-              <text
-                x={funnelCx}
-                y={y + 31}
-                fontFamily="var(--font-mono)"
-                fontSize="9"
-                fill="var(--fg-3)"
-                textAnchor="middle"
-                letterSpacing="0.04em"
-              >
-                {lever.desc}
-              </text>
+              <g style={entranceStyle(textDelay)}>
+                <text
+                  x={funnelCx}
+                  y={y + 31}
+                  fontFamily="var(--font-mono)"
+                  fontSize="9"
+                  fill="var(--fg-3)"
+                  textAnchor="middle"
+                  letterSpacing="0.04em"
+                >
+                  {lever.desc}
+                </text>
+              </g>
             </g>
           );
         })}
@@ -250,9 +264,10 @@ export function FinopsDiagram() {
           const y2 = funnelTopY + (i + 1) * (barH + barGap);
           const x1 = funnelCx - w1 / 2;
           const x2 = funnelCx - w2 / 2;
+          const taperDelay = `${(0.4 + i * 0.15) * d}s`;
 
           return (
-            <g key={`fo-taper-${i}`}>
+            <g key={`fo-taper-${i}`} style={entranceStyle(taperDelay)}>
               {/* Left taper */}
               <line
                 x1={x1} y1={y1}
@@ -273,29 +288,13 @@ export function FinopsDiagram() {
           );
         })}
 
-        {/* Downward arrow below funnel */}
-        {(() => {
-          const lastBarY = funnelTopY + 3 * (barH + barGap) + barH;
-          const arrowStartY = lastBarY + 8;
-          const arrowEndY = arrowStartY + 28;
-
-          return (
-            <line
-              x1={funnelCx} y1={arrowStartY}
-              x2={funnelCx} y2={arrowEndY}
-              stroke="var(--color-midnight)"
-              strokeWidth="1.5"
-              markerEnd="url(#foArrow)"
-            />
-          );
-        })()}
 
         {/* Cost label below funnel */}
         {(() => {
           const labelY = funnelTopY + 3 * (barH + barGap) + barH + 54;
 
           return (
-            <>
+            <g style={entranceStyle(`${0.95 * d}s`)}>
               <rect
                 x={funnelCx - 90}
                 y={labelY - 14}
@@ -318,36 +317,40 @@ export function FinopsDiagram() {
               >
                 Cost per task: EUR 0.12
               </text>
-            </>
+            </g>
           );
         })()}
 
         {/* ── Divider between sections ───────────────────────── */}
-        <line
-          x1="600" y1="30"
-          x2="600" y2="420"
-          stroke="var(--border)"
-          strokeWidth="1"
-          strokeDasharray="4 4"
-        />
+        <g style={entranceStyle(`${0.5 * d}s`)}>
+          <line
+            x1="600" y1="30"
+            x2="600" y2="420"
+            stroke="var(--border)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+        </g>
 
         {/* ════════════════════════════════════════════════════════
             RIGHT SECTION — Metric Ladder
             ════════════════════════════════════════════════════════ */}
 
         {/* Section title */}
-        <text
-          x={ladderX + ladderW / 2}
-          y={28}
-          fontFamily="var(--font-display)"
-          fontSize="14"
-          fill="var(--color-midnight)"
-          textAnchor="middle"
-          fontWeight="600"
-          letterSpacing="0.02em"
-        >
-          Metric Ladder
-        </text>
+        <g style={entranceStyle(`${0.6 * d}s`)}>
+          <text
+            x={ladderX + ladderW / 2}
+            y={28}
+            fontFamily="var(--font-display)"
+            fontSize="14"
+            fill="var(--color-midnight)"
+            textAnchor="middle"
+            fontWeight="600"
+            letterSpacing="0.02em"
+          >
+            Metric Ladder
+          </text>
+        </g>
 
         {/* Ladder rungs — bottom to top, animated */}
         {rungs.map((rung, i) => {
@@ -355,14 +358,14 @@ export function FinopsDiagram() {
           const isAccent = rung.accent;
 
           // Bottom-to-top: rung 0 (bottom) appears first, rung 3 (top) last
-          const staggerDelay = `${0.6 + i * 0.18}s`;
-          const rungOpacity = skip ? 1 : visible ? 1 : 0;
-          const rungTranslateY = skip ? 0 : visible ? 0 : 16;
+          const staggerDelay = `${(0.7 + i * 0.18) * d}s`;
+          const rungOpacity = reduceMotion ? 1 : (visible ? 1 : 0);
+          const rungTranslateY = reduceMotion ? 0 : (visible ? 0 : 16);
 
           return (
             <g
               key={`fo-rung-${i}`}
-              className={`fo-rung-group${isAccent ? " fo-accent-rung" : ""}`}
+              className={`fo-rung-group${isAccent && visible && !reduceMotion ? " fo-accent-rung" : ""}`}
               style={{
                 opacity: rungOpacity,
                 transform: `translateY(${rungTranslateY}px)`,
@@ -401,18 +404,20 @@ export function FinopsDiagram() {
         {[0, 1, 2].map((i) => {
           const y1 = ladderBottomY - i * (ladderRungH + ladderGap);
           const y2 = ladderBottomY - (i + 1) * (ladderRungH + ladderGap) + ladderRungH;
+          const connDelay = `${(0.85 + i * 0.18) * d}s`;
 
           return (
-            <line
-              key={`fo-rung-conn-${i}`}
-              x1={ladderX + ladderW / 2}
-              y1={y1}
-              x2={ladderX + ladderW / 2}
-              y2={y2}
-              stroke="var(--border)"
-              strokeWidth="1"
-              strokeDasharray="3 3"
-            />
+            <g key={`fo-rung-conn-${i}`} style={entranceStyle(connDelay)}>
+              <line
+                x1={ladderX + ladderW / 2}
+                y1={y1}
+                x2={ladderX + ladderW / 2}
+                y2={y2}
+                stroke="var(--border)"
+                strokeWidth="1"
+                strokeDasharray="3 3"
+              />
+            </g>
           );
         })}
 
@@ -422,7 +427,7 @@ export function FinopsDiagram() {
           const bottomRungY = ladderBottomY + ladderRungH;
 
           return (
-            <>
+            <g style={entranceStyle(`${1.5 * d}s`)}>
               <line
                 x1={arrowX}
                 y1={bottomRungY - 6}
@@ -446,29 +451,32 @@ export function FinopsDiagram() {
               >
                 climb to measure what matters
               </text>
-            </>
+            </g>
           );
         })()}
 
         {/* Number labels for ladder rungs (bottom to top) */}
         {rungs.map((_, i) => {
           const y = ladderBottomY - i * (ladderRungH + ladderGap) + ladderRungH / 2;
+          const numDelay = `${(0.7 + i * 0.18) * d}s`;
 
           return (
-            <text
-              key={`fo-rung-num-${i}`}
-              x={ladderX - 16}
-              y={y + 1}
-              fontFamily="var(--font-mono)"
-              fontSize="10"
-              fill="var(--fg-3)"
-              textAnchor="middle"
-              dominantBaseline="middle"
-            >
-              {i + 1}
-            </text>
+            <g key={`fo-rung-num-${i}`} style={entranceStyle(numDelay)}>
+              <text
+                x={ladderX - 16}
+                y={y + 1}
+                fontFamily="var(--font-mono)"
+                fontSize="10"
+                fill="var(--fg-3)"
+                textAnchor="middle"
+                dominantBaseline="middle"
+              >
+                {i + 1}
+              </text>
+            </g>
           );
         })}
+
       </svg>
     </figure>
   );

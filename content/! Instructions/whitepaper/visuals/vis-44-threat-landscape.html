@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-44 — AI Security Threat Landscape Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .landscape {
+    width: 760px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+  }
+
+  /* Left taxonomy: OWASP LLM Top 10 */
+  .taxonomy {
+    width: 220px;
+    flex-shrink: 0;
+  }
+  .tax-header {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    color: var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 10px;
+    background: var(--midnight);
+    color: #FFFFFF;
+    border-radius: 4px 4px 0 0;
+    text-align: center;
+  }
+  .tax-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .tax-item {
+    font-size: 10px;
+    color: var(--midnight-muted);
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-top: none;
+    background: var(--bg);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 26px;
+  }
+  .tax-item:last-child { border-radius: 0 0 4px 4px; }
+  .tax-num {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    color: var(--gray-light);
+    width: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Centre defence layers */
+  .defence-centre {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 8px;
+    justify-content: center;
+    gap: 3px;
+  }
+  .def-header {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    color: var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-align: center;
+    padding: 8px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .def-layer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    min-height: 32px;
+  }
+  .def-icon {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--midnight);
+    flex-shrink: 0;
+  }
+  .def-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--midnight);
+  }
+  /* Gap highlight */
+  .def-gap {
+    border-color: var(--violet);
+    background: var(--violet-wash);
+  }
+  .def-gap .def-icon {
+    background: var(--violet);
+  }
+  .gap-note {
+    font-size: 9px;
+    color: var(--violet);
+    font-weight: 600;
+    margin-left: auto;
+  }
+
+  /* Right taxonomy: OWASP Agentic Top 10 */
+  .tax-right .tax-header {
+    background: var(--midnight-muted);
+  }
+
+  /* Mapping lines replaced by structural layout */
+  .mapping-arrows {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 16px;
+    flex-shrink: 0;
+    padding: 30px 0;
+  }
+  .map-line {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Gap callout */
+  .gap-callout {
+    width: 760px;
+    margin: 20px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .gc-line {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+  }
+  .gc-badge {
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .gc-badge strong {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    color: var(--midnight);
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 720px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">AI Security Threat Landscape Map</div>
+
+    <div class="landscape">
+      <!-- Left: OWASP LLM Top 10 -->
+      <div class="taxonomy">
+        <div class="tax-header">OWASP LLM Top 10</div>
+        <div class="tax-list">
+          <div class="tax-item"><span class="tax-num">01</span> Prompt Injection</div>
+          <div class="tax-item"><span class="tax-num">02</span> Sensitive Info Disclosure</div>
+          <div class="tax-item"><span class="tax-num">03</span> Supply Chain Vuln.</div>
+          <div class="tax-item"><span class="tax-num">04</span> Data/Model Poisoning</div>
+          <div class="tax-item"><span class="tax-num">05</span> Improper Output Handling</div>
+          <div class="tax-item"><span class="tax-num">06</span> Excessive Agency</div>
+          <div class="tax-item"><span class="tax-num">07</span> System Prompt Leakage</div>
+          <div class="tax-item"><span class="tax-num">08</span> Vector/Embedding Vuln.</div>
+          <div class="tax-item"><span class="tax-num">09</span> Misinformation</div>
+          <div class="tax-item"><span class="tax-num">10</span> Unbounded Consumption</div>
+        </div>
+      </div>
+
+      <!-- Left mapping arrows -->
+      <div class="mapping-arrows">
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+      </div>
+
+      <!-- Centre: Defence Layers -->
+      <div class="defence-centre">
+        <div class="def-header">Defence Layers</div>
+        <div class="def-layer">
+          <div class="def-icon"></div>
+          <span class="def-name">Identity</span>
+        </div>
+        <div class="def-layer def-gap">
+          <div class="def-icon"></div>
+          <span class="def-name">Input</span>
+          <span class="gap-note">Gap: 34.7% deployed</span>
+        </div>
+        <div class="def-layer">
+          <div class="def-icon"></div>
+          <span class="def-name">Model</span>
+        </div>
+        <div class="def-layer def-gap">
+          <div class="def-icon"></div>
+          <span class="def-name">Output</span>
+          <span class="gap-note">Coverage gap</span>
+        </div>
+        <div class="def-layer">
+          <div class="def-icon"></div>
+          <span class="def-name">Monitoring</span>
+        </div>
+        <div class="def-layer">
+          <div class="def-icon"></div>
+          <span class="def-name">Infrastructure</span>
+        </div>
+      </div>
+
+      <!-- Right mapping arrows -->
+      <div class="mapping-arrows">
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+        <div class="map-line"></div>
+      </div>
+
+      <!-- Right: OWASP Agentic Top 10 -->
+      <div class="taxonomy tax-right">
+        <div class="tax-header">OWASP Agentic Top 10</div>
+        <div class="tax-list">
+          <div class="tax-item"><span class="tax-num">01</span> Agent Hijacking</div>
+          <div class="tax-item"><span class="tax-num">02</span> Tool Misuse</div>
+          <div class="tax-item"><span class="tax-num">03</span> Privilege Escalation</div>
+          <div class="tax-item"><span class="tax-num">04</span> Identity Spoofing</div>
+          <div class="tax-item"><span class="tax-num">05</span> Memory Poisoning</div>
+          <div class="tax-item"><span class="tax-num">06</span> Guardrail Bypass</div>
+          <div class="tax-item"><span class="tax-num">07</span> Cascading Hallucination</div>
+          <div class="tax-item"><span class="tax-num">08</span> Repudiation Attack</div>
+          <div class="tax-item"><span class="tax-num">09</span> Multi-Agent Exploit</div>
+          <div class="tax-item"><span class="tax-num">10</span> Resource Exhaustion</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gap-callout">
+      <div class="gc-line"></div>
+      <div class="gc-badge">Only <strong>34.7%</strong> have deployed dedicated prompt injection solutions. <strong>17x</strong> spending gap.</div>
+      <div class="gc-line"></div>
+    </div>
+  </div>
+  <div class="caption">The AI Security Threat Landscape Map. OWASP LLM and Agentic Top 10 threats mapped to enterprise defence layers. Coverage gaps reveal where the 17x spending gap is most dangerous.</div>
+</body>
+</html>

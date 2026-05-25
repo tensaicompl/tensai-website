@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-29 — Governance ROI Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 640px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  /* Two-bar comparison */
+  .bars-section {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding: 32px 24px 24px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .bar-visual {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  .bar-rect {
+    width: 80%;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 120px;
+  }
+  .bar-invest {
+    background: #0F172A;
+    height: 48px;
+    color: #FAFAFA;
+  }
+  .bar-incident {
+    background: #0F172A;
+    height: 280px;
+    color: #FAFAFA;
+  }
+
+  .bar-amount {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .bar-incident .bar-amount {
+    font-size: 22px;
+  }
+
+  .bar-label-bottom {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    color: #0F172A;
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ROI multiplier callout */
+  .roi-callout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-direction: column;
+    padding: 20px 0;
+    align-self: center;
+    flex-shrink: 0;
+    width: 80px;
+  }
+  .roi-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 28px;
+    color: #6D28D9;
+    line-height: 1;
+  }
+  .roi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6D28D9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  /* Breakdown table */
+  .breakdown {
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .breakdown-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #FAFAFA;
+    background: #0F172A;
+    padding: 12px 16px;
+  }
+
+  .breakdown-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .breakdown-table tbody tr:nth-child(odd) { background: #FFFFFF; }
+  .breakdown-table tbody tr:nth-child(even) { background: #F1F5F9; }
+  .breakdown-table td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    line-height: 1.5;
+  }
+  .breakdown-table tr:last-child td { border-bottom: none; }
+  .breakdown-table td:first-child {
+    font-weight: 500;
+    color: #0F172A;
+  }
+  .breakdown-table td:last-child {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0F172A;
+  }
+
+  /* Two side-by-side breakdowns */
+  .breakdown-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  /* Single incident risks */
+  .risk-list {
+    padding: 16px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+  .risk-list-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #0F172A;
+    margin-bottom: 12px;
+  }
+  .risk-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 13px;
+  }
+  .risk-item:last-child { border-bottom: none; }
+  .risk-name { color: #334155; }
+  .risk-cost {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    color: #0F172A;
+    font-size: 13px;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .bars-section, .breakdown-pair { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Governance ROI Calculator</h1>
+  <p class="subtitle">Governance costs 0.5--1% of AI spend. A single incident costs 10--100 times that amount.</p>
+
+  <!-- Visual comparison -->
+  <div class="bars-section">
+    <div class="bar-col">
+      <div class="bar-visual">
+        <div class="bar-rect bar-invest">
+          <span class="bar-amount">$16K--$30K</span>
+        </div>
+      </div>
+      <div class="bar-label-bottom">Annual Governance<br>Investment</div>
+    </div>
+
+    <div class="roi-callout">
+      <span class="roi-value">10--100x</span>
+      <span class="roi-label">Return on<br>investment</span>
+    </div>
+
+    <div class="bar-col">
+      <div class="bar-visual">
+        <div class="bar-rect bar-incident">
+          <span class="bar-amount">$4.88M+</span>
+        </div>
+      </div>
+      <div class="bar-label-bottom">Single Incident<br>Cost</div>
+    </div>
+  </div>
+
+  <!-- Breakdown tables -->
+  <div class="breakdown-pair">
+    <div class="breakdown">
+      <div class="breakdown-title">Governance investment</div>
+      <table class="breakdown-table">
+        <tbody>
+          <tr>
+            <td>Initial setup</td>
+            <td>0.5--1% of AI spend</td>
+          </tr>
+          <tr>
+            <td>Ongoing annual</td>
+            <td>0.3--0.5%</td>
+          </tr>
+          <tr>
+            <td>Mid-size enterprise</td>
+            <td>$16K--$30K/yr</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">Incident exposure</div>
+      <table class="breakdown-table">
+        <tbody>
+          <tr>
+            <td>Avg data breach</td>
+            <td>$4.88M</td>
+          </tr>
+          <tr>
+            <td>AI Act max fine</td>
+            <td>EUR 35M / 7%</td>
+          </tr>
+          <tr>
+            <td>Reputational cost</td>
+            <td>Unquantified</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="risk-list">
+    <div class="risk-list-title">Single incident cost benchmarks</div>
+    <div class="risk-item">
+      <span class="risk-name">Average data breach (IBM 2025)</span>
+      <span class="risk-cost">$4.88M</span>
+    </div>
+    <div class="risk-item">
+      <span class="risk-name">EU AI Act -- prohibited practice violation</span>
+      <span class="risk-cost">EUR 35M or 7% revenue</span>
+    </div>
+    <div class="risk-item">
+      <span class="risk-name">EU AI Act -- high-risk violation</span>
+      <span class="risk-cost">EUR 15M or 3% revenue</span>
+    </div>
+    <div class="risk-item">
+      <span class="risk-name">AI hallucination losses (aggregate, 2025)</span>
+      <span class="risk-cost">$67.4B</span>
+    </div>
+    <div class="risk-item">
+      <span class="risk-name">Arup deepfake fraud (single incident)</span>
+      <span class="risk-cost">$25.6M</span>
+    </div>
+  </div>
+
+  <p class="caption"><strong>Figure VIS-29.</strong> The Governance ROI Calculator. Governance costs 0.5--1% of AI spend. A single incident costs 10--100 times that amount. Organisations with governance programmes saw 45% fewer incidents. Sources: IBM Cost of Data Breach 2025, EY AI Risk Survey, EU AI Act.</p>
+
+</div>
+</body>
+</html>

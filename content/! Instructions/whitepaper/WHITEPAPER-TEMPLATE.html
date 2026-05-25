@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TensAI — Implementing AI at Enterprise Scale</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ================================================================
+   0. CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ================================================================ */
+:root {
+  /* Backgrounds */
+  --bg-page: #FAFAFA;
+  --bg-card: #FFFFFF;
+  --bg-midnight: #0F172A;
+  --bg-surface: #F1F5F9;
+  --bg-violet-wash: #EDE9FE;
+
+  /* Text */
+  --text-midnight: #0F172A;
+  --text-body: #334155;
+  --text-gray: #6B7280;
+  --text-subtext: #94A3B8;
+  --text-on-dark: #F8FAFC;
+
+  /* Accent */
+  --violet: #6D28D9;
+  --violet-light: #C4B5FD;
+  --violet-wash: #EDE9FE;
+
+  /* Border */
+  --border: #E2E8F0;
+
+  /* Fonts */
+  --font-display: 'Montserrat', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ================================================================
+   1. RESET & BASE
+   ================================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-body);
+  background: var(--bg-page);
+  line-height: 1.65;
+}
+
+/* ================================================================
+   2. PRINT STYLES
+   ================================================================ */
+@page {
+  size: A4;
+  margin: 20mm;
+}
+
+@page fullbleed {
+  margin: 0;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .page-fullbleed {
+    page: fullbleed;
+    min-height: 100vh;
+    width: 100%;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page {
+    padding: 0;
+    min-height: auto;
+    max-width: none;
+    box-shadow: none;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Prevent orphans/widows */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  table, figure, blockquote {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
+/* ================================================================
+   3. SCREEN PREVIEW — simulate A4 pages for authoring
+   ================================================================ */
+@media screen {
+  body {
+    padding: 40px 0;
+  }
+
+  .page {
+    max-width: 210mm;
+    margin: 0 auto 40px;
+    background: var(--bg-page);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04);
+    border-radius: 2px;
+    padding: 20mm;
+    min-height: 297mm;
+  }
+
+  .page-fullbleed {
+    max-width: 210mm;
+    margin: 0 auto 40px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04);
+    border-radius: 2px;
+    min-height: 297mm;
+  }
+}
+
+/* ================================================================
+   4. COVER PAGE
+   ================================================================ */
+.cover {
+  background: var(--bg-midnight);
+  color: var(--text-on-dark);
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.cover-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cover-brand img {
+  height: 36px;
+  width: auto;
+}
+
+.cover-brand-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text-on-dark);
+  letter-spacing: -0.01em;
+}
+
+.cover-meta {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-subtext);
+  line-height: 1.7;
+}
+
+/* Watermark enso */
+.cover-watermark {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 294px;
+  height: 294px;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.cover-watermark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Lower content block — sits at ~60% page height, not bottom */
+.cover-content {
+  margin-top: auto;
+  margin-bottom: 20%;
+  padding-top: 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.cover-hairline {
+  width: 100%;
+  height: 3px;
+  background: var(--violet);
+  margin-bottom: 28px;
+}
+
+.cover-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--violet-light);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 14px;
+}
+
+.cover-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 42px;
+  color: var(--text-on-dark);
+  line-height: 1.12;
+  margin-bottom: 16px;
+  max-width: 80%;
+}
+
+.cover-standfirst {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-subtext);
+  line-height: 1.65;
+  max-width: 70%;
+  margin-bottom: 48px;
+}
+
+/* Footer */
+.cover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.16);
+  padding-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-subtext);
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================================
+   5. COLOPHON / INSIDE COVER
+   ================================================================ */
+.colophon {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
+}
+
+.colophon-content {
+  max-width: 75%;
+}
+
+.colophon-content h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-midnight);
+  margin-bottom: 20px;
+}
+
+.colophon-content p {
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text-gray);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.colophon-content p strong {
+  color: var(--text-midnight);
+  font-weight: 500;
+}
+
+.colophon-separator {
+  width: 40px;
+  height: 2px;
+  background: var(--border);
+  margin-bottom: 20px;
+}
+
+/* ================================================================
+   6. TABLE OF CONTENTS
+   ================================================================ */
+.toc {
+  padding-top: 20px;
+}
+
+.toc-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  color: var(--text-midnight);
+  margin-bottom: 8px;
+}
+
+.toc-subheading {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-gray);
+  margin-bottom: 36px;
+}
+
+.toc-list {
+  list-style: none;
+}
+
+.toc-item {
+  display: flex;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.toc-item:first-child {
+  border-top: 1px solid var(--border);
+}
+
+.toc-number {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-subtext);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.toc-title {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-midnight);
+  flex-shrink: 0;
+}
+
+.toc-leader {
+  flex: 1;
+  border-bottom: 1px dotted var(--border);
+  margin: 0 8px;
+  min-width: 20px;
+  position: relative;
+  top: -3px;
+}
+
+.toc-page {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtext);
+  flex-shrink: 0;
+}
+
+/* Executive Summary gets slightly bolder */
+.toc-item--exec .toc-title {
+  font-weight: 600;
+}
+
+/* Appendix items are lighter */
+.toc-item--appendix .toc-title {
+  color: var(--text-gray);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+/* ================================================================
+   7. CHAPTER OPENER
+   ================================================================ */
+.chapter-opener {
+  position: relative;
+  padding-top: 48px;
+  padding-bottom: 32px;
+}
+
+.chapter-number-watermark {
+  position: absolute;
+  top: -10px;
+  right: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 140px;
+  color: var(--text-midnight);
+  opacity: 0.04;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.chapter-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-subtext);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.chapter-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  color: var(--text-midnight);
+  line-height: 1.18;
+  margin-bottom: 16px;
+  max-width: 85%;
+}
+
+.chapter-subtitle {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-gray);
+  line-height: 1.6;
+  max-width: 80%;
+  margin-bottom: 24px;
+}
+
+.chapter-rule {
+  width: 100%;
+  height: 2px;
+  background: var(--text-midnight);
+  margin-bottom: 0;
+}
+
+/* ================================================================
+   8. SECTION & SUBSECTION HEADINGS
+   ================================================================ */
+.section-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-midnight);
+  margin-top: 36px;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.section-rule {
+  width: 100%;
+  height: 1px;
+  background: var(--text-midnight);
+  margin-bottom: 18px;
+  opacity: 0.25;
+}
+
+.subsection-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-midnight);
+  margin-top: 28px;
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+
+/* ================================================================
+   9. BODY TEXT
+   ================================================================ */
+.body-text {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 11pt;
+  color: var(--text-body);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.lead-text {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13pt;
+  color: var(--text-midnight);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+/* ================================================================
+   10. DATA TABLE
+   ================================================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 10.5pt;
+}
+
+.data-table thead th {
+  background: var(--bg-midnight);
+  color: var(--text-on-dark);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 14px;
+  text-align: left;
+  border: none;
+}
+
+.data-table thead th:first-child {
+  border-radius: 6px 0 0 0;
+}
+
+.data-table thead th:last-child {
+  border-radius: 0 6px 0 0;
+}
+
+.data-table tbody td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-body);
+  font-size: 10.5pt;
+  color: var(--text-body);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: var(--bg-surface);
+}
+
+.data-table tbody tr:last-child td:first-child {
+  border-radius: 0 0 0 6px;
+}
+
+.data-table tbody tr:last-child td:last-child {
+  border-radius: 0 0 6px 0;
+}
+
+/* Right-align numeric columns */
+.data-table .num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10pt;
+}
+
+/* ================================================================
+   11. CALLOUT / BLOCKQUOTE
+   ================================================================ */
+.callout {
+  border-left: 3px solid var(--violet);
+  background: var(--bg-violet-wash);
+  padding: 16px 20px;
+  margin: 24px 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.callout p {
+  font-family: var(--font-body);
+  font-size: 10.5pt;
+  color: var(--text-midnight);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.callout p + p {
+  margin-top: 8px;
+}
+
+.callout-label {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--violet);
+  margin-bottom: 6px;
+}
+
+/* ================================================================
+   12. CODE BLOCK
+   ================================================================ */
+.code-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 9.5pt;
+  color: var(--text-midnight);
+  line-height: 1.6;
+  white-space: pre;
+  display: block;
+}
+
+.code-block-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-gray);
+  margin-bottom: 8px;
+}
+
+/* ================================================================
+   13. PULL QUOTE / STATISTIC
+   ================================================================ */
+.pull-quote {
+  text-align: center;
+  padding: 32px 24px;
+  margin: 32px 0;
+}
+
+.pull-quote-stat {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 52px;
+  color: var(--violet);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.pull-quote-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-midnight);
+  margin-bottom: 4px;
+}
+
+.pull-quote-source {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-subtext);
+}
+
+/* ================================================================
+   14. FIGURE / VIS PLACEHOLDER
+   ================================================================ */
+.figure {
+  margin: 28px 0;
+}
+
+.figure-placeholder {
+  background: var(--bg-surface);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-subtext);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.figure-placeholder-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+.figure-caption {
+  font-family: var(--font-body);
+  font-size: 9.5pt;
+  color: var(--text-gray);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.figure-caption strong {
+  font-weight: 600;
+  color: var(--text-midnight);
+}
+
+/* ================================================================
+   15. LISTS
+   ================================================================ */
+.body-list {
+  margin: 14px 0 14px 24px;
+  font-family: var(--font-body);
+  font-size: 11pt;
+  color: var(--text-body);
+  line-height: 1.65;
+}
+
+.body-list li {
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
+
+.body-list li::marker {
+  color: var(--text-subtext);
+}
+
+ol.body-list {
+  list-style-type: decimal;
+}
+
+ol.body-list li::marker {
+  font-family: var(--font-mono);
+  font-size: 10pt;
+  font-weight: 500;
+  color: var(--text-midnight);
+}
+
+/* ================================================================
+   16. FOOTNOTES
+   ================================================================ */
+.footnotes {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.footnote {
+  font-family: var(--font-body);
+  font-size: 8.5pt;
+  color: var(--text-gray);
+  line-height: 1.55;
+  margin-bottom: 4px;
+  padding-left: 16px;
+  text-indent: -16px;
+}
+
+.footnote-ref {
+  font-family: var(--font-mono);
+  font-size: 7.5pt;
+  color: var(--text-subtext);
+  vertical-align: super;
+  text-decoration: none;
+}
+
+/* ================================================================
+   17. APPENDIX
+   ================================================================ */
+.appendix-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--text-midnight);
+  margin-bottom: 6px;
+}
+
+.appendix-rule {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 24px;
+}
+
+.appendix-section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-midnight);
+  margin-top: 28px;
+  margin-bottom: 12px;
+}
+
+.appendix-text {
+  font-family: var(--font-body);
+  font-size: 10pt;
+  color: var(--text-gray);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+/* ================================================================
+   18. BACK COVER
+   ================================================================ */
+.back-cover {
+  background: var(--bg-midnight);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.back-cover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.back-cover-enso {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+.back-cover-enso img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.back-cover-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--text-on-dark);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.back-cover-tagline {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-subtext);
+  margin-bottom: 6px;
+}
+
+.back-cover-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--violet-light);
+  margin-top: 16px;
+}
+
+.back-cover-footer {
+  position: absolute;
+  bottom: 40px;
+  left: 48px;
+  right: 48px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-subtext);
+}
+
+/* ================================================================
+   19. UTILITY
+   ================================================================ */
+.mb-0 { margin-bottom: 0; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.mb-32 { margin-bottom: 32px; }
+
+</style>
+</head>
+
+<body>
+
+<!-- ================================================================
+     PAGE 1: COVER (full bleed, midnight)
+     ================================================================ -->
+<div class="page-fullbleed cover">
+
+  <!-- Top row: brand + meta -->
+  <div class="cover-top">
+    <div class="cover-brand">
+      <img src="../../../.claude/skills/tensai-design/assets/logos/icon-white-cropped.svg" alt="TensAI enso">
+      <span class="cover-brand-name">TensAI</span>
+    </div>
+  </div>
+
+  <!-- Centre watermark -->
+  <div class="cover-watermark">
+    <img src="../../../.claude/skills/tensai-design/assets/logos/icon-white-cropped.svg" alt="">
+  </div>
+
+  <!-- Lower content -->
+  <div class="cover-content">
+    <div class="cover-hairline"></div>
+    <div class="cover-eyebrow">A Practitioner&rsquo;s Framework for the CTO, CIO, and Head of AI</div>
+    <h1 class="cover-title">Implementing AI<br>at Enterprise Scale</h1>
+    <p class="cover-standfirst">
+      88% of enterprises have adopted AI. Fewer than 6% see measurable impact.
+      The gap is not technical &mdash; it is structural. This whitepaper maps the
+      six pillars that separate the organisations capturing value from
+      the majority still trapped in pilot purgatory.
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div class="cover-footer">
+    <span>TENSAI P.S.A. &middot; 2026</span>
+    <span>DRIVING INNOVATION</span>
+  </div>
+
+</div>
+
+
+<!-- ================================================================
+     PAGE 2: COLOPHON / INSIDE COVER
+     ================================================================ -->
+<div class="page page-break">
+  <div class="colophon">
+    <div class="colophon-content">
+
+      <div class="colophon-separator"></div>
+
+      <h3>Publication Notice</h3>
+
+      <p>
+        <strong>Implementing AI at Enterprise Scale: A Practitioner's Framework for the CTO, CIO, and Head of AI</strong>
+      </p>
+
+      <p>
+        Published by TensAI P.S.A.<br>
+        Version 1.0 &mdash; May 2026<br>
+        Document reference: 26A-001
+      </p>
+
+      <p>
+        &copy; 2026 TensAI P.S.A. All rights reserved. No part of this publication may be reproduced,
+        distributed, or transmitted in any form or by any means without the prior written permission
+        of the publisher, except for brief quotations in critical reviews and certain other
+        noncommercial uses permitted by copyright law.
+      </p>
+
+      <p>
+        <strong>Confidentiality.</strong> This document contains proprietary frameworks and analysis.
+        It is intended for the individual or entity to which it was furnished. Redistribution
+        to third parties requires written consent from TensAI P.S.A.
+      </p>
+
+      <p>
+        <strong>Disclaimer.</strong> The information in this document is provided for general
+        informational purposes. While every effort has been made to ensure accuracy, TensAI P.S.A.
+        makes no warranty, express or implied, regarding the completeness or reliability of the
+        content. This document does not constitute professional advice.
+      </p>
+
+      <p>
+        For permissions, corrections, or inquiries:<br>
+        <strong>research@tensai.com</strong>
+      </p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================================
+     PAGE 3: TABLE OF CONTENTS
+     ================================================================ -->
+<div class="page page-break">
+  <div class="toc">
+
+    <h2 class="toc-heading">Contents</h2>
+    <p class="toc-subheading">A practitioner's framework in ten chapters</p>
+
+    <ul class="toc-list">
+
+      <li class="toc-item toc-item--exec">
+        <span class="toc-number"></span>
+        <span class="toc-title">Executive Summary</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">5</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">01</span>
+        <span class="toc-title">The Trillion-Dollar Paradox</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">9</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">02</span>
+        <span class="toc-title">Why Pilots Don't Scale &mdash; The Structural Gap</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">19</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">03</span>
+        <span class="toc-title">The Operating Model &mdash; Organising for AI at Scale</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">29</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">04</span>
+        <span class="toc-title">Governance That Works &mdash; Beyond Compliance Theatre</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">39</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">05</span>
+        <span class="toc-title">The Architecture of Production AI</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">49</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">06</span>
+        <span class="toc-title">The Economics of Enterprise AI</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">57</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">07</span>
+        <span class="toc-title">Security and Trust at Scale</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">67</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">08</span>
+        <span class="toc-title">Case Evidence &mdash; Patterns from the Field</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">77</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">09</span>
+        <span class="toc-title">Measuring What Matters &mdash; The Enterprise AI Scorecard</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">85</span>
+      </li>
+
+      <li class="toc-item">
+        <span class="toc-number">10</span>
+        <span class="toc-title">The Road Ahead &mdash; From Assistive to Agentic to Autonomous</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">93</span>
+      </li>
+
+      <li class="toc-item toc-item--appendix">
+        <span class="toc-number">A</span>
+        <span class="toc-title">Appendices &mdash; Glossary, Methodology, and References</span>
+        <span class="toc-leader"></span>
+        <span class="toc-page">101</span>
+      </li>
+
+    </ul>
+
+  </div>
+</div>
+
+
+<!-- ================================================================
+     PAGE 4+: EXECUTIVE SUMMARY
+     ================================================================ -->
+<div class="page page-break">
+
+  <!-- Chapter opener -->
+  <div class="chapter-opener">
+    <div class="chapter-number-watermark"></div>
+    <div class="chapter-eyebrow">Executive Summary</div>
+    <h1 class="chapter-title">The Implementation Bridge</h1>
+    <p class="chapter-subtitle">
+      A standalone overview of the argument, the framework, and the key numbers.
+      A CxO who reads only this section should grasp the full case.
+    </p>
+    <div class="chapter-rule"></div>
+  </div>
+
+  <!-- VIS placeholder -->
+  <div class="figure mb-24">
+    <div class="figure-placeholder">
+      <div class="figure-placeholder-icon">&#9633;</div>
+      VIS-00 &mdash; The Six-Pillar Enterprise AI Operating Framework
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 1.</strong> The six interdependent pillars that separate organisations
+      extracting value from AI from those trapped in pilot purgatory.
+    </p>
+  </div>
+
+  <!-- Lead paragraph -->
+  <p class="lead-text">
+    Global AI spending reached $2.59 trillion in 2026. Yet 80&ndash;95% of AI projects
+    fail to deliver intended business value. This whitepaper maps the structural gap
+    between investment and return, and provides a practitioner's framework for closing it.
+  </p>
+
+  <!-- Pull quote card -->
+  <div class="pull-quote keep-together">
+    <div class="pull-quote-stat">$2.59T</div>
+    <div class="pull-quote-label">Global AI spending in 2026</div>
+    <div class="pull-quote-source">Source: Gartner, 2026</div>
+  </div>
+
+  <!-- Body text -->
+  <p class="body-text">
+    The problem is not technology. Models are better, cheaper, and faster than ever &mdash;
+    LLM inference costs fell 94&ndash;99% since 2023. The problem is structural: governance,
+    operating model, cost attribution, skills distribution, and trust. Ninety-five percent
+    of transformation failures trace to organisational factors.
+  </p>
+
+  <p class="body-text">
+    Organisations adopted AI without building the machinery to operate it. The result is
+    pilot purgatory &mdash; a state where proofs of concept succeed but production deployments
+    stall. This whitepaper provides the implementation bridge: for each of six pillars, a
+    maturity assessment, a target-state framework, a staged implementation path, decision
+    trees for the hardest choices, cost benchmarks, and case evidence from named enterprises.
+  </p>
+
+</div>
+
+
+<!-- ================================================================
+     PAGE 5+: CHAPTER 1 — Full template with every layout element
+     ================================================================ -->
+<div class="page page-break">
+
+  <!-- Chapter opener -->
+  <div class="chapter-opener">
+    <div class="chapter-number-watermark">01</div>
+    <div class="chapter-eyebrow">Chapter One</div>
+    <h1 class="chapter-title">The Trillion-Dollar Paradox</h1>
+    <p class="chapter-subtitle">
+      Near-universal AI adoption masks a massive value-creation gap. Enterprises have adopted
+      AI without building the structural capability to extract value from it.
+    </p>
+    <div class="chapter-rule"></div>
+  </div>
+
+  <!-- Lead paragraph -->
+  <p class="lead-text">
+    EuroCorp's board approved EUR 18M in AI spending after a McKinsey presentation.
+    Two years later, the CFO asks a question that no one in the room can answer
+    with confidence: where is the return?
+  </p>
+
+  <!-- Section heading with rule -->
+  <h2 class="section-heading">The adoption-value paradox</h2>
+  <div class="section-rule"></div>
+
+  <p class="body-text">
+    The data presents a paradox. On one axis, adoption is near-universal: 78% of
+    organisations now use AI in at least one business function, up from 55% in 2023.
+    On the other axis, value capture remains stubbornly concentrated. Just 20% of
+    organisations capture 74% of AI's total economic value. The remaining 80% are
+    spending, experimenting, and largely failing to convert experiments into production
+    systems that move business metrics.
+  </p>
+
+  <p class="body-text">
+    This is not a technology gap. The models work. GPT-4-class performance is now
+    available at 1/50th of its 2023 cost. Fine-tuning, RAG architectures, and
+    agent frameworks have matured from research curiosities to production tooling.
+    The gap is structural &mdash; and that makes it both harder to diagnose and more
+    expensive to ignore.
+  </p>
+
+  <!-- Subsection heading -->
+  <h3 class="subsection-heading">The scale of the investment</h3>
+
+  <p class="body-text">
+    Enterprise AI spending has grown at a compound rate that exceeds any comparable
+    technology wave. The numbers demand scrutiny because they represent capital allocated
+    on the basis of expected returns that, for most organisations, have not materialised.
+  </p>
+
+  <!-- Data table -->
+  <table class="data-table keep-together">
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>2023</th>
+        <th>2024</th>
+        <th class="num">2026</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Global AI spending</td>
+        <td>$154B</td>
+        <td>$235B</td>
+        <td class="num">$644B</td>
+        <td>IDC</td>
+      </tr>
+      <tr>
+        <td>Enterprise adoption rate</td>
+        <td>55%</td>
+        <td>72%</td>
+        <td class="num">78%</td>
+        <td>McKinsey</td>
+      </tr>
+      <tr>
+        <td>Pilot-to-production rate</td>
+        <td>12%</td>
+        <td>15%</td>
+        <td class="num">18%</td>
+        <td>Gartner</td>
+      </tr>
+      <tr>
+        <td>AI projects failing ROI target</td>
+        <td>85%</td>
+        <td>82%</td>
+        <td class="num">80%</td>
+        <td>RAND/MIT</td>
+      </tr>
+      <tr>
+        <td>Value captured by top 20%</td>
+        <td>68%</td>
+        <td>71%</td>
+        <td class="num">74%</td>
+        <td>PwC</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+
+<!-- Chapter 1, continued -->
+<div class="page page-break">
+
+  <!-- Callout / blockquote -->
+  <div class="callout keep-together">
+    <div class="callout-label">Key insight</div>
+    <p>
+      The pilot-to-production rate has barely improved in three years despite an order-of-magnitude
+      increase in spending. This suggests the bottleneck is not investment volume but investment
+      structure. More money flowing through the same broken pipes produces the same leaks.
+    </p>
+  </div>
+
+  <p class="body-text">
+    The structural explanation has three components. First, most organisations treat AI as a
+    project rather than a capability &mdash; they fund individual use cases instead of building
+    the operating model to run them. Second, governance lags deployment by 12&ndash;18 months,
+    creating risk exposure that triggers executive pullback. Third, the economics are opaque:
+    fewer than 30% of enterprises can attribute AI costs to the business units that consume them.
+  </p>
+
+  <!-- Figure / VIS placeholder -->
+  <div class="figure keep-together">
+    <div class="figure-placeholder">
+      <div class="figure-placeholder-icon">&#9633;</div>
+      VIS-01 &mdash; Adoption vs. Value Capture (2020&ndash;2026)
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 2.</strong> The scissors chart: AI adoption (blue) rises steeply while
+      the share of organisations reporting positive ROI (gray) remains nearly flat. The gap
+      between the lines is the paradox. Source: McKinsey Global Survey, Gartner.
+    </p>
+  </div>
+
+  <!-- Section heading -->
+  <h2 class="section-heading">What the failure literature shows</h2>
+  <div class="section-rule"></div>
+
+  <p class="body-text">
+    The academic and practitioner literature on AI project failure converges on a
+    consistent set of root causes. Notably, technology ranks low on every list.
+    Stanford's 2026 analysis of 340 enterprise AI failures found that 95% traced
+    to organisational factors:
+  </p>
+
+  <!-- Numbered list -->
+  <ol class="body-list">
+    <li>Unclear problem framing and misaligned success metrics (cited in 67% of failures)</li>
+    <li>Insufficient data infrastructure and pipeline reliability (58%)</li>
+    <li>No clear ownership model between business and technology teams (54%)</li>
+    <li>Governance gaps that surface post-deployment, triggering executive shutdown (41%)</li>
+    <li>Cost overruns driven by unmetered inference and compute sprawl (38%)</li>
+  </ol>
+
+  <!-- Pull quote -->
+  <div class="pull-quote keep-together">
+    <div class="pull-quote-stat">95%</div>
+    <div class="pull-quote-label">of AI transformation failures trace to organisational factors</div>
+    <div class="pull-quote-source">Source: Stanford HAI, 2026</div>
+  </div>
+
+  <p class="body-text">
+    The pattern is consistent across industries and geographies. Financial services,
+    healthcare, and manufacturing &mdash; sectors with the highest AI spending &mdash; report
+    structurally identical failure modes despite very different regulatory environments
+    and technical stacks.
+  </p>
+
+</div>
+
+
+<!-- Chapter 1, continued -->
+<div class="page page-break">
+
+  <h2 class="section-heading">The EuroCorp diagnostic</h2>
+  <div class="section-rule"></div>
+
+  <p class="body-text">
+    EuroCorp's situation is representative. Their 23 AI pilots span four business units:
+    supply chain optimisation, customer service automation, predictive maintenance, and
+    document processing. Each was funded separately, built by different teams, and measured
+    by different criteria. Three reached production. Twenty stalled at varying points
+    between proof-of-concept and deployment.
+  </p>
+
+  <!-- Bullet list -->
+  <ul class="body-list">
+    <li>No central model registry or shared inference infrastructure</li>
+    <li>Each business unit procured its own vendor stack independently</li>
+    <li>The CAIO reports to the CTO but has no budget authority</li>
+    <li>Governance exists on paper but has never blocked or approved a deployment</li>
+    <li>Cost allocation treats all AI spend as a central IT overhead line</li>
+  </ul>
+
+  <p class="body-text">
+    The diagnosis is not that EuroCorp lacks ambition, talent, or technology. It lacks
+    the structural machinery to convert AI experiments into AI operations. This is the
+    gap that the rest of this whitepaper addresses.
+  </p>
+
+  <!-- Code block -->
+  <div class="code-block keep-together">
+    <div class="code-block-label">EuroCorp AI maturity assessment (simplified)</div>
+    <code>Pillar                     Score    Target    Gap
+─────────────────────────  ───────  ────────  ────
+Strategy & Use Cases       3.2/5    4.5/5     -1.3
+Operating Model            1.8/5    4.0/5     -2.2
+Governance & Risk          2.1/5    4.0/5     -1.9
+Architecture & Infra       3.5/5    4.5/5     -1.0
+Economics & Measurement    1.4/5    3.5/5     -2.1
+Security & Trust           2.6/5    4.0/5     -1.4
+─────────────────────────  ───────  ────────  ────
+Composite                  2.4/5    4.1/5     -1.7</code>
+  </div>
+
+  <h3 class="subsection-heading">What this chapter established</h3>
+
+  <p class="body-text">
+    The paradox is real, measurable, and expensive. Near-universal adoption has not
+    produced near-universal value. The root cause is structural, not technical. The
+    following chapters provide the frameworks, decision trees, and implementation paths
+    for each of the six pillars that constitute the structural gap.
+  </p>
+
+  <!-- Footnotes -->
+  <div class="footnotes">
+    <p class="footnote">
+      <a class="footnote-ref" id="fn1">1</a>&ensp;Gartner, "Forecast: AI Spending, Worldwide, 2023&ndash;2027," March 2026.
+    </p>
+    <p class="footnote">
+      <a class="footnote-ref" id="fn2">2</a>&ensp;RAND Corporation, "The State of Enterprise AI Adoption," January 2026.
+    </p>
+    <p class="footnote">
+      <a class="footnote-ref" id="fn3">3</a>&ensp;Stanford HAI, "AI Index Report 2026," April 2026.
+    </p>
+    <p class="footnote">
+      <a class="footnote-ref" id="fn4">4</a>&ensp;PwC, "Global AI Study: Sizing the Prize," 2026 Update.
+    </p>
+    <p class="footnote">
+      <a class="footnote-ref" id="fn5">5</a>&ensp;McKinsey, "The State of AI in 2026," Global Survey, May 2026.
+    </p>
+  </div>
+
+</div>
+
+
+<!-- ================================================================
+     APPENDIX
+     ================================================================ -->
+<div class="page page-break">
+
+  <div class="chapter-opener">
+    <div class="chapter-number-watermark">A</div>
+    <div class="chapter-eyebrow">Appendices</div>
+    <h1 class="appendix-heading">Glossary, Methodology, and References</h1>
+    <div class="appendix-rule"></div>
+  </div>
+
+  <h3 class="appendix-section-title">A.1 Glossary of terms</h3>
+
+  <p class="appendix-text">
+    <strong>AI Operating Model.</strong> The organisational structure, processes,
+    and governance mechanisms through which an enterprise develops, deploys,
+    and maintains AI systems at scale. Encompasses team topology, funding model,
+    platform architecture, and decision rights.
+  </p>
+
+  <p class="appendix-text">
+    <strong>Pilot Purgatory.</strong> The state in which an organisation accumulates
+    successful AI proofs-of-concept that never advance to production deployment.
+    Characterised by repeated funding of new experiments while prior ones remain
+    un-operationalised.
+  </p>
+
+  <p class="appendix-text">
+    <strong>Value Leakage.</strong> The gap between the theoretical economic value
+    of an AI system (as projected during business case approval) and the realised
+    value in production. Common causes include data drift, scope creep, integration
+    failure, and governance delays.
+  </p>
+
+  <h3 class="appendix-section-title">A.2 Methodology</h3>
+
+  <p class="appendix-text">
+    This whitepaper synthesises findings from eight categories of primary and
+    secondary research: analyst reports (Gartner, IDC, Forrester), management
+    consultancy studies (McKinsey, BCG, PwC, Deloitte), academic research
+    (Stanford HAI, MIT, RAND), regulatory guidance (EU AI Act, NIST AI RMF),
+    vendor documentation, industry case studies, practitioner interviews, and
+    TensAI's proprietary engagement data.
+  </p>
+
+  <p class="appendix-text">
+    All quantitative claims are sourced. Where sources conflict, the range is
+    reported. The running example (EuroCorp) is a composite based on anonymised
+    enterprise engagements and is not a single real organisation.
+  </p>
+
+  <h3 class="appendix-section-title">A.3 References</h3>
+
+  <p class="appendix-text">
+    [1] Gartner, "Forecast: AI Spending, Worldwide, 2023&ndash;2027," March 2026.<br>
+    [2] RAND Corporation, "The State of Enterprise AI Adoption," January 2026.<br>
+    [3] Stanford HAI, "AI Index Report 2026," April 2026.<br>
+    [4] PwC, "Global AI Study: Sizing the Prize," 2026 Update.<br>
+    [5] McKinsey, "The State of AI in 2026," Global Survey, May 2026.<br>
+    [6] IDC, "Worldwide AI Spending Guide," Q1 2026.<br>
+    [7] BCG, "From Potential to Profit: Closing the AI Impact Gap," 2026.<br>
+    [8] Deloitte, "State of AI in the Enterprise," 6th Edition, 2026.<br>
+    [9] EU AI Act, Regulation (EU) 2024/1689, entered into force August 2024.<br>
+    [10] NIST, "AI Risk Management Framework (AI RMF 1.0)," January 2023.
+  </p>
+
+</div>
+
+
+<!-- ================================================================
+     BACK COVER (full bleed, midnight)
+     ================================================================ -->
+<div class="page-fullbleed back-cover page-break">
+
+  <div class="back-cover-content">
+    <div class="back-cover-enso">
+      <img src="../../../.claude/skills/tensai-design/assets/logos/icon-white-cropped.svg" alt="TensAI enso">
+    </div>
+    <div class="back-cover-wordmark">TensAI</div>
+    <div class="back-cover-tagline">Driving innovation.</div>
+    <div class="back-cover-url">tensai.com.pl</div>
+  </div>
+
+  <div class="back-cover-footer">
+    <span>&copy; 2026 TensAI P.S.A.</span>
+    <span>All rights reserved.</span>
+  </div>
+
+</div>
+
+
+</body>
+</html>

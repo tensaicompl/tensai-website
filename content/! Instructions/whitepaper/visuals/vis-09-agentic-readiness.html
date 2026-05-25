@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-09 — Agentic Readiness Assessment (Preliminary)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 560px;
+    width: 100%;
+    padding: 40px 36px 36px;
+  }
+
+  .card-header {
+    margin-bottom: 32px;
+  }
+
+  .card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .card-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  /* Radar chart via CSS */
+  .radar-container {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto 32px;
+    aspect-ratio: 1;
+  }
+
+  .radar-bg {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* SVG radar chart */
+  .radar-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .axis-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    fill: #0F172A;
+  }
+
+  .axis-sublabel {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    fill: #6B7280;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-bottom: 28px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  .legend-swatch {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .legend-swatch.required {
+    background: #6D28D9;
+  }
+
+  .legend-swatch.typical {
+    background: #334155;
+  }
+
+  .footer-note {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 20px;
+    line-height: 1.5;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Agentic Readiness Assessment</div>
+    <div class="card-subtitle">Preliminary -- five dimensions of organisational readiness</div>
+  </div>
+
+  <div class="radar-container">
+    <svg class="radar-svg" viewBox="0 0 400 400">
+      <!-- Grid rings -->
+      <polygon points="200,60  332,156  250,320  150,320  68,156" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <polygon points="200,95  299,167  237,288  163,288  101,167" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <polygon points="200,130 265,178 225,255 175,255 135,178" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+      <polygon points="200,165 232,189 212,223 188,223 168,189" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+      <!-- Axis lines -->
+      <line x1="200" y1="200" x2="200" y2="60" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="200" y1="200" x2="332" y2="156" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="200" y1="200" x2="250" y2="320" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="200" y1="200" x2="150" y2="320" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="200" y1="200" x2="68" y2="156" stroke="#E2E8F0" stroke-width="1"/>
+
+      <!-- Required boundary (outer) - violet -->
+      <polygon points="200,75  320,160  245,310  155,310  80,160"
+               fill="rgba(109,40,217,0.06)" stroke="#6D28D9" stroke-width="2" stroke-dasharray="none"/>
+
+      <!-- Typical enterprise (inner) - midnight muted -->
+      <polygon points="200,150  248,185  220,245  180,245  152,185"
+               fill="rgba(51,65,133,0.08)" stroke="#334155" stroke-width="2"/>
+
+      <!-- Axis labels -->
+      <text x="200" y="42" text-anchor="middle" class="axis-label">Strategy</text>
+      <text x="200" y="52" text-anchor="middle" class="axis-sublabel">Alignment</text>
+
+      <text x="348" y="156" text-anchor="start" class="axis-label">Governance</text>
+      <text x="348" y="168" text-anchor="start" class="axis-sublabel">Maturity</text>
+
+      <text x="260" y="338" text-anchor="middle" class="axis-label">Architecture</text>
+      <text x="260" y="350" text-anchor="middle" class="axis-sublabel">Readiness</text>
+
+      <text x="140" y="338" text-anchor="middle" class="axis-label">Skills</text>
+      <text x="140" y="350" text-anchor="middle" class="axis-sublabel">Capability</text>
+
+      <text x="50" y="156" text-anchor="end" class="axis-label">Economic</text>
+      <text x="50" y="168" text-anchor="end" class="axis-sublabel">Controls</text>
+
+      <!-- Data points - Required -->
+      <circle cx="200" cy="75" r="4" fill="#6D28D9"/>
+      <circle cx="320" cy="160" r="4" fill="#6D28D9"/>
+      <circle cx="245" cy="310" r="4" fill="#6D28D9"/>
+      <circle cx="155" cy="310" r="4" fill="#6D28D9"/>
+      <circle cx="80" cy="160" r="4" fill="#6D28D9"/>
+
+      <!-- Data points - Typical -->
+      <circle cx="200" cy="150" r="4" fill="#334155"/>
+      <circle cx="248" cy="185" r="4" fill="#334155"/>
+      <circle cx="220" cy="245" r="4" fill="#334155"/>
+      <circle cx="180" cy="245" r="4" fill="#334155"/>
+      <circle cx="152" cy="185" r="4" fill="#334155"/>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch required"></div>
+      Required for agentic AI
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch typical"></div>
+      Typical enterprise today
+    </div>
+  </div>
+
+  <div class="footer-note">
+    The gap between the two boundaries represents the readiness deficit most enterprises must close before deploying agentic AI. Full assessment in Chapter 10.
+  </div>
+
+  <div class="caption">Agentic Readiness Assessment (preliminary). The gap between current enterprise capabilities and agentic AI requirements.</div>
+</div>
+
+</body>
+</html>

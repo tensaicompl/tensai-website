@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-21 — AI Team Topology Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 860px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .topology {
+    position: relative;
+    width: 780px;
+    height: 420px;
+    margin: 0 auto;
+  }
+
+  .team-box {
+    position: absolute;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 16px 18px;
+    background: #FFFFFF;
+    z-index: 2;
+  }
+
+  .team-box.platform {
+    border-color: #6D28D9;
+    border-width: 2px;
+  }
+
+  .team-type {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    color: #9CA3AF;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .team-box.platform .team-type {
+    color: #6D28D9;
+  }
+
+  .team-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
+  .team-details {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    line-height: 1.5;
+  }
+
+  .team-details li {
+    margin-bottom: 2px;
+    list-style: none;
+    padding-left: 10px;
+    position: relative;
+  }
+
+  .team-details li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #E2E8F0;
+  }
+
+  /* Positions */
+  .box-platform {
+    top: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    text-align: center;
+  }
+
+  .box-platform .team-details {
+    text-align: left;
+    display: inline-block;
+  }
+
+  .box-stream1 {
+    top: 0;
+    left: 0;
+    width: 185px;
+  }
+
+  .box-stream2 {
+    top: 0;
+    right: 0;
+    width: 185px;
+  }
+
+  .box-stream3 {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 185px;
+  }
+
+  .box-enabling {
+    bottom: 0;
+    left: 40px;
+    width: 200px;
+  }
+
+  .box-complicated {
+    bottom: 0;
+    right: 40px;
+    width: 200px;
+  }
+
+  /* SVG lines */
+  .lines-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-line {
+    width: 32px;
+    height: 0;
+  }
+
+  .legend-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #334155;
+  }
+
+  .principle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    text-align: center;
+    margin-top: 16px;
+    font-style: italic;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">AI Team Topology Map</div>
+  <div class="subtitle">Adapted from Skelton and Pais -- four team types with three interaction modes</div>
+
+  <div class="topology">
+    <svg class="lines-layer" viewBox="0 0 780 420" fill="none">
+      <!-- Collaboration: thick solid lines (Stream teams to Platform) -->
+      <line x1="92" y1="105" x2="340" y2="190" stroke="#0F172A" stroke-width="2"/>
+      <line x1="390" y1="80" x2="390" y2="170" stroke="#0F172A" stroke-width="2"/>
+      <line x1="688" y1="105" x2="440" y2="190" stroke="#0F172A" stroke-width="2"/>
+
+      <!-- X-as-a-Service: dashed lines (Platform provides to streams) -->
+      <line x1="340" y1="230" x2="92" y2="105" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.5"/>
+      <line x1="440" y1="230" x2="688" y2="105" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.5"/>
+
+      <!-- Facilitating: dotted lines (Enabling to streams) -->
+      <line x1="180" y1="340" x2="92" y2="105" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,3" opacity="0.4"/>
+      <line x1="200" y1="330" x2="390" y2="80" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,3" opacity="0.4"/>
+      <line x1="200" y1="340" x2="688" y2="105" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,3" opacity="0.4"/>
+
+      <!-- Complicated-Subsystem to Platform: collaboration -->
+      <line x1="600" y1="340" x2="440" y2="260" stroke="#0F172A" stroke-width="2"/>
+    </svg>
+
+    <!-- Stream-Aligned Team 1 -->
+    <div class="team-box box-stream1">
+      <div class="team-type">Stream-Aligned</div>
+      <div class="team-name">Business Unit A</div>
+      <ul class="team-details">
+        <li>Consumes AI platform APIs</li>
+        <li>Owns use case priorities</li>
+        <li>Domain-specific workflows</li>
+      </ul>
+    </div>
+
+    <!-- Stream-Aligned Team 2 -->
+    <div class="team-box box-stream3">
+      <div class="team-type">Stream-Aligned</div>
+      <div class="team-name">Business Unit B</div>
+      <ul class="team-details">
+        <li>Self-service AI tools</li>
+        <li>Owns adoption metrics</li>
+        <li>Workflow integration</li>
+      </ul>
+    </div>
+
+    <!-- Stream-Aligned Team 3 -->
+    <div class="team-box box-stream2">
+      <div class="team-type">Stream-Aligned</div>
+      <div class="team-name">Business Unit C</div>
+      <ul class="team-details">
+        <li>Pre-built AI components</li>
+        <li>Owns outcome targets</li>
+        <li>Process redesign</li>
+      </ul>
+    </div>
+
+    <!-- Platform Team (violet accent) -->
+    <div class="team-box platform box-platform">
+      <div class="team-type">Platform Team</div>
+      <div class="team-name">AI Platform</div>
+      <ul class="team-details">
+        <li>APIs and model endpoints</li>
+        <li>Pre-built components</li>
+        <li>Self-service environments</li>
+        <li>Observability and cost tracking</li>
+      </ul>
+    </div>
+
+    <!-- Enabling Team -->
+    <div class="team-box box-enabling">
+      <div class="team-type">Enabling Team</div>
+      <div class="team-name">CoE (Advisory Mode)</div>
+      <ul class="team-details">
+        <li>Best practice guidance</li>
+        <li>Training and upskilling</li>
+        <li>Standards and patterns</li>
+        <li>Temporary embedding</li>
+      </ul>
+    </div>
+
+    <!-- Complicated-Subsystem Team -->
+    <div class="team-box box-complicated">
+      <div class="team-type">Complicated-Subsystem</div>
+      <div class="team-name">Specialist ML Teams</div>
+      <ul class="team-details">
+        <li>Custom model development</li>
+        <li>Advanced fine-tuning</li>
+        <li>Research and experimentation</li>
+        <li>Domain-specific models</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item">
+      <svg class="legend-line" viewBox="0 0 32 2"><line x1="0" y1="1" x2="32" y2="1" stroke="#0F172A" stroke-width="2"/></svg>
+      <span class="legend-label">Collaboration</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-line" viewBox="0 0 32 2"><line x1="0" y1="1" x2="32" y2="1" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.5"/></svg>
+      <span class="legend-label">X-as-a-Service</span>
+    </div>
+    <div class="legend-item">
+      <svg class="legend-line" viewBox="0 0 32 2"><line x1="0" y1="1" x2="32" y2="1" stroke="#0F172A" stroke-width="1" stroke-dasharray="2,3" opacity="0.5"/></svg>
+      <span class="legend-label">Facilitating</span>
+    </div>
+  </div>
+
+  <div class="principle">Bounded agency: each team owns decisions within defined guardrails.</div>
+
+  <div class="caption">The AI Team Topology Map. How stream-aligned, platform, enabling, and complicated-subsystem teams interact in an AI-enabled organisation. Adapted from Skelton and Pais.</div>
+</div>
+</body>
+</html>

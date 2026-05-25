@@ -6,10 +6,14 @@
  * Centre: large Working Memory (Context Window) box with accent border.
  * Left: three persistent stores stacked vertically (Episodic, Semantic, Procedural).
  * Four operations form the cycle:
- *   Select  — arrows from stores into Working Memory (animated dots rightward)
- *   Write   — arrows from Working Memory back to stores (animated dots leftward)
- *   Compress — circular arrow within Working Memory (animated dot loop)
+ *   Select  — lines from stores into Working Memory (animated dots rightward)
+ *   Write   — lines from Working Memory back to stores (animated dots leftward)
+ *   Compress — circular path within Working Memory (animated dot loop)
  *   Isolate  — Working Memory splits into scoped rectangles on the right
+ *
+ * All connections are plain lines (no arrowheads). Direction is conveyed
+ * solely by flowing SMIL dots. Static rails rendered at 25% opacity,
+ * following the HarnessDiagram standard.
  *
  * Single accent: var(--accent) on Working Memory border and operation labels.
  *
@@ -22,17 +26,19 @@ import { useEffect, useRef, useState } from "react";
 export function MemoryContextDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mql.matches);
+    const motionHandler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mql.addEventListener("change", motionHandler);
+    return () => mql.removeEventListener("change", motionHandler);
+  }, []);
 
   useEffect(() => {
     const el = figRef.current;
     if (!el) return;
-
-    // Respect reduced-motion preference
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setVisible(true);
-      return;
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -61,62 +67,28 @@ export function MemoryContextDiagram() {
         xmlns="http://www.w3.org/2000/svg"
         style={{ width: "100%", height: "auto", display: "block" }}
       >
-        {/* ── Marker definitions ──────────────────────────── */}
+        {/* ── Path definitions for animated dots ──────────── */}
         <defs>
-          <marker
-            id="mcArrow"
-            viewBox="0 0 10 10"
-            refX="10"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path
-              d="M 0 1 L 10 5 L 0 9"
-              fill="none"
-              stroke="var(--color-midnight)"
-              strokeWidth="1.5"
-            />
-          </marker>
-          <marker
-            id="mcArrowAccent"
-            viewBox="0 0 10 10"
-            refX="10"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path
-              d="M 0 1 L 10 5 L 0 9"
-              fill="none"
-              stroke="var(--accent)"
-              strokeWidth="1.5"
-            />
-          </marker>
-
-          {/* ── Flow paths for animated dots ────────────── */}
-
-          {/* Select: Episodic → WM */}
-          <path id="selectPathEpisodic" d="M 240 95 L 400 170" />
-          {/* Select: Semantic → WM */}
+          {/* Select: stores -> Working Memory (rightward) */}
+          <path id="selectPathEpisodic" d="M 240 90 L 400 165" />
           <path id="selectPathSemantic" d="M 240 210 L 400 210" />
-          {/* Select: Procedural → WM */}
-          <path id="selectPathProcedural" d="M 240 325 L 400 260" />
+          <path id="selectPathProcedural" d="M 240 325 L 400 265" />
 
-          {/* Write: WM → Episodic */}
-          <path id="writePathEpisodic" d="M 400 185 L 240 115" />
-          {/* Write: WM → Semantic */}
+          {/* Write: Working Memory -> stores (leftward) */}
+          <path id="writePathEpisodic" d="M 400 180 L 240 110" />
           <path id="writePathSemantic" d="M 400 230 L 240 230" />
-          {/* Write: WM → Procedural */}
-          <path id="writePathProcedural" d="M 400 280 L 240 345" />
+          <path id="writePathProcedural" d="M 400 285 L 240 345" />
 
-          {/* Compress: loop inside WM */}
+          {/* Compress: perfect circle inside WM */}
           <path
             id="compressPath"
-            d="M 540 190 C 520 230, 520 280, 550 300 C 580 320, 630 305, 640 275 C 650 245, 635 210, 610 195"
+            d="M 560 175 A 45 45 0 1 1 559.99 175"
           />
+
+          {/* Isolate: WM -> Scope A */}
+          <path id="isolatePathA" d="M 720 170 L 810 155" />
+          {/* Isolate: WM -> Scope B */}
+          <path id="isolatePathB" d="M 720 270 L 810 285" />
         </defs>
 
         {/* ── CSS transition entrance groups ─────────────── */}
@@ -294,17 +266,19 @@ export function MemoryContextDiagram() {
             context window
           </text>
 
-          {/* ── Compress (circular arrow within WM) ─────────── */}
-          <path
-            d="M 540 190 C 520 230, 520 280, 550 300 C 580 320, 630 305, 640 275 C 650 245, 635 210, 610 195"
+          {/* ── Compress (perfect circle within WM) ──────────── */}
+          <circle
+            cx="560"
+            cy="220"
+            r="45"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
             fill="none"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
           <text
-            x="570"
-            y="265"
+            x="560"
+            y="225"
             fontFamily="var(--font-mono)"
             fontSize="11"
             fill="var(--accent)"
@@ -315,7 +289,7 @@ export function MemoryContextDiagram() {
           </text>
         </g>
 
-        {/* Group 3: Operation arrows and labels (last to appear) */}
+        {/* Group 3: Connection rails and labels (last to appear) */}
         <g
           style={{
             opacity: visible ? 1 : 0,
@@ -323,39 +297,39 @@ export function MemoryContextDiagram() {
             transitionDelay: "0.7s",
           }}
         >
-          {/* ── Select arrows (stores -> working memory) ─────── */}
+          {/* ── Select rails (stores -> WM, 25% opacity) ──────── */}
 
           {/* Episodic -> WM */}
           <line
             x1="240"
-            y1="88"
-            x2="396"
-            y2="160"
+            y1="90"
+            x2="400"
+            y2="165"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* Semantic -> WM */}
           <line
             x1="240"
-            y1="206"
-            x2="396"
-            y2="206"
+            y1="210"
+            x2="400"
+            y2="210"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* Procedural -> WM */}
           <line
             x1="240"
-            y1="328"
-            x2="396"
-            y2="268"
+            y1="325"
+            x2="400"
+            y2="265"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* Select label */}
@@ -371,39 +345,39 @@ export function MemoryContextDiagram() {
             select
           </text>
 
-          {/* ── Write arrows (working memory -> stores) ──────── */}
+          {/* ── Write rails (WM -> stores, 25% opacity) ────────── */}
 
           {/* WM -> Episodic */}
           <line
-            x1="396"
-            y1="175"
+            x1="400"
+            y1="180"
             x2="240"
-            y2="108"
+            y2="110"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* WM -> Semantic */}
           <line
-            x1="396"
-            y1="226"
+            x1="400"
+            y1="230"
             x2="240"
-            y2="226"
+            y2="230"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* WM -> Procedural */}
           <line
-            x1="396"
-            y1="288"
+            x1="400"
+            y1="285"
             x2="240"
-            y2="348"
+            y2="345"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* Write label */}
@@ -500,26 +474,26 @@ export function MemoryContextDiagram() {
             strokeDasharray="4 3"
           />
 
-          {/* Arrow: WM -> Scope A */}
+          {/* Rail: WM -> Scope A (25% opacity, no arrowhead) */}
           <line
             x1="720"
             y1="170"
-            x2="806"
+            x2="810"
             y2="155"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
-          {/* Arrow: WM -> Scope B */}
+          {/* Rail: WM -> Scope B (25% opacity, no arrowhead) */}
           <line
             x1="720"
             y1="270"
-            x2="806"
+            x2="810"
             y2="285"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
-            markerEnd="url(#mcArrow)"
+            opacity="0.25"
           />
 
           {/* Isolate label */}
@@ -537,13 +511,16 @@ export function MemoryContextDiagram() {
         </g>
 
         {/* ── SMIL animated dots (only render when visible) ── */}
-        {visible && (
+        {visible && !reducedMotion && (
           <g>
             {/* ── Select dots (stores -> WM, rightward) ─────── */}
             <circle r="4" fill="var(--accent)" opacity="0.85">
               <animateMotion
                 dur="2s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="0s"
               >
                 <mpath xlinkHref="#selectPathEpisodic" />
@@ -553,6 +530,9 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="1.8s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="0.3s"
               >
                 <mpath xlinkHref="#selectPathSemantic" />
@@ -562,6 +542,9 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="2.2s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="0.6s"
               >
                 <mpath xlinkHref="#selectPathProcedural" />
@@ -573,6 +556,9 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="2.2s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="1s"
               >
                 <mpath xlinkHref="#writePathEpisodic" />
@@ -582,6 +568,9 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="2s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="1.3s"
               >
                 <mpath xlinkHref="#writePathSemantic" />
@@ -591,6 +580,9 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="2.4s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="1.6s"
               >
                 <mpath xlinkHref="#writePathProcedural" />
@@ -602,9 +594,38 @@ export function MemoryContextDiagram() {
               <animateMotion
                 dur="3s"
                 repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
                 begin="0.5s"
               >
                 <mpath xlinkHref="#compressPath" />
+              </animateMotion>
+            </circle>
+
+            {/* ── Isolate dots (WM -> Scope A and Scope B) ───── */}
+            <circle r="4" fill="var(--accent)" opacity="0.85">
+              <animateMotion
+                dur="1.6s"
+                repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
+                begin="0.2s"
+              >
+                <mpath xlinkHref="#isolatePathA" />
+              </animateMotion>
+            </circle>
+            <circle r="4" fill="var(--accent)" opacity="0.85">
+              <animateMotion
+                dur="1.6s"
+                repeatCount="indefinite"
+                keyPoints="0;1"
+                keyTimes="0;1"
+                calcMode="linear"
+                begin="0.8s"
+              >
+                <mpath xlinkHref="#isolatePathB" />
               </animateMotion>
             </circle>
           </g>

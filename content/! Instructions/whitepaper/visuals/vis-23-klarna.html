@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-23 — The Klarna Lesson</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 360px;
+    width: 100%;
+    padding: 36px 32px 32px;
+  }
+
+  .sector-badge {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid #E2E8F0;
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 20px;
+  }
+
+  .company-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+  }
+
+  .headline-stat {
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    color: #0F172A;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .stat-reversal {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #DC2626;
+    margin-top: 4px;
+    margin-bottom: 24px;
+  }
+
+  .divider {
+    height: 1px;
+    background: #E2E8F0;
+    margin-bottom: 20px;
+  }
+
+  .bullet-list {
+    list-style: none;
+    margin-bottom: 24px;
+  }
+
+  .bullet-list li {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.5;
+    padding: 6px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .bullet-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    background: #0F172A;
+    border-radius: 50%;
+  }
+
+  .lesson {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    color: #0F172A;
+    line-height: 1.5;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 16px;
+  }
+
+  .lesson-label {
+    font-weight: 500;
+    color: #6B7280;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="sector-badge">Fintech</div>
+
+  <div class="company-name">Klarna</div>
+
+  <div class="headline-stat">
+    <div class="stat-value">$40M saved</div>
+  </div>
+  <div class="stat-reversal">Then reversed.</div>
+
+  <div class="divider"></div>
+
+  <ul class="bullet-list">
+    <li>Replaced 700 agents, 67% automation rate</li>
+    <li>Volume metrics masked quality degradation</li>
+    <li>CEO admitted "lower quality." Rehired humans.</li>
+  </ul>
+
+  <div class="lesson">
+    <span class="lesson-label">Lesson</span>
+    Metrics without outcomes is not strategy.
+  </div>
+</div>
+
+</body>
+</html>

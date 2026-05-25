@@ -26,19 +26,19 @@ import { useEffect, useRef, useState } from "react";
 export function EvalsObservabilityDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mql.matches);
+    const motionHandler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mql.addEventListener("change", motionHandler);
+    return () => mql.removeEventListener("change", motionHandler);
+  }, []);
 
   useEffect(() => {
     const el = figRef.current;
     if (!el) return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
-      setVisible(true);
-      return;
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -618,7 +618,7 @@ export function EvalsObservabilityDiagram() {
         </g>
 
         {/* ── Flowing SMIL dots (rendered only when visible) ──── */}
-        {visible && (
+        {visible && !reducedMotion && (
           <g>
             {/* Dot: failure signal flowing downward */}
             <circle r="4" fill="var(--color-midnight)" opacity="0.8">

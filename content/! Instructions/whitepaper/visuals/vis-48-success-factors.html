@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-48 — Success Factor Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .matrix {
+    width: 740px;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+
+  /* Table header */
+  .matrix thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 2px solid var(--midnight);
+    background: var(--surface);
+    vertical-align: bottom;
+  }
+  .matrix thead th:first-child {
+    text-align: left;
+    width: 160px;
+  }
+  .matrix thead th.factor-col {
+    width: 130px;
+  }
+
+  /* Table body */
+  .matrix tbody tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .matrix tbody td {
+    padding: 8px 12px;
+    font-size: 12px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .matrix tbody td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--midnight);
+  }
+
+  /* Heat map cells */
+  .heat-strong {
+    background: var(--midnight);
+  }
+  .heat-moderate {
+    background: var(--gray);
+  }
+  .heat-weak {
+    background: var(--border);
+  }
+  .heat-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .heat-dot {
+    width: 28px;
+    height: 14px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  /* Section divider */
+  .section-row td {
+    padding: 6px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+
+  /* Legend */
+  .legend {
+    width: 740px;
+    margin: 20px auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 500;
+  }
+  .legend-swatch {
+    width: 20px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  /* Source note */
+  .source {
+    width: 740px;
+    margin: 12px auto 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray);
+    line-height: 1.4;
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 720px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">Success Factor Matrix</div>
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th class="factor-col">Workflow Mapping</th>
+          <th class="factor-col">Governance Architecture</th>
+          <th class="factor-col">Observability</th>
+          <th class="factor-col">Leadership Continuity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Section: Successful Organisations -->
+        <tr class="section-row">
+          <td colspan="5">Scaled Successfully</td>
+        </tr>
+        <tr>
+          <td>JPMorgan</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Morgan Stanley</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Goldman Sachs</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Siemens</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Bosch</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Mayo Clinic</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+        </tr>
+        <tr>
+          <td>Stripe</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Shopify</td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Singapore Gov</td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>UK GDS</td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+
+        <!-- Section: Cautionary Tales -->
+        <tr class="section-row">
+          <td colspan="5">Stalled or Reversed</td>
+        </tr>
+        <tr>
+          <td>Klarna</td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+        </tr>
+        <tr>
+          <td>Amazon</td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-strong"></span></td>
+        </tr>
+        <tr>
+          <td>Duolingo</td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-moderate"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+          <td><span class="heat-dot heat-weak"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-swatch heat-strong"></div>
+        Strong
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch heat-moderate"></div>
+        Moderate
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch heat-weak"></div>
+        Weak
+      </div>
+    </div>
+
+    <div class="source">Based on Stanford Enterprise AI Playbook (51 deployments, 41 organisations, 7 countries).</div>
+  </div>
+  <div class="caption">The Success Factor Matrix. Across sectors and geographies, the same four factors separate organisations that scaled from those that stalled. Based on Stanford Enterprise AI Playbook (51 deployments, 41 organisations, 7 countries).</div>
+</body>
+</html>

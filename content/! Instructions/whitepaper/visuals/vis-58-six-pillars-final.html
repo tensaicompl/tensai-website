@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-58 — The TensAI Enterprise AI Operating Framework (Final)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 36px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+
+  /* Hexagonal layout: 2-row grid (3 top, 3 bottom) with centre */
+  .hex-grid {
+    position: relative;
+    width: 100%;
+  }
+
+  .hex-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .hex-row:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Pillar cards */
+  .pillar {
+    width: 224px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 14px 14px 12px;
+    background: #FFFFFF;
+    position: relative;
+  }
+
+  .pillar-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .pillar-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 9px;
+    color: #9CA3AF;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .pillar-chapter {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 8px;
+    color: #9CA3AF;
+  }
+
+  .pillar-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    line-height: 1.35;
+    margin-bottom: 8px;
+  }
+
+  .pillar-framework {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #334155;
+    padding: 4px 8px;
+    background: #F1F5F9;
+    border-radius: 2px;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+
+  /* Maturity progression bar */
+  .maturity {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .maturity-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 8px;
+    color: #9CA3AF;
+    min-width: 42px;
+  }
+
+  .maturity-track {
+    flex: 1;
+    height: 4px;
+    background: #F1F5F9;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .maturity-fill {
+    height: 100%;
+    background: #0F172A;
+    border-radius: 2px;
+  }
+
+  .maturity-label-right {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 8px;
+    color: #0F172A;
+    min-width: 42px;
+    text-align: right;
+  }
+
+  /* Interdependency labels */
+  .interdep {
+    text-align: center;
+    margin: 4px 0 12px;
+  }
+
+  .interdep-row {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .interdep-item {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #9CA3AF;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .interdep-arrow {
+    color: #E2E8F0;
+    font-size: 12px;
+  }
+
+  /* Centre node */
+  .centre-band {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+    position: relative;
+  }
+
+  .centre-node {
+    padding: 16px 28px;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .centre-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #6D28D9;
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+
+  .centre-sub {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #6D28D9;
+    opacity: 0.8;
+  }
+
+  /* Connecting lines between rows and centre (using borders) */
+  .centre-band::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 40px;
+    right: 40px;
+    height: 1px;
+    background: #E2E8F0;
+    z-index: 0;
+  }
+
+  /* Subtitle */
+  .subtitle {
+    text-align: center;
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: #F1F5F9;
+    border-radius: 4px;
+  }
+
+  .subtitle-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: #334155;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">The TensAI Enterprise AI Operating Framework</div>
+
+  <div class="hex-grid">
+    <!-- Top row: 3 pillars -->
+    <div class="hex-row">
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 1</div>
+          <div class="pillar-chapter">Ch. 1--2</div>
+        </div>
+        <div class="pillar-name">Strategy and Use Case Selection</div>
+        <div class="pillar-framework">Scaling Readiness Assessment</div>
+        <div class="maturity">
+          <div class="maturity-label">Ad hoc</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:25%"></div></div>
+          <div class="maturity-label-right">Portfolio</div>
+        </div>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 2</div>
+          <div class="pillar-chapter">Ch. 3</div>
+        </div>
+        <div class="pillar-name">Operating Model and Organisation</div>
+        <div class="pillar-framework">CoE Three-Phase Blueprint</div>
+        <div class="maturity">
+          <div class="maturity-label">Central</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:40%"></div></div>
+          <div class="maturity-label-right">Federated</div>
+        </div>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 3</div>
+          <div class="pillar-chapter">Ch. 4</div>
+        </div>
+        <div class="pillar-name">Governance and Risk</div>
+        <div class="pillar-framework">MVG 90-Day Implementation</div>
+        <div class="maturity">
+          <div class="maturity-label">Theatrical</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:30%"></div></div>
+          <div class="maturity-label-right">Operational</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interdependency labels (top -> centre) -->
+    <div class="interdep">
+      <div class="interdep-row">
+        <div class="interdep-item">Strategy validates Economics <span class="interdep-arrow">&darr;</span></div>
+        <div class="interdep-item">Governance enables Architecture <span class="interdep-arrow">&darr;</span></div>
+        <div class="interdep-item">Operating Model structures Security <span class="interdep-arrow">&darr;</span></div>
+      </div>
+    </div>
+
+    <!-- Centre node -->
+    <div class="centre-band">
+      <div class="centre-node">
+        <div class="centre-label">Enterprise AI Operating Framework</div>
+        <div class="centre-sub">The Implementation Bridge</div>
+      </div>
+    </div>
+
+    <!-- Interdependency labels (centre -> bottom) -->
+    <div class="interdep">
+      <div class="interdep-row">
+        <div class="interdep-item"><span class="interdep-arrow">&darr;</span> Economics validates Strategy</div>
+        <div class="interdep-item"><span class="interdep-arrow">&darr;</span> Architecture constrains Governance</div>
+        <div class="interdep-item"><span class="interdep-arrow">&darr;</span> Security underpins Trust</div>
+      </div>
+    </div>
+
+    <!-- Bottom row: 3 pillars -->
+    <div class="hex-row">
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 4</div>
+          <div class="pillar-chapter">Ch. 5</div>
+        </div>
+        <div class="pillar-name">Architecture and Infrastructure</div>
+        <div class="pillar-framework">AI Gateway Reference Architecture</div>
+        <div class="maturity">
+          <div class="maturity-label">Pilot</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:20%"></div></div>
+          <div class="maturity-label-right">Production</div>
+        </div>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 5</div>
+          <div class="pillar-chapter">Ch. 6</div>
+        </div>
+        <div class="pillar-name">Economics and Measurement</div>
+        <div class="pillar-framework">AI TCO Calculator + Scorecard</div>
+        <div class="maturity">
+          <div class="maturity-label">Tokens</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:15%"></div></div>
+          <div class="maturity-label-right">Outcomes</div>
+        </div>
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-header">
+          <div class="pillar-number">Pillar 6</div>
+          <div class="pillar-chapter">Ch. 7</div>
+        </div>
+        <div class="pillar-name">Security and Trust</div>
+        <div class="pillar-framework">Defence-in-Depth Stack</div>
+        <div class="maturity">
+          <div class="maturity-label">Perimeter</div>
+          <div class="maturity-track"><div class="maturity-fill" style="width:20%"></div></div>
+          <div class="maturity-label-right">Zero Trust</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subtitle">
+    <div class="subtitle-text">Vendor-neutral. Practitioner-oriented. Built for the 70%.</div>
+  </div>
+
+  <div class="caption">The TensAI Enterprise AI Operating Framework -- fully elaborated. Six interdependent pillars, each with a diagnostic, a target-state framework, and a staged implementation path. The implementation bridge between diagnostic reports and vendor guides.</div>
+</div>
+</body>
+</html>

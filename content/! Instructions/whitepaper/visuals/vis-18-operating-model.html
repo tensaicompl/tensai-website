@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-18 — Operating Model Selection Matrix</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+
+  .matrix-container {
+    width: 100%;
+    position: relative;
+  }
+
+  /* Y-axis label */
+  .y-axis-label {
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: rotate(-90deg) translateX(-50%);
+    transform-origin: 0 0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: #334155;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  /* X-axis label */
+  .x-axis-label {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: #334155;
+    letter-spacing: 0.03em;
+    margin-top: 12px;
+  }
+
+  .matrix-grid {
+    margin-left: 32px;
+    display: grid;
+    grid-template-columns: 100px 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 0;
+  }
+
+  /* Header row */
+  .header-cell {
+    padding: 10px 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    text-align: center;
+    border-bottom: 2px solid #0F172A;
+  }
+
+  .header-cell.corner {
+    border-bottom: 2px solid #0F172A;
+    border-right: 2px solid #0F172A;
+  }
+
+  /* Row headers */
+  .row-header {
+    padding: 16px 12px;
+    border-right: 2px solid #0F172A;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .row-header-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: #0F172A;
+    margin-bottom: 2px;
+  }
+
+  .row-header-detail {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #9CA3AF;
+    line-height: 1.3;
+  }
+
+  /* Grid cells */
+  .cell {
+    padding: 14px 12px;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    text-align: center;
+  }
+
+  .cell:last-child {
+    border-right: none;
+  }
+
+  .cell-model {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+
+  .cell-timeline {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #6B7280;
+  }
+
+  .cell-signal {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #9CA3AF;
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* Target state cell */
+  .cell.target {
+    background: #EDE9FE;
+    border: 1.5px solid #6D28D9;
+  }
+
+  .cell.target .cell-model {
+    color: #6D28D9;
+  }
+
+  /* Current position marker */
+  .cell.current {
+    position: relative;
+  }
+
+  .cell.current::after {
+    content: 'CURRENT';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 7px;
+    color: #9CA3AF;
+    letter-spacing: 0.05em;
+    border: 1px solid #E2E8F0;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  /* Empty/uncommon cells */
+  .cell.uncommon {
+    background: #F1F5F9;
+  }
+
+  .cell.uncommon .cell-model {
+    color: #9CA3AF;
+    font-weight: 500;
+  }
+
+  /* Transition arrow annotation */
+  .transition-note {
+    margin-left: 32px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #F1F5F9;
+    border-radius: 4px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .transition-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .transition-arrow {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+  }
+
+  .transition-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #334155;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">Operating Model Selection Matrix</div>
+
+  <div class="matrix-container">
+    <div class="y-axis-label">Operational Complexity</div>
+
+    <div class="matrix-grid">
+      <!-- Header row -->
+      <div class="header-cell corner"></div>
+      <div class="header-cell">Early<br><span style="font-weight:500;font-size:9px;color:#6B7280">0--12 months</span></div>
+      <div class="header-cell">Growth<br><span style="font-weight:500;font-size:9px;color:#6B7280">12--24 months</span></div>
+      <div class="header-cell">Scale<br><span style="font-weight:500;font-size:9px;color:#6B7280">24--36 months</span></div>
+
+      <!-- Row 1: High complexity -->
+      <div class="row-header">
+        <div class="row-header-label">High</div>
+        <div class="row-header-detail">100+ deployments<br>4+ jurisdictions</div>
+      </div>
+      <div class="cell uncommon">
+        <div class="cell-model">Centralised CoE</div>
+        <div class="cell-timeline">Bottleneck risk</div>
+      </div>
+      <div class="cell current">
+        <div class="cell-model">Hub-and-Spoke</div>
+        <div class="cell-timeline">Transition urgency</div>
+        <div class="cell-signal">Signal: governance requests outpace central capacity</div>
+      </div>
+      <div class="cell target">
+        <div class="cell-model">Federated with Central Governance</div>
+        <div class="cell-timeline">Target state</div>
+      </div>
+
+      <!-- Row 2: Medium complexity -->
+      <div class="row-header">
+        <div class="row-header-label">Medium</div>
+        <div class="row-header-detail">30--100 deployments<br>2--3 jurisdictions</div>
+      </div>
+      <div class="cell">
+        <div class="cell-model">Centralised CoE</div>
+        <div class="cell-timeline">Appropriate fit</div>
+      </div>
+      <div class="cell">
+        <div class="cell-model">Hub-and-Spoke</div>
+        <div class="cell-timeline">Recommended</div>
+        <div class="cell-signal">Signal: 40% of capacity is governance vs building</div>
+      </div>
+      <div class="cell">
+        <div class="cell-model">Federated with Central Governance</div>
+        <div class="cell-timeline">Aspirational</div>
+      </div>
+
+      <!-- Row 3: Low complexity -->
+      <div class="row-header" style="border-bottom:none;">
+        <div class="row-header-label">Low</div>
+        <div class="row-header-detail">&lt;30 deployments<br>Single jurisdiction</div>
+      </div>
+      <div class="cell" style="border-bottom:none;">
+        <div class="cell-model">Centralised CoE</div>
+        <div class="cell-timeline">Start here</div>
+      </div>
+      <div class="cell" style="border-bottom:none;">
+        <div class="cell-model">Centralised CoE</div>
+        <div class="cell-timeline">Still appropriate</div>
+      </div>
+      <div class="cell uncommon" style="border-bottom:none;">
+        <div class="cell-model">Hub-and-Spoke</div>
+        <div class="cell-timeline">If expanding</div>
+      </div>
+    </div>
+
+    <div class="x-axis-label">Organisational Maturity</div>
+  </div>
+
+  <div class="transition-note">
+    <div class="transition-item">
+      <span class="transition-arrow">&rarr;</span>
+      <span class="transition-text"><strong>Transition signal 1:</strong> 40% of central capacity spent on governance, not building</span>
+    </div>
+    <div class="transition-item">
+      <span class="transition-arrow">&rarr;</span>
+      <span class="transition-text"><strong>Transition signal 2:</strong> Business units requesting AI capabilities faster than CoE can deliver</span>
+    </div>
+  </div>
+
+  <div class="caption">The Operating Model Selection Matrix. Map your organisational maturity and operational complexity to the right model -- then plan the transition. Source: TensAI, adapted from Microsoft CAF.</div>
+</div>
+</body>
+</html>

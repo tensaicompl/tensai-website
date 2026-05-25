@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-15 — AI Technical Debt Categories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    max-width: 560px;
+    width: 100%;
+    padding: 40px 32px 32px;
+  }
+
+  .card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #0F172A;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .card-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #6B7280;
+    margin-bottom: 28px;
+  }
+
+  .category {
+    margin-bottom: 4px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0 8px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .category:first-of-type .category-header {
+    border-top: 2px solid #0F172A;
+  }
+
+  .category-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #9CA3AF;
+    min-width: 20px;
+  }
+
+  .category-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    flex: 1;
+  }
+
+  .category-name.accent {
+    color: #6D28D9;
+  }
+
+  .severity {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .severity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .severity-high .severity-dot { background: #0F172A; }
+  .severity-high { color: #0F172A; }
+
+  .severity-medium .severity-dot { background: #6B7280; }
+  .severity-medium { color: #6B7280; }
+
+  .severity-low .severity-dot { background: #D1D5DB; }
+  .severity-low { color: #9CA3AF; }
+
+  .category-items {
+    padding-left: 32px;
+    padding-bottom: 8px;
+  }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+  }
+
+  .checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .item-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    line-height: 1.4;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+    border-top: 1px solid #E2E8F0;
+    padding-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-title">AI Technical Debt Inventory</div>
+  <div class="card-subtitle">Seven categories. Assess severity for your organisation.</div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">1</span>
+      <span class="category-name">Data Dependency Debt</span>
+      <div class="severity severity-high"><span class="severity-dot"></span>High</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Training-serving skew</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Undeclared data consumers</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">2</span>
+      <span class="category-name">Configuration Debt</span>
+      <div class="severity severity-medium"><span class="severity-dot"></span>Medium</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Parameter sprawl</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Unversioned configurations</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">3</span>
+      <span class="category-name">Entanglement Debt</span>
+      <div class="severity severity-high"><span class="severity-dot"></span>High</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Feature coupling across models</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Undocumented correlations</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">4</span>
+      <span class="category-name">Feedback Loop Debt</span>
+      <div class="severity severity-medium"><span class="severity-dot"></span>Medium</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Direct feedback loops</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Hidden feedback loops</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">5</span>
+      <span class="category-name">Pipeline Debt</span>
+      <div class="severity severity-medium"><span class="severity-dot"></span>Medium</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Glue code proliferation</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Dead pipeline paths</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">6</span>
+      <span class="category-name">Monitoring Debt</span>
+      <div class="severity severity-high"><span class="severity-dot"></span>High</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Drift detection gaps</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Alert fatigue</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Missing SLA thresholds</span></div>
+    </div>
+  </div>
+
+  <div class="category">
+    <div class="category-header">
+      <span class="category-number">7</span>
+      <span class="category-name accent">GenAI-Specific Debt</span>
+      <div class="severity severity-high"><span class="severity-dot"></span>High</div>
+    </div>
+    <div class="category-items">
+      <div class="item"><div class="checkbox"></div><span class="item-text">Tool sprawl across teams</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Prompt stuffing and unversioned prompts</span></div>
+      <div class="item"><div class="checkbox"></div><span class="item-text">Opaque agent pipelines</span></div>
+    </div>
+  </div>
+
+  <div class="caption">The AI Technical Debt Inventory. Seven categories of debt that accumulate in production AI systems, with GenAI-specific additions from Databricks 2026.</div>
+</div>
+
+</body>
+</html>

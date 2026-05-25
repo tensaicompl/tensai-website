@@ -22,16 +22,21 @@ import { useEffect, useRef, useState } from "react";
 export function GroundworkOverviewDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     const el = figRef.current;
     if (!el) return;
 
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
+    if (reducedMotion) {
       setVisible(true);
       return;
     }
@@ -48,7 +53,7 @@ export function GroundworkOverviewDiagram() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [reducedMotion]);
 
   /* ── Layout constants (scaled to 1200-wide viewBox) ── */
   const cardW = 308;
@@ -91,7 +96,6 @@ export function GroundworkOverviewDiagram() {
   /* ── Arrow connections ─────────────────────────────── */
   const arrows: { from: number; to: number }[] = [
     { from: 0, to: 1 }, // Operating Model -> Build/Buy/Boost
-    { from: 2, to: 3 }, // Token Sourcing -> Security Architecture
     { from: 2, to: 5 }, // Token Sourcing -> FinOps
     { from: 4, to: 0 }, // Governance -> Operating Model
     { from: 4, to: 1 }, // Governance -> Build/Buy/Boost
@@ -137,6 +141,7 @@ export function GroundworkOverviewDiagram() {
   function arrowPath(from: number, to: number): string {
     const start = edgePoint(from, to, 3);
     const end = edgePoint(to, from, 3);
+
     return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   }
 
@@ -261,9 +266,6 @@ export function GroundworkOverviewDiagram() {
             const isGovernance = from === 4;
             const isCrossRow = cards[from].row !== cards[to].row;
 
-            const start = edgePoint(from, to, 3);
-            const end = edgePoint(to, from, 3);
-
             let strokeColor = "var(--color-midnight)";
             let strokeW = 1.5;
             let dashArray: string | undefined;
@@ -277,24 +279,22 @@ export function GroundworkOverviewDiagram() {
               strokeW = 1;
             }
 
+            const markerEnd = isGovernance
+              ? "url(#goArrowAccent)"
+              : isCrossRow
+                ? "url(#goArrowMuted)"
+                : "url(#goArrow)";
+
             return (
-              <line
+              <path
                 key={`rail-${i}`}
-                x1={start.x}
-                y1={start.y}
-                x2={end.x}
-                y2={end.y}
+                d={arrowPath(from, to)}
                 stroke={strokeColor}
                 strokeWidth={strokeW}
                 opacity={0.25}
                 strokeDasharray={dashArray}
-                markerEnd={
-                  isGovernance
-                    ? "url(#goArrowAccent)"
-                    : isCrossRow
-                      ? "url(#goArrowMuted)"
-                      : "url(#goArrow)"
-                }
+                fill="none"
+                markerEnd={markerEnd}
               />
             );
           })}
@@ -351,8 +351,8 @@ export function GroundworkOverviewDiagram() {
           );
         })}
 
-        {/* ── Flowing dots (rendered only when visible) ──── */}
-        {visible && (
+        {/* ── Flowing dots (rendered only when visible and motion allowed) ──── */}
+        {visible && !reducedMotion && (
           <g>
             {arrows.map(({ from }, i) => {
               const isGovernance = from === 4;
@@ -364,7 +364,7 @@ export function GroundworkOverviewDiagram() {
                   opacity={isGovernance ? 0.6 : 0.8}
                 >
                   <animateMotion
-                    dur={isGovernance ? "2.5s" : "2s"}
+                    dur="2s"
                     repeatCount="indefinite"
                     keyPoints="0;1"
                     keyTimes="0;1"

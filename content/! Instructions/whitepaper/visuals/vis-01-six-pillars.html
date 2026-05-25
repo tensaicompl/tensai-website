@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-01 — The Six-Pillar Enterprise AI Operating Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .hex-container {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    margin: 0 auto;
+  }
+
+  /* Six pillar boxes positioned in a hexagonal ring */
+  .pillar {
+    position: absolute;
+    width: 200px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 12px 14px;
+    background: #FFFFFF;
+  }
+
+  .pillar-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: #9CA3AF;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .pillar-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+
+  .pillar-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    line-height: 1.4;
+  }
+
+  .pillar-chapter {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #9CA3AF;
+    margin-top: 6px;
+  }
+
+  /* Positions: hexagonal arrangement */
+  .pillar-1 { top: 0; left: 50%; transform: translateX(-50%); }
+  .pillar-2 { top: 80px; right: 0; }
+  .pillar-3 { bottom: 80px; right: 0; }
+  .pillar-4 { bottom: 0; left: 50%; transform: translateX(-50%); }
+  .pillar-5 { bottom: 80px; left: 0; }
+  .pillar-6 { top: 80px; left: 0; }
+
+  /* Centre node */
+  .centre {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 2;
+  }
+
+  .centre-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: #6D28D9;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+
+  /* SVG lines layer */
+  .lines-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .pillar { z-index: 1; }
+  .centre { z-index: 2; }
+
+  /* Subtitle */
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-top: 32px;
+    line-height: 1.5;
+  }
+
+  /* Caption */
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">The Six-Pillar Enterprise AI Operating Framework</div>
+
+  <div class="hex-container">
+    <!-- Connecting lines -->
+    <svg class="lines-layer" viewBox="0 0 600 400" fill="none">
+      <!-- Lines connecting all six pillar centres to each other (showing interdependence) -->
+      <!-- Pillar centres: 1(300,35), 2(500,130), 3(500,270), 4(300,365), 5(100,270), 6(100,130) -->
+      <line x1="300" y1="35" x2="500" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="35" x2="500" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="35" x2="300" y2="365" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="35" x2="100" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="35" x2="100" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="130" x2="500" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="130" x2="300" y2="365" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="130" x2="100" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="130" x2="100" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="270" x2="300" y2="365" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="270" x2="100" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="500" y1="270" x2="100" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="365" x2="100" y2="270" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="300" y1="365" x2="100" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+      <line x1="100" y1="270" x2="100" y2="130" stroke="#E2E8F0" stroke-width="1"/>
+
+      <!-- Lines from centre to each pillar -->
+      <line x1="300" y1="200" x2="300" y2="35" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+      <line x1="300" y1="200" x2="500" y2="130" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+      <line x1="300" y1="200" x2="500" y2="270" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+      <line x1="300" y1="200" x2="300" y2="365" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+      <line x1="300" y1="200" x2="100" y2="270" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+      <line x1="300" y1="200" x2="100" y2="130" stroke="#0F172A" stroke-width="1" stroke-dasharray="4,3" opacity="0.25"/>
+
+      <!-- Centre dot -->
+      <circle cx="300" cy="200" r="4" fill="#6D28D9" opacity="0.15"/>
+    </svg>
+
+    <!-- Pillar 1: Top centre -->
+    <div class="pillar pillar-1">
+      <div class="pillar-number">PILLAR 1</div>
+      <div class="pillar-name">Strategy and Use Case Selection</div>
+      <div class="pillar-desc">From 23 pilots to 3 that matter</div>
+      <div class="pillar-chapter">Ch. 1--2</div>
+    </div>
+
+    <!-- Pillar 2: Top right -->
+    <div class="pillar pillar-2">
+      <div class="pillar-number">PILLAR 2</div>
+      <div class="pillar-name">Operating Model and Organisation</div>
+      <div class="pillar-desc">Structure that scales beyond the CoE</div>
+      <div class="pillar-chapter">Ch. 3</div>
+    </div>
+
+    <!-- Pillar 3: Bottom right -->
+    <div class="pillar pillar-3">
+      <div class="pillar-number">PILLAR 3</div>
+      <div class="pillar-name">Governance and Risk</div>
+      <div class="pillar-desc">Operational, not theatrical</div>
+      <div class="pillar-chapter">Ch. 4</div>
+    </div>
+
+    <!-- Pillar 4: Bottom centre -->
+    <div class="pillar pillar-4">
+      <div class="pillar-number">PILLAR 4</div>
+      <div class="pillar-name">Architecture and Infrastructure</div>
+      <div class="pillar-desc">Production-grade, not proof-of-concept</div>
+      <div class="pillar-chapter">Ch. 5</div>
+    </div>
+
+    <!-- Pillar 5: Bottom left -->
+    <div class="pillar pillar-5">
+      <div class="pillar-number">PILLAR 5</div>
+      <div class="pillar-name">Economics and Measurement</div>
+      <div class="pillar-desc">Beyond token counting to business value</div>
+      <div class="pillar-chapter">Ch. 6</div>
+    </div>
+
+    <!-- Pillar 6: Top left -->
+    <div class="pillar pillar-6">
+      <div class="pillar-number">PILLAR 6</div>
+      <div class="pillar-name">Security and Trust</div>
+      <div class="pillar-desc">Defence in depth for the AI era</div>
+      <div class="pillar-chapter">Ch. 7</div>
+    </div>
+
+    <!-- Centre label -->
+    <div class="centre">
+      <div class="centre-label">Enterprise AI<br>Operating Framework</div>
+    </div>
+  </div>
+
+  <div class="subtitle">Six interdependent domains. Progress in one without the others produces pilot purgatory.</div>
+
+  <div class="caption">The TensAI Enterprise AI Operating Framework. Six interdependent domains that must advance together -- no single pillar produces scaled value in isolation.</div>
+</div>
+</body>
+</html>

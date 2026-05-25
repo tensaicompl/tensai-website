@@ -29,14 +29,25 @@ import { useEffect, useRef, useState } from "react";
 export function AgentCatalogDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    mq.addEventListener("change", onMotionChange);
+
     const el = figRef.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(true);
-      return;
+    if (!el) {
+      return () => mq.removeEventListener("change", onMotionChange);
     }
+
+    if (mq.matches) {
+      setVisible(true);
+      return () => mq.removeEventListener("change", onMotionChange);
+    }
+
     const obs = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) {
@@ -47,7 +58,10 @@ export function AgentCatalogDiagram() {
       { threshold: 0.2 },
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    return () => {
+      obs.disconnect();
+      mq.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   /* ── Layout constants (scaled to 1200-wide viewBox) ──── */
@@ -514,6 +528,7 @@ export function AgentCatalogDiagram() {
             ANIMATED DOTS: agents -> skills
             ═══════════════════════════════════════════════════ */}
         {visible &&
+          !reducedMotion &&
           agentToSkill.map((_, i) => (
             <circle
               key={`dot-a2s-${i}`}
@@ -535,6 +550,7 @@ export function AgentCatalogDiagram() {
             ANIMATED DOTS: skills -> tools
             ═══════════════════════════════════════════════════ */}
         {visible &&
+          !reducedMotion &&
           skillToTool.map((_, i) => (
             <circle
               key={`dot-s2t-${i}`}

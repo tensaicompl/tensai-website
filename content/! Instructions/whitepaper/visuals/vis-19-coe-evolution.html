@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-19 — CoE Blueprint: Three-Phase Evolution</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 36px;
+    text-transform: uppercase;
+  }
+
+  .timeline {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    position: relative;
+  }
+
+  /* The connecting arrows between phases */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #E2E8F0;
+    z-index: 0;
+  }
+
+  .phase {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .phase + .phase {
+    margin-left: 16px;
+  }
+
+  /* Phase header / timeline dot */
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .phase-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #0F172A;
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 0 0 1.5px #0F172A;
+    flex-shrink: 0;
+  }
+
+  .phase-timeline-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #9CA3AF;
+    letter-spacing: 0.03em;
+  }
+
+  .phase-card {
+    border: 1.5px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 20px 16px;
+    background: #FFFFFF;
+    min-height: 280px;
+  }
+
+  .phase-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 10px;
+    color: #9CA3AF;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .phase-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    margin-bottom: 12px;
+  }
+
+  .phase-team {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #334155;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    background: #F1F5F9;
+    border-radius: 3px;
+  }
+
+  .phase-responsibilities {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .phase-responsibilities li {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.4;
+    padding: 4px 0;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .phase-responsibilities li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #E2E8F0;
+  }
+
+  /* Transition signals between phases */
+  .transition {
+    position: absolute;
+    top: 50%;
+    right: -16px;
+    transform: translate(50%, -50%);
+    z-index: 3;
+    width: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .transition-arrow {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .transition-arrow svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .transition-signal {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    margin-top: 8px;
+    background: #EDE9FE;
+    border: 1px solid #6D28D9;
+    border-radius: 3px;
+    padding: 6px 8px;
+  }
+
+  .transition-signal-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 8px;
+    color: #6D28D9;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+  }
+
+  .transition-signal-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #6D28D9;
+    line-height: 1.3;
+  }
+
+  /* Simplified org chart representation */
+  .org-mini {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .org-mini-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .org-boxes {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .org-box {
+    padding: 3px 6px;
+    border: 1px solid #E2E8F0;
+    border-radius: 2px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 8px;
+    color: #334155;
+    background: #F1F5F9;
+  }
+
+  .org-box.central {
+    border-color: #0F172A;
+    background: #0F172A;
+    color: #FFFFFF;
+  }
+
+  .org-box.spoke {
+    border-color: #334155;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 28px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">CoE Blueprint -- Three-Phase Evolution</div>
+
+  <div class="timeline">
+    <!-- Phase 1 -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-dot"></div>
+        <div class="phase-timeline-label">0--12 months</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 1</div>
+        <div class="phase-name">Centralised Delivery</div>
+        <div class="phase-team">10--15 person team</div>
+        <ul class="phase-responsibilities">
+          <li>All AI development in-house</li>
+          <li>Build foundational data pipelines</li>
+          <li>Establish governance baseline</li>
+          <li>Deliver first 3--5 production models</li>
+          <li>Create reusable templates and tooling</li>
+        </ul>
+        <div class="org-mini">
+          <div class="org-mini-label">Structure</div>
+          <div class="org-boxes">
+            <div class="org-box central">Central AI Team</div>
+            <div class="org-box">Data Eng</div>
+            <div class="org-box">ML Eng</div>
+            <div class="org-box">AI PM</div>
+          </div>
+        </div>
+      </div>
+      <div class="transition">
+        <div class="transition-arrow">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M10 5l3 3-3 3" stroke="#0F172A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="transition-signal">
+          <div class="transition-signal-label">Transition signal</div>
+          <div class="transition-signal-text">40% of central capacity is governance vs building</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-dot"></div>
+        <div class="phase-timeline-label">12--24 months</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 2</div>
+        <div class="phase-name">Hub-and-Spoke</div>
+        <div class="phase-team">Central + 3--4 BU spokes</div>
+        <ul class="phase-responsibilities">
+          <li>Central team shifts to platform and standards</li>
+          <li>BU spokes own domain-specific models</li>
+          <li>Shared infrastructure, distributed execution</li>
+          <li>Cross-BU knowledge sharing forums</li>
+          <li>Governance becomes embedded, not bolted on</li>
+        </ul>
+        <div class="org-mini">
+          <div class="org-mini-label">Structure</div>
+          <div class="org-boxes">
+            <div class="org-box central">Central Hub</div>
+            <div class="org-box spoke">BU-1</div>
+            <div class="org-box spoke">BU-2</div>
+            <div class="org-box spoke">BU-3</div>
+            <div class="org-box spoke">BU-4</div>
+          </div>
+        </div>
+      </div>
+      <div class="transition">
+        <div class="transition-arrow">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M10 5l3 3-3 3" stroke="#0F172A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="transition-signal">
+          <div class="transition-signal-label">Transition signal</div>
+          <div class="transition-signal-text">BU teams self-serve for 60%+ of standard use cases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-dot"></div>
+        <div class="phase-timeline-label">24--36 months</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 3</div>
+        <div class="phase-name">Advisory Model</div>
+        <div class="phase-team">Small central governance + empowered BUs</div>
+        <ul class="phase-responsibilities">
+          <li>Central team is governance and advisory only</li>
+          <li>BUs fully own AI development lifecycle</li>
+          <li>Platform team maintains shared infrastructure</li>
+          <li>Standards enforced through automation, not review</li>
+          <li>CoE focus: frontier research, strategic initiatives</li>
+        </ul>
+        <div class="org-mini">
+          <div class="org-mini-label">Structure</div>
+          <div class="org-boxes">
+            <div class="org-box central">Advisory</div>
+            <div class="org-box spoke">BU-1</div>
+            <div class="org-box spoke">BU-2</div>
+            <div class="org-box spoke">BU-3</div>
+            <div class="org-box spoke">BU-4</div>
+            <div class="org-box spoke">BU-5</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">The CoE Blueprint. Three-phase evolution from centralised delivery to advisory model. Transition signals indicate when to move to the next phase. Adapted from Microsoft Cloud Adoption Framework.</div>
+</div>
+</body>
+</html>

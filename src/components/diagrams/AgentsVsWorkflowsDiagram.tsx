@@ -81,30 +81,32 @@ export function AgentsVsWorkflowsDiagram() {
             <path d="M 0 2 L 10 5 L 0 8" fill="none" stroke="var(--color-midnight)" strokeWidth="1.5" />
           </marker>
 
-          {/* ── Animation paths ──────────────────────────────── */}
+          {/* ── Animation paths (connector gaps only) ─────────── */}
 
-          {/* Single Call: input center → model center → output center (downward) */}
-          <path
-            id="avwPathSingle"
-            d="M 175 170 L 175 213 L 175 255 L 175 290"
-          />
+          {/* Single Call: input bottom edge → model top edge */}
+          <path id="avwPathSingle1" d="M 175 172 L 175 200" />
+          {/* Single Call: model bottom edge → output top edge */}
+          <path id="avwPathSingle2" d="M 175 232 L 175 260" />
 
-          {/* Workflow: classify → route → branch(refund) → send */}
-          <path
-            id="avwPathWorkflow"
-            d="M 500 168 L 590 168 L 590 195
-               L 520 195 L 520 218
-               L 520 238 L 520 268
-               L 600 268 L 600 285"
-          />
+          {/* Workflow: classify right edge → route left edge */}
+          <path id="avwPathWf1" d="M 490 154 L 542 154" />
+          {/* Workflow: route bottom edge → branch → refund top edge */}
+          <path id="avwPathWf2" d="M 582 168 L 582 190 L 480 190 L 480 210" />
+          {/* Workflow: route bottom edge → branch → escalate top edge */}
+          <path id="avwPathWf3" d="M 582 168 L 582 190 L 640 190 L 640 210" />
+          {/* Workflow: refund bottom edge → converge → send top edge */}
+          <path id="avwPathWf4" d="M 480 238 L 480 260 L 560 260 L 560 280" />
+          {/* Workflow: escalate bottom edge → converge → send top edge */}
+          <path id="avwPathWf5" d="M 640 238 L 640 260 L 560 260 L 560 280" />
 
-          {/* Agent: continuous loop think → act → observe → think */}
+          {/* Agent: think bottom edge → act top edge */}
+          <path id="avwPathAg1" d="M 890 170 L 890 212" />
+          {/* Agent: act bottom edge → observe top edge */}
+          <path id="avwPathAg2" d="M 890 242 L 890 282" />
+          {/* Agent: loop-back — observe left edge → up → think left edge */}
           <path
-            id="avwPathAgent"
-            d="M 1010 165 L 1070 165 L 1070 225
-               L 1010 225 L 940 225 L 940 290
-               L 1010 290 L 1010 305
-               L 920 305 Q 910 305 910 295 L 910 155 Q 910 145 920 145 L 960 145"
+            id="avwPathAgLoop"
+            d="M 845 297 L 798 297 L 798 155 L 845 155"
           />
         </defs>
 
@@ -202,19 +204,35 @@ export function AgentsVsWorkflowsDiagram() {
           <rect x="125" y="260" width="100" height="32" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
           <text x="175" y="281" fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-2)" textAnchor="middle">output</text>
 
-          {/* Animated dot */}
+          {/* Animated dots — connector gaps only */}
           {visible && !reducedMotion && (
-            <circle r={dotR} fill={dotFill}>
-              <animateMotion
-                dur="2.4s"
-                repeatCount="indefinite"
-                keyPoints="0;1"
-                keyTimes="0;1"
-                calcMode="linear"
-              >
-                <mpath href="#avwPathSingle" />
-              </animateMotion>
-            </circle>
+            <>
+              {/* Dot: input → model */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="1.2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                >
+                  <mpath href="#avwPathSingle1" />
+                </animateMotion>
+              </circle>
+              {/* Dot: model → output */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="1.2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="0.6s"
+                >
+                  <mpath href="#avwPathSingle2" />
+                </animateMotion>
+              </circle>
+            </>
           )}
         </g>
 
@@ -288,19 +306,74 @@ export function AgentsVsWorkflowsDiagram() {
           <rect x="520" y="280" width="80" height="28" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
           <text x="560" y="299" fontFamily="var(--font-mono)" fontSize="9" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">send</text>
 
-          {/* Animated dot */}
+          {/* Animated dots — connector gaps only */}
           {visible && !reducedMotion && (
-            <circle r={dotR} fill={dotFill}>
-              <animateMotion
-                dur="3.6s"
-                repeatCount="indefinite"
-                keyPoints="0;1"
-                keyTimes="0;1"
-                calcMode="linear"
-              >
-                <mpath href="#avwPathWorkflow" />
-              </animateMotion>
-            </circle>
+            <>
+              {/* Dot: classify → route */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="1.4s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                >
+                  <mpath href="#avwPathWf1" />
+                </animateMotion>
+              </circle>
+              {/* Dot: route → refund (left branch) */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="0.4s"
+                >
+                  <mpath href="#avwPathWf2" />
+                </animateMotion>
+              </circle>
+              {/* Dot: route → escalate (right branch) */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="1.2s"
+                >
+                  <mpath href="#avwPathWf3" />
+                </animateMotion>
+              </circle>
+              {/* Dot: refund → send */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="0.8s"
+                >
+                  <mpath href="#avwPathWf4" />
+                </animateMotion>
+              </circle>
+              {/* Dot: escalate → send */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="2s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="1.6s"
+                >
+                  <mpath href="#avwPathWf5" />
+                </animateMotion>
+              </circle>
+            </>
           )}
         </g>
 
@@ -346,32 +419,29 @@ export function AgentsVsWorkflowsDiagram() {
           <rect x="845" y="140" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1.5" />
           <text x="890" y="160" fontFamily="var(--font-mono)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600">think</text>
 
-          {/* Static rail: think → act (right then down) */}
-          <line x1="935" y1="155" x2="960" y2="155" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
-          <line x1="960" y1="155" x2="960" y2="208" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+          {/* Static rail: think → act (straight down) */}
+          <line x1="890" y1="170" x2="890" y2="212" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
 
           {/* act */}
           <rect x="845" y="212" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--color-midnight)" strokeWidth="1" />
           <text x="890" y="232" fontFamily="var(--font-mono)" fontSize="10" fill="var(--color-midnight)" textAnchor="middle">act</text>
 
-          {/* Static rail: act → observe (left then down) */}
-          <line x1="845" y1="227" x2="820" y2="227" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" />
-          <line x1="820" y1="227" x2="820" y2="278" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
+          {/* Static rail: act → observe (straight down) */}
+          <line x1="890" y1="242" x2="890" y2="282" stroke="var(--color-midnight)" strokeWidth="1" opacity="0.25" markerEnd="url(#avwArrowSm)" />
 
           {/* observe */}
           <rect x="845" y="282" width="90" height="30" rx="3" fill="var(--bg-surface)" stroke="var(--border)" strokeWidth="1" />
           <text x="890" y="302" fontFamily="var(--font-mono)" fontSize="10" fill="var(--fg-2)" textAnchor="middle">observe</text>
 
-          {/* Static dashed loop-back rail */}
+          {/* Static dashed loop-back rail: observe left → up → think left */}
           <path
-            d="M 845 297 L 808 297 Q 798 297 798 287 L 798 160 Q 798 150 808 150 L 842 150"
+            d="M 845 297 L 798 297 L 798 155 L 845 155"
             stroke="var(--color-midnight)"
             strokeWidth="1.5"
             fill="none"
             strokeDasharray="4 3"
             opacity="0.25"
-            markerEnd="url(#avwArrowSm)"
-          />
+                     />
           <text
             x="790" y="228"
             fontFamily="var(--font-mono)"
@@ -384,19 +454,48 @@ export function AgentsVsWorkflowsDiagram() {
             loop
           </text>
 
-          {/* Animated dot — continuous loop */}
+          {/* Animated dots — connector gaps only */}
           {visible && !reducedMotion && (
-            <circle r={dotR} fill={dotFill}>
-              <animateMotion
-                dur="4s"
-                repeatCount="indefinite"
-                keyPoints="0;1"
-                keyTimes="0;1"
-                calcMode="linear"
-              >
-                <mpath href="#avwPathAgent" />
-              </animateMotion>
-            </circle>
+            <>
+              {/* Dot: think → act */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="1.4s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                >
+                  <mpath href="#avwPathAg1" />
+                </animateMotion>
+              </circle>
+              {/* Dot: act → observe */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="1.4s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="0.5s"
+                >
+                  <mpath href="#avwPathAg2" />
+                </animateMotion>
+              </circle>
+              {/* Dot: loop-back (observe → think) */}
+              <circle r={dotR} fill={dotFill} opacity="0.8">
+                <animateMotion
+                  dur="3s"
+                  repeatCount="indefinite"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                  begin="1s"
+                >
+                  <mpath href="#avwPathAgLoop" />
+                </animateMotion>
+              </circle>
+            </>
           )}
         </g>
       </svg>

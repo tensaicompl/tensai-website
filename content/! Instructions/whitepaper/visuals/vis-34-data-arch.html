@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-34 — Enterprise AI Data Architecture Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #FAFAFA;
+    --midnight: #0F172A;
+    --midnight-muted: #334155;
+    --gray: #6B7280;
+    --gray-light: #9CA3AF;
+    --violet: #6D28D9;
+    --violet-wash: #EDE9FE;
+    --border: #E2E8F0;
+    --surface: #F1F5F9;
+  }
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--midnight);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .visual {
+    width: 800px;
+    min-height: 500px;
+    background: var(--bg);
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--midnight);
+    margin-bottom: 28px;
+    text-align: center;
+    letter-spacing: -0.02em;
+  }
+
+  .pipeline {
+    width: 740px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* Layers row */
+  .layers-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .layer-col {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg);
+    position: relative;
+  }
+  .layer-accent {
+    border-left: 4px solid var(--violet);
+  }
+  .layer-header {
+    background: var(--surface);
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .layer-num {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    color: var(--gray-light);
+    margin-bottom: 2px;
+  }
+  .layer-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--midnight);
+    line-height: 1.3;
+  }
+  .layer-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .cap-item {
+    font-size: 10px;
+    color: var(--midnight-muted);
+    font-weight: 500;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.3;
+  }
+  .cap-item:last-child { border-bottom: none; }
+
+  /* Flow arrows between columns */
+  .flow-arrows {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+
+  /* Monitoring bar */
+  .monitor-bar {
+    width: 740px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .monitor-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--midnight);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  .monitor-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .monitor-item {
+    font-size: 10px;
+    color: var(--gray);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-weight: 500;
+  }
+
+  /* Volume annotation */
+  .volume {
+    width: 740px;
+    margin: 16px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .volume-line {
+    height: 1px;
+    flex: 1;
+    background: var(--border);
+  }
+  .volume-badge {
+    font-size: 11px;
+    color: var(--gray);
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 6px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  /* Horizontal arrow between layers */
+  .arrow-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 16px;
+    justify-content: center;
+  }
+  .arrow-right::after {
+    content: '';
+    display: block;
+    width: 0; height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid var(--gray-light);
+  }
+  .layers-flow {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    margin-bottom: 8px;
+  }
+  .layers-flow .layer-col {
+    min-width: 0;
+  }
+
+  .caption {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.5;
+    text-align: center;
+    max-width: 700px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+  <div class="visual">
+    <div class="title">Enterprise AI Data Architecture Reference</div>
+
+    <div class="pipeline">
+      <div class="layers-flow">
+        <!-- Layer 1: Data Ingestion -->
+        <div class="layer-col">
+          <div class="layer-header">
+            <div class="layer-num">01</div>
+            <div class="layer-name">Data Ingestion</div>
+          </div>
+          <div class="layer-body">
+            <div class="cap-item">Databases</div>
+            <div class="cap-item">APIs</div>
+            <div class="cap-item">Event Streams</div>
+            <div class="cap-item">Documents</div>
+            <div class="cap-item">Schema Validation</div>
+          </div>
+        </div>
+
+        <div class="arrow-right"></div>
+
+        <!-- Layer 2: Quality Validation (violet accent) -->
+        <div class="layer-col layer-accent">
+          <div class="layer-header">
+            <div class="layer-num">02</div>
+            <div class="layer-name">Quality Validation</div>
+          </div>
+          <div class="layer-body">
+            <div class="cap-item">Data Profiling</div>
+            <div class="cap-item">Cleansing</div>
+            <div class="cap-item">Anomaly Detection</div>
+            <div class="cap-item">Lineage Tracking</div>
+          </div>
+        </div>
+
+        <div class="arrow-right"></div>
+
+        <!-- Layer 3: Feature Engineering -->
+        <div class="layer-col">
+          <div class="layer-header">
+            <div class="layer-num">03</div>
+            <div class="layer-name">Feature Engineering</div>
+          </div>
+          <div class="layer-body">
+            <div class="cap-item">Feature Store</div>
+            <div class="cap-item">Transformation Pipelines</div>
+            <div class="cap-item">Versioning</div>
+            <div class="cap-item">Feature Registry</div>
+          </div>
+        </div>
+
+        <div class="arrow-right"></div>
+
+        <!-- Layer 4: Serving -->
+        <div class="layer-col">
+          <div class="layer-header">
+            <div class="layer-num">04</div>
+            <div class="layer-name">Serving</div>
+          </div>
+          <div class="layer-body">
+            <div class="cap-item">Real-Time Inference</div>
+            <div class="cap-item">Batch Processing</div>
+            <div class="cap-item">Caching</div>
+            <div class="cap-item">A/B Testing</div>
+          </div>
+        </div>
+
+        <div class="arrow-right"></div>
+
+        <!-- Layer 5: Governance -->
+        <div class="layer-col">
+          <div class="layer-header">
+            <div class="layer-num">05</div>
+            <div class="layer-name">Governance</div>
+          </div>
+          <div class="layer-body">
+            <div class="cap-item">Access Control</div>
+            <div class="cap-item">Audit Trails</div>
+            <div class="cap-item">Compliance</div>
+            <div class="cap-item">Data Catalogue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring bar spans bottom -->
+      <div class="monitor-bar">
+        <div class="monitor-label">Monitoring</div>
+        <div class="monitor-items">
+          <span class="monitor-item">Pipeline Health</span>
+          <span class="monitor-item">Data Quality Scores</span>
+          <span class="monitor-item">Latency</span>
+          <span class="monitor-item">Throughput</span>
+          <span class="monitor-item">Drift Detection</span>
+          <span class="monitor-item">Cost Tracking</span>
+        </div>
+      </div>
+
+      <div class="volume">
+        <div class="volume-line"></div>
+        <div class="volume-badge">Data volumes increase 40--60% annually with AI adoption</div>
+        <div class="volume-line"></div>
+      </div>
+    </div>
+  </div>
+  <div class="caption">The Enterprise AI Data Architecture Reference. Five layers from ingestion to governance, with quality validation as the critical gatekeeper. Data volumes increase 40--60% annually with AI adoption.</div>
+</body>
+</html>

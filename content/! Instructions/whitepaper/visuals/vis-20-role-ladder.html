@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-20 — Role Sequencing Ladder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 540px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  /* Ladder */
+  .ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  /* Vertical connector line */
+  .ladder::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: #E2E8F0;
+    z-index: 0;
+  }
+
+  .stage {
+    display: flex;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stage-marker {
+    flex-shrink: 0;
+    width: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+  }
+  .stage-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #0F172A;
+    border: 3px solid #FAFAFA;
+    box-shadow: 0 0 0 2px #E2E8F0;
+    position: relative;
+    z-index: 2;
+  }
+  .stage:last-child .stage-dot {
+    width: 16px;
+    height: 16px;
+  }
+
+  .stage-card {
+    flex: 1;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .stage:nth-child(even) .stage-card {
+    background: #F1F5F9;
+  }
+
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .stage-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    letter-spacing: 0.2px;
+  }
+  .stage-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .team-size {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B7280;
+    background: #F1F5F9;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .stage:nth-child(even) .team-size {
+    background: #E2E8F0;
+  }
+
+  .stage-timeline {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 12px;
+  }
+
+  .roles-section {
+    margin-bottom: 10px;
+  }
+  .roles-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #9CA3AF;
+    margin-bottom: 6px;
+  }
+  .roles-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .role-tag {
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    background: #F1F5F9;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #E2E8F0;
+    line-height: 1.4;
+  }
+  .stage:nth-child(even) .role-tag {
+    background: #FFFFFF;
+  }
+
+  /* Violet accent: highest-leverage hire */
+  .role-tag.highlight {
+    color: #6D28D9;
+    border-color: #6D28D9;
+    background: #EDE9FE;
+    font-weight: 600;
+  }
+  .highlight-note {
+    font-size: 11px;
+    color: #6D28D9;
+    font-weight: 500;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Cumulative section */
+  .cumulative-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #9CA3AF;
+    margin-bottom: 4px;
+    margin-top: 6px;
+  }
+  .cumulative-text {
+    font-size: 12px;
+    color: #6B7280;
+    line-height: 1.5;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 24px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .ladder { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Role Sequencing Ladder</h1>
+  <p class="subtitle">Which roles to hire at each maturity stage, with team size benchmarks.</p>
+
+  <div class="ladder">
+
+    <!-- Stage 1 -->
+    <div class="stage">
+      <div class="stage-marker"><div class="stage-dot"></div></div>
+      <div class="stage-card">
+        <div class="stage-header">
+          <span class="stage-name">Stage 1 -- Foundation</span>
+          <div class="stage-meta">
+            <span class="team-size">5--8 people</span>
+          </div>
+        </div>
+        <div class="stage-timeline">Months 0--6</div>
+        <div class="roles-section">
+          <div class="roles-label">New hires</div>
+          <div class="roles-list">
+            <span class="role-tag">Senior AI Engineer</span>
+            <span class="role-tag">Data Engineer</span>
+          </div>
+        </div>
+        <div class="cumulative-label">Focus</div>
+        <div class="cumulative-text">First production model. Data pipeline foundations. Prove feasibility.</div>
+      </div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="stage">
+      <div class="stage-marker"><div class="stage-dot"></div></div>
+      <div class="stage-card">
+        <div class="stage-header">
+          <span class="stage-name">Stage 2 -- Growth</span>
+          <div class="stage-meta">
+            <span class="team-size">12--20 people</span>
+          </div>
+        </div>
+        <div class="stage-timeline">Months 6--18</div>
+        <div class="roles-section">
+          <div class="roles-label">New hires</div>
+          <div class="roles-list">
+            <span class="role-tag highlight">AI Product Manager</span>
+            <span class="role-tag">MLOps Engineer</span>
+          </div>
+        </div>
+        <p class="highlight-note">Highest-leverage non-technical hire</p>
+        <div class="cumulative-label">Focus</div>
+        <div class="cumulative-text">Use-case prioritisation. Production pipelines. Cross-functional delivery.</div>
+      </div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="stage">
+      <div class="stage-marker"><div class="stage-dot"></div></div>
+      <div class="stage-card">
+        <div class="stage-header">
+          <span class="stage-name">Stage 3 -- Scale</span>
+          <div class="stage-meta">
+            <span class="team-size">25--50 people</span>
+          </div>
+        </div>
+        <div class="stage-timeline">Months 18--30</div>
+        <div class="roles-section">
+          <div class="roles-label">New hires</div>
+          <div class="roles-list">
+            <span class="role-tag">CAIO</span>
+            <span class="role-tag">AI Governance Lead</span>
+            <span class="role-tag">Domain Specialists</span>
+          </div>
+        </div>
+        <div class="cumulative-label">Focus</div>
+        <div class="cumulative-text">Executive ownership. Compliance architecture. Business-unit embedding.</div>
+      </div>
+    </div>
+
+    <!-- Stage 4 -->
+    <div class="stage">
+      <div class="stage-marker"><div class="stage-dot"></div></div>
+      <div class="stage-card">
+        <div class="stage-header">
+          <span class="stage-name">Stage 4 -- Optimise</span>
+          <div class="stage-meta">
+            <span class="team-size">50+ people</span>
+          </div>
+        </div>
+        <div class="stage-timeline">Months 30+</div>
+        <div class="roles-section">
+          <div class="roles-label">New hires</div>
+          <div class="roles-list">
+            <span class="role-tag">AI Ethics Lead</span>
+            <span class="role-tag">Agentic Workflow Designer</span>
+            <span class="role-tag">Human-AI Collaboration Specialist</span>
+          </div>
+        </div>
+        <div class="cumulative-label">Focus</div>
+        <div class="cumulative-text">Responsible AI at scale. Agent orchestration. Organisation-wide transformation.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="caption"><strong>Figure VIS-20.</strong> The Role Sequencing Ladder. What to hire at each maturity stage, with team size benchmarks. The AI Product Manager is the highest-leverage non-technical hire at the growth stage. Sources: LinkedIn 2025, McKinsey role data.</p>
+
+</div>
+</body>
+</html>

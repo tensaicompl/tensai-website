@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-52 — Government AI Governance Comparison Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 960px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 760px;
+  }
+
+  /* Grid */
+  .gov-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .gov-grid thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 16px 14px;
+    text-align: center;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .gov-grid thead th.dim-col {
+    background: #F1F5F9;
+    color: #6B7280;
+    text-align: left;
+    width: 160px;
+    padding-left: 16px;
+    border-right: 2px solid #E2E8F0;
+  }
+  .gov-grid thead th.country-col {
+    background: #0F172A;
+    color: #FAFAFA;
+    width: calc((100% - 160px) / 4);
+    border-right: 1px solid #1E293B;
+  }
+  .gov-grid thead th.country-col:last-child {
+    border-right: none;
+  }
+  .country-sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.6;
+    margin-top: 3px;
+  }
+
+  /* Body */
+  .gov-grid tbody tr:nth-child(odd) td {
+    background: #FFFFFF;
+  }
+  .gov-grid tbody tr:nth-child(even) td {
+    background: #F1F5F9;
+  }
+  .gov-grid tbody td {
+    padding: 14px 14px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.55;
+    text-align: center;
+  }
+  .gov-grid tbody td:last-child {
+    border-right: none;
+  }
+  .gov-grid tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dim-name {
+    text-align: left;
+    padding-left: 16px;
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    border-right: 2px solid #E2E8F0;
+  }
+
+  /* Approach badges */
+  .approach-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  .approach-voluntary {
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+  }
+  .approach-binding {
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+  }
+  .approach-existing {
+    background: #FFF7ED;
+    color: #9A3412;
+    border: 1px solid #FED7AA;
+  }
+  .approach-preemption {
+    background: #F1F5F9;
+    color: #334155;
+    border: 1px solid #E2E8F0;
+  }
+
+  .detail-text {
+    display: block;
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* Key policy highlight */
+  .policy-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #334155;
+    font-weight: 500;
+  }
+
+  /* Spectrum bar */
+  .spectrum {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+  }
+  .spectrum-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 10px;
+  }
+  .spectrum-bar {
+    height: 8px;
+    background: linear-gradient(90deg, #ECFDF5 0%, #FFF7ED 33%, #FEF2F2 66%, #FEF2F2 100%);
+    border-radius: 4px;
+    position: relative;
+    margin-bottom: 8px;
+    border: 1px solid #E2E8F0;
+  }
+  .spectrum-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #6B7280;
+  }
+  .spectrum-markers {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-top: -14px;
+    margin-bottom: 4px;
+    padding: 0 2%;
+  }
+  .spec-marker {
+    font-size: 10px;
+    font-weight: 600;
+    color: #0F172A;
+    text-align: center;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .gov-grid { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Government AI Governance Comparison Matrix</h1>
+  <p class="subtitle">Four approaches to the same challenge. Each creates different incentives for enterprise AI adoption.</p>
+
+  <table class="gov-grid">
+    <thead>
+      <tr>
+        <th class="dim-col">Dimension</th>
+        <th class="country-col">Singapore<span class="country-sub">Asia-Pacific model</span></th>
+        <th class="country-col">European Union<span class="country-sub">Regulatory model</span></th>
+        <th class="country-col">United Kingdom<span class="country-sub">Principles model</span></th>
+        <th class="country-col">United States<span class="country-sub">Market model</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="dim-name">Regulation Type</td>
+        <td><span class="approach-tag approach-voluntary">Voluntary</span><span class="detail-text">Framework-based guidance</span></td>
+        <td><span class="approach-tag approach-binding">Binding</span><span class="detail-text">EU AI Act in force</span></td>
+        <td><span class="approach-tag approach-existing">Existing Regulators</span><span class="detail-text">Sector-specific oversight</span></td>
+        <td><span class="approach-tag approach-preemption">Preemption</span><span class="detail-text">Federal preemption of state law</span></td>
+      </tr>
+      <tr>
+        <td class="dim-name">Enforcement</td>
+        <td>Industry self-regulation with government support</td>
+        <td>Fines up to EUR 35M or 7% of revenue</td>
+        <td>Existing regulatory powers applied to AI</td>
+        <td>Limited federal enforcement; state-level variation</td>
+      </tr>
+      <tr>
+        <td class="dim-name">Innovation Stance</td>
+        <td>Pro-innovation sandbox approach</td>
+        <td>Risk-based; innovation concerns via Digital Omnibus</td>
+        <td>Pro-innovation; "light touch" regulation</td>
+        <td>Market-first; minimal intervention</td>
+      </tr>
+      <tr>
+        <td class="dim-name">Key Deployments</td>
+        <td>SingPass, Smart Nation, government services</td>
+        <td>Cross-sector compliance programmes</td>
+        <td>GOV.UK Chat, NHS AI Lab</td>
+        <td>Federal agency adoption, defense AI</td>
+      </tr>
+      <tr>
+        <td class="dim-name">Key Framework</td>
+        <td><span class="policy-ref">AI Governance Framework</span><span class="detail-text">Model AI Governance (2020, updated)</span></td>
+        <td><span class="policy-ref">EU AI Act</span><span class="detail-text">+ Digital Omnibus amendments</span></td>
+        <td><span class="policy-ref">AI Safety Institute</span><span class="detail-text">Pro-Innovation AI Regulation (2024)</span></td>
+        <td><span class="policy-ref">Executive Orders</span><span class="detail-text">EO 14110 (2023), subsequent orders</span></td>
+      </tr>
+      <tr>
+        <td class="dim-name">Investment Level</td>
+        <td>S$1B+ National AI Strategy 2.0</td>
+        <td>EUR 20B+ across member states</td>
+        <td>GBP 2.5B+ AI strategy</td>
+        <td>$285.9B total private investment</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="spectrum">
+    <div class="spectrum-label">Regulatory spectrum</div>
+    <div class="spectrum-bar"></div>
+    <div class="spectrum-labels">
+      <span>Voluntary</span>
+      <span>Principles-based</span>
+      <span>Binding</span>
+    </div>
+  </div>
+
+  <p class="caption"><strong>Figure VIS-52.</strong> Government AI Governance Comparison. Four approaches to the same challenge: Singapore (voluntary frameworks), EU (binding regulation), UK (existing regulators), US (preemption). Each creates different incentives for enterprise AI adoption. Sources: national policy documents, Stanford HAI 2026.</p>
+
+</div>
+</body>
+</html>

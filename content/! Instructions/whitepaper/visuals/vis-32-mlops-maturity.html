@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-32 — MLOps Maturity Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 960px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 760px;
+  }
+
+  /* Maturity grid */
+  .maturity-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .maturity-grid thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 14px 16px;
+    text-align: center;
+    vertical-align: bottom;
+  }
+  .maturity-grid thead th.cap-col {
+    background: #F1F5F9;
+    color: #6B7280;
+    text-align: left;
+    width: 150px;
+    border-right: 2px solid #E2E8F0;
+  }
+  .maturity-grid thead th.level-col {
+    background: #0F172A;
+    color: #FAFAFA;
+    width: 28%;
+    border-right: 1px solid #1E293B;
+  }
+  .maturity-grid thead th.level-col:last-child {
+    border-right: none;
+  }
+  .maturity-grid thead th.level-target {
+    background: #6D28D9;
+    color: #FFFFFF;
+  }
+
+  .level-sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.7;
+    margin-top: 3px;
+  }
+
+  /* Body */
+  .maturity-grid tbody tr:nth-child(odd) td {
+    background: #FFFFFF;
+  }
+  .maturity-grid tbody tr:nth-child(even) td {
+    background: #F1F5F9;
+  }
+  .maturity-grid tbody td {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .maturity-grid tbody td:last-child {
+    border-right: none;
+  }
+  .maturity-grid tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .cap-name {
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    border-right: 2px solid #E2E8F0;
+  }
+
+  /* Level 2+ column subtle highlight */
+  .maturity-grid tbody td.target-col {
+    background: #FDFCFF;
+  }
+  .maturity-grid tbody tr:nth-child(even) td.target-col {
+    background: #F5F3FF;
+  }
+
+  /* Markers */
+  .marker-row {
+    border-top: 2px solid #E2E8F0;
+  }
+  .marker-row td {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    background: #F8FAFC !important;
+    color: #6B7280;
+    border-bottom: none !important;
+  }
+  .marker-here {
+    color: #0F172A;
+    font-weight: 700;
+  }
+  .marker-target {
+    color: #6D28D9;
+    font-weight: 700;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #334155;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.here { background: #0F172A; }
+  .legend-dot.target { background: #6D28D9; }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .maturity-grid { break-inside: avoid; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">MLOps Maturity Assessment</h1>
+  <p class="subtitle">Eight capabilities scored across three maturity levels. Most enterprises sit at Level 0--1; production requires Level 2+.</p>
+
+  <table class="maturity-grid">
+    <thead>
+      <tr>
+        <th class="cap-col">Capability</th>
+        <th class="level-col">Level 0<span class="level-sub">Manual</span></th>
+        <th class="level-col">Level 1<span class="level-sub">Automated Pipelines</span></th>
+        <th class="level-col level-target">Level 2+<span class="level-sub">CI/CD for Models</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cap-name">Data Management</td>
+        <td>Manual data collection. Ad-hoc quality checks. No lineage tracking.</td>
+        <td>Automated ingestion pipelines. Schema validation. Basic lineage.</td>
+        <td class="target-col">Versioned datasets. Automated quality gates. Full data lineage and cataloguing.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Experimentation</td>
+        <td>Notebooks on local machines. No experiment tracking. Results in spreadsheets.</td>
+        <td>Centralised experiment tracker. Parameterised runs. Shared compute.</td>
+        <td class="target-col">Automated hyperparameter search. Reproducible runs. Experiment-to-production pipeline.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Model Training</td>
+        <td>Manual script execution. Single-machine training. No versioning.</td>
+        <td>Orchestrated training pipelines. Model registry. GPU scheduling.</td>
+        <td class="target-col">Automated retraining triggers. Distributed training. A/B model comparison.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Deployment</td>
+        <td>Manual deployment. SSH into servers. No rollback capability.</td>
+        <td>Containerised serving. Blue-green deployments. Basic health checks.</td>
+        <td class="target-col">Canary releases. Auto-scaling. Feature flags. Instant rollback.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Monitoring</td>
+        <td>No model monitoring. Issues discovered by users. Reactive fixes.</td>
+        <td>Basic metrics dashboards. Manual drift checks. Alert thresholds.</td>
+        <td class="target-col">Automated drift detection. Performance decay alerts. Real-time model health.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Governance</td>
+        <td>No model cards. No audit trail. Informal approval process.</td>
+        <td>Model cards for production models. Basic approval workflow. Access controls.</td>
+        <td class="target-col">Automated compliance checks. Full audit trail. Classification-based controls.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Testing</td>
+        <td>No testing beyond accuracy. Train/test split only. No integration tests.</td>
+        <td>Unit tests for pipelines. Validation datasets. Bias checks on major releases.</td>
+        <td class="target-col">Automated test suites. Shadow scoring. Continuous bias monitoring. Adversarial testing.</td>
+      </tr>
+      <tr>
+        <td class="cap-name">Documentation</td>
+        <td>Tribal knowledge. README files at best. No runbooks.</td>
+        <td>Standardised model cards. Team wiki. Basic runbooks.</td>
+        <td class="target-col">Auto-generated docs. Living architecture diagrams. Incident playbooks.</td>
+      </tr>
+
+      <!-- Marker row -->
+      <tr class="marker-row">
+        <td></td>
+        <td colspan="1" class="marker-here">Most enterprises are here</td>
+        <td></td>
+        <td class="marker-target">Minimum for production</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot here"></div>
+      <span>"You Are Here" -- most enterprises at Level 0--1</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot target"></div>
+      <span>Minimum for Production -- Level 2+</span>
+    </div>
+  </div>
+
+  <p class="caption"><strong>Figure VIS-32.</strong> The MLOps Maturity Assessment. Eight capabilities scored across three maturity levels. Most enterprises sit at Level 0--1; production requires Level 2+. Adapted from Google MLOps levels and Microsoft Azure AI maturity model.</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-11 — The AI Iceberg Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .iceberg-container {
+    position: relative;
+    width: 720px;
+    margin: 0 auto;
+  }
+
+  .iceberg-svg {
+    width: 100%;
+    display: block;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 28px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">The AI Iceberg Diagram</div>
+
+  <div class="iceberg-container">
+    <svg class="iceberg-svg" viewBox="0 0 720 540" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Waterline -->
+      <line x1="40" y1="120" x2="680" y2="120" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+      <!-- Waterline labels -->
+      <text x="56" y="112" font-family="Inter, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">VISIBLE</text>
+      <text x="56" y="138" font-family="Inter, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">HIDDEN</text>
+
+      <!-- Above waterline: ML Code box -->
+      <rect x="260" y="36" rx="3" ry="3" width="200" height="60" stroke="#6D28D9" stroke-width="2" fill="#EDE9FE"/>
+      <text x="360" y="62" font-family="Montserrat, sans-serif" font-size="14" fill="#6D28D9" font-weight="700" text-anchor="middle">ML Code</text>
+      <text x="360" y="82" font-family="Inter, sans-serif" font-size="11" fill="#6D28D9" text-anchor="middle" font-weight="500">5--10% of a production system</text>
+
+      <!-- Below waterline: iceberg shape outline -->
+      <path d="M 160 120 L 120 200 L 100 320 L 140 440 L 260 500 L 460 500 L 580 440 L 620 320 L 600 200 L 560 120 Z"
+            stroke="#E2E8F0" stroke-width="1.5" fill="#F1F5F9"/>
+
+      <!-- Below waterline sections, labelled rows -->
+      <!-- Row 1 -->
+      <rect x="180" y="140" rx="2" ry="2" width="360" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="161" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Data Collection and Validation</text>
+
+      <!-- Row 2 -->
+      <rect x="170" y="180" rx="2" ry="2" width="380" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="201" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Feature Engineering</text>
+
+      <!-- Row 3 -->
+      <rect x="160" y="220" rx="2" ry="2" width="400" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="241" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Configuration and Model Serving Infrastructure</text>
+
+      <!-- Row 4 -->
+      <rect x="156" y="260" rx="2" ry="2" width="408" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="281" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Monitoring, Testing and Debugging</text>
+
+      <!-- Row 5 -->
+      <rect x="164" y="300" rx="2" ry="2" width="392" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="321" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Process Management</text>
+
+      <!-- Row 6 -->
+      <rect x="180" y="340" rx="2" ry="2" width="360" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="361" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Governance and Compliance</text>
+
+      <!-- Row 7 -->
+      <rect x="200" y="380" rx="2" ry="2" width="320" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="401" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Organisational Change Management</text>
+
+      <!-- Row 8 -->
+      <rect x="224" y="420" rx="2" ry="2" width="272" height="32" stroke="#E2E8F0" stroke-width="1" fill="#FFFFFF"/>
+      <text x="360" y="441" font-family="Montserrat, sans-serif" font-size="11" fill="#0F172A" font-weight="600" text-anchor="middle">Security and Trust</text>
+
+      <!-- Relative size annotation -->
+      <!-- Bracket on the right side -->
+      <line x1="640" y1="36" x2="650" y2="36" stroke="#9CA3AF" stroke-width="1"/>
+      <line x1="650" y1="36" x2="650" y2="96" stroke="#9CA3AF" stroke-width="1"/>
+      <line x1="640" y1="96" x2="650" y2="96" stroke="#9CA3AF" stroke-width="1"/>
+      <text x="660" y="70" font-family="Inter, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">5--10%</text>
+
+      <line x1="640" y1="140" x2="650" y2="140" stroke="#9CA3AF" stroke-width="1"/>
+      <line x1="650" y1="140" x2="650" y2="460" stroke="#9CA3AF" stroke-width="1"/>
+      <line x1="640" y1="460" x2="650" y2="460" stroke="#9CA3AF" stroke-width="1"/>
+      <text x="660" y="296" font-family="Inter, sans-serif" font-size="10" fill="#9CA3AF" font-weight="500">90--95%</text>
+
+      <!-- Attribution -->
+      <text x="360" y="510" font-family="Inter, sans-serif" font-size="10" fill="#9CA3AF" text-anchor="middle" font-style="italic">Adapted from Sculley et al., 2015</text>
+    </svg>
+  </div>
+
+  <div class="caption">The AI iceberg. ML code is 5--10% of a production AI system. The rest -- infrastructure, governance, organisational change -- is invisible from the surface. Adapted from Sculley et al., 2015.</div>
+</div>
+</body>
+</html>

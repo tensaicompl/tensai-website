@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-55 — Three-Wave AI Maturity Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 880px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .timeline-area {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    margin-bottom: 20px;
+  }
+
+  /* Year axis at top */
+  .year-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 60px;
+  }
+
+  .year-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    color: #9CA3AF;
+    text-align: center;
+    width: 50px;
+  }
+
+  /* Wave bands */
+  .waves-container {
+    position: relative;
+    height: 120px;
+    margin: 0 60px;
+  }
+
+  .wave {
+    position: absolute;
+    height: 36px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+  }
+
+  .wave-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #FFFFFF;
+    white-space: nowrap;
+  }
+
+  .wave-1 {
+    background: #E2E8F0;
+    top: 0;
+    left: 0;
+    width: 37.5%; /* 2023-2025 out of 2023-2030+ */
+  }
+  .wave-1 .wave-label { color: #334155; }
+
+  .wave-2 {
+    background: #334155;
+    top: 42px;
+    left: 25%; /* starts 2025 */
+    width: 43.75%; /* 2025-2028 */
+  }
+
+  .wave-3 {
+    background: #0F172A;
+    top: 84px;
+    left: 62.5%; /* starts 2028 */
+    width: 37.5%; /* 2028-2030+ */
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  /* Fade effect on wave edges */
+  .wave-1::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, #FFFFFF);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .wave-2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, transparent, #FFFFFF);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .wave-2::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, #FFFFFF);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .wave-3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to left, transparent, #FFFFFF);
+    border-radius: 4px 0 0 4px;
+  }
+
+  /* Today marker */
+  .today-marker {
+    position: absolute;
+    left: calc(25% + 60px + 8%);
+    top: -8px;
+    bottom: -8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 5;
+  }
+
+  .today-tag {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 9px;
+    color: #6D28D9;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    background: #FFFFFF;
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+
+  .today-line {
+    width: 2px;
+    flex: 1;
+    background: #6D28D9;
+  }
+
+  /* Requirements table below waves */
+  .requirements {
+    margin: 24px 60px 0;
+  }
+
+  .req-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .req-table th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    padding: 8px 0;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .req-table th:first-child {
+    width: 120px;
+  }
+
+  .req-table td {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #334155;
+    padding: 10px 12px 10px 0;
+    vertical-align: top;
+    line-height: 1.4;
+    border-bottom: 1px solid #F1F5F9;
+  }
+
+  .req-table td:first-child {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    color: #6B7280;
+  }
+
+  .wave-col-header {
+    font-weight: 700;
+  }
+
+  /* Data annotations */
+  .annotations {
+    display: flex;
+    gap: 16px;
+    margin: 20px 60px 0;
+  }
+
+  .annotation {
+    flex: 1;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 10px 14px;
+  }
+
+  .annotation-stat {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+    margin-bottom: 2px;
+  }
+
+  .annotation-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #6B7280;
+    line-height: 1.4;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">Three-Wave AI Maturity Timeline</div>
+  <div class="subtitle">From assistive to agentic to autonomous -- 2023 through 2030+</div>
+
+  <div class="timeline-area">
+    <!-- Year axis -->
+    <div class="year-axis">
+      <span class="year-label">2023</span>
+      <span class="year-label">2024</span>
+      <span class="year-label">2025</span>
+      <span class="year-label">2026</span>
+      <span class="year-label">2027</span>
+      <span class="year-label">2028</span>
+      <span class="year-label">2029</span>
+      <span class="year-label">2030+</span>
+    </div>
+
+    <!-- Waves -->
+    <div class="waves-container">
+      <div class="wave wave-1">
+        <span class="wave-label">Wave 1: Assistive AI</span>
+      </div>
+      <div class="wave wave-2">
+        <span class="wave-label">Wave 2: Agentic AI</span>
+      </div>
+      <div class="wave wave-3">
+        <span class="wave-label">Wave 3: Autonomous AI</span>
+      </div>
+
+      <!-- Today marker -->
+      <div class="today-marker">
+        <span class="today-tag">Today</span>
+        <div class="today-line"></div>
+      </div>
+    </div>
+
+    <!-- Requirements table -->
+    <div class="requirements">
+      <table class="req-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Wave 1 (Assistive)</th>
+            <th>Wave 2 (Agentic)</th>
+            <th>Wave 3 (Autonomous)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Capabilities</td>
+            <td>Copilots, chatbots, summarisers</td>
+            <td>Agents that plan, reason, act with bounded autonomy</td>
+            <td>Systems with delegated decision authority</td>
+          </tr>
+          <tr>
+            <td>Governance</td>
+            <td>Output review, basic policies</td>
+            <td>Per-action authorisation, audit trails</td>
+            <td>Outcome-based governance, liability frameworks</td>
+          </tr>
+          <tr>
+            <td>Organisation</td>
+            <td>CoE + power users</td>
+            <td>Platform team + embedded specialists</td>
+            <td>AI-native operating model</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="annotations">
+    <div class="annotation">
+      <div class="annotation-stat">20% to 77.3%</div>
+      <div class="annotation-desc">Agent task success improvement in one year (Stanford HAI)</div>
+    </div>
+    <div class="annotation">
+      <div class="annotation-stat">30%</div>
+      <div class="annotation-desc">Of enterprise software revenue from agentic AI by 2035 (Goldman Sachs)</div>
+    </div>
+  </div>
+
+  <div class="caption">The Three-Wave AI Maturity Timeline. From assistive (copilots) to agentic (bounded autonomy) to autonomous (delegated decisions). Agent task success improved from 20% to 77.3% in one year (Stanford HAI).</div>
+</div>
+</body>
+</html>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 const STAGE_W = 140;
 const STAGE_H = 160;
 
@@ -15,7 +19,7 @@ function Stage1() {
   );
 }
 
-function Stage2() {
+function Stage2({ reducedMotion }: { reducedMotion: boolean }) {
   const cx = STAGE_W / 2, hubY = 60;
   const spokes = [
     { dx: -38, dy: -28 }, { dx: 38, dy: -23 },
@@ -39,11 +43,13 @@ function Stage2() {
           <g key={i}>
             <line x1={eX} y1={eY} x2={cx + s.dx} y2={hubY + s.dy} stroke="var(--border)" strokeWidth="1" />
             <circle cx={cx + s.dx} cy={hubY + s.dy} r={6} stroke="var(--color-midnight)" strokeWidth="1.5" fill="none" />
-            <circle r="2" fill="var(--color-midnight)" opacity="0.6">
-              <animateMotion dur="2s" repeatCount="indefinite" begin={`${i * 0.4}s`}>
-                <mpath href={`#si2-spoke-${i}`} />
-              </animateMotion>
-            </circle>
+            {!reducedMotion && (
+              <circle r="2" fill="var(--color-midnight)" opacity="0.6">
+                <animateMotion dur="2s" repeatCount="indefinite" begin={`${i * 0.4}s`}>
+                  <mpath href={`#si2-spoke-${i}`} />
+                </animateMotion>
+              </circle>
+            )}
           </g>
         );
       })}
@@ -54,7 +60,7 @@ function Stage2() {
   );
 }
 
-function Stage3() {
+function Stage3({ reducedMotion }: { reducedMotion: boolean }) {
   const cx = STAGE_W / 2, barY = 42, barW = 100, barH = 10;
   const coeY = 22, coeR = 12;
   const dots = [
@@ -68,11 +74,13 @@ function Stage3() {
       <circle cx={cx} cy={coeY} r={coeR} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
       <text x={cx} y={coeY + 1} fontFamily="var(--font-display)" fontSize="7" fill="var(--color-midnight)" textAnchor="middle" dominantBaseline="middle" fontWeight="700">CoE</text>
       <line x1={cx} y1={coeY + coeR} x2={cx} y2={barY} stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2" />
-      <circle r="2" fill="var(--color-midnight)" opacity="0.5">
-        <animateMotion dur="1.5s" repeatCount="indefinite">
-          <mpath href="#si3-coe-plat" />
-        </animateMotion>
-      </circle>
+      {!reducedMotion && (
+        <circle r="2" fill="var(--color-midnight)" opacity="0.5">
+          <animateMotion dur="1.5s" repeatCount="indefinite">
+            <mpath href="#si3-coe-plat" />
+          </animateMotion>
+        </circle>
+      )}
       <rect x={cx - barW / 2} y={barY} width={barW} height={barH} rx={2} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
       <text x={cx} y={barY + 7.5} fontFamily="var(--font-mono)" fontSize="7" fill="var(--color-midnight)" textAnchor="middle" fontWeight="600" letterSpacing="0.08em">PLATFORM</text>
       {dots.map((d, i) => (
@@ -86,7 +94,7 @@ function Stage3() {
   );
 }
 
-function Stage4() {
+function Stage4({ reducedMotion }: { reducedMotion: boolean }) {
   const cx = STAGE_W / 2, barY = 46, barW = 100, barH = 10;
   const coeY = 20, coeR = 12;
   const usersY = 118, usersW = 44, usersH = 16;
@@ -118,11 +126,13 @@ function Stage4() {
       {elbows.map((e, i) => (
         <g key={e.id}>
           <path d={e.d} stroke="var(--fg-3)" strokeWidth="0.8" fill="none" opacity="0.25" />
-          <circle r="2" fill="var(--color-midnight)" opacity="0.6">
-            <animateMotion dur="2.5s" repeatCount="indefinite" begin={`${i * 0.5}s`}>
-              <mpath href={`#${e.id}`} />
-            </animateMotion>
-          </circle>
+          {!reducedMotion && (
+            <circle r="2" fill="var(--color-midnight)" opacity="0.6">
+              <animateMotion dur="2.5s" repeatCount="indefinite" begin={`${i * 0.5}s`}>
+                <mpath href={`#${e.id}`} />
+              </animateMotion>
+            </circle>
+          )}
         </g>
       ))}
       <rect x={cx - usersW / 2} y={usersY} width={usersW} height={usersH} rx={2} stroke="var(--color-midnight)" strokeWidth="1.5" fill="var(--bg-card)" />
@@ -132,9 +142,25 @@ function Stage4() {
   );
 }
 
-const STAGES: Record<number, () => React.JSX.Element> = { 1: Stage1, 2: Stage2, 3: Stage3, 4: Stage4 };
+const STAGES: Record<number, (props: { reducedMotion: boolean }) => React.JSX.Element> = {
+  1: () => <Stage1 />,
+  2: ({ reducedMotion }) => <Stage2 reducedMotion={reducedMotion} />,
+  3: ({ reducedMotion }) => <Stage3 reducedMotion={reducedMotion} />,
+  4: ({ reducedMotion }) => <Stage4 reducedMotion={reducedMotion} />,
+};
 
 export function StageIllustration({ stage }: { stage: number | string }) {
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    mq.addEventListener("change", onMotionChange);
+    return () => mq.removeEventListener("change", onMotionChange);
+  }, []);
+
   const StageComponent = STAGES[Number(stage)];
   if (!StageComponent) return null;
   return (
@@ -162,7 +188,7 @@ export function StageIllustration({ stage }: { stage: number | string }) {
           padding: "8px",
         }}
       >
-        <StageComponent />
+        <StageComponent reducedMotion={reducedMotion} />
       </svg>
     </span>
   );

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-28 — AI Incident Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 520px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .chart-area {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    padding: 0 0 40px 40px;
+  }
+
+  /* Y-axis */
+  .y-axis {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 40px;
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-right: 6px;
+  }
+
+  .y-tick {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #9CA3AF;
+  }
+
+  /* Grid lines */
+  .grid {
+    position: absolute;
+    left: 40px;
+    top: 0;
+    right: 0;
+    bottom: 40px;
+  }
+
+  .grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #F1F5F9;
+  }
+
+  /* Bars */
+  .bars {
+    position: absolute;
+    left: 40px;
+    top: 0;
+    right: 0;
+    bottom: 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding: 0 24px;
+  }
+
+  .bar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    max-width: 100px;
+  }
+
+  .bar {
+    width: 56px;
+    border-radius: 3px 3px 0 0;
+    position: relative;
+  }
+
+  .bar-value {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+  }
+
+  .bar-2023 {
+    background: #0F172A;
+    height: 104px; /* 149/362 * 252 */
+  }
+
+  .bar-2024 {
+    background: #0F172A;
+    height: 162px; /* 233/362 * 252 */
+  }
+
+  .bar-2025 {
+    background: #6D28D9;
+    height: 252px; /* full height = 362 */
+  }
+
+  .bar-2025 .bar-value {
+    color: #6D28D9;
+  }
+
+  /* X-axis labels */
+  .x-labels {
+    position: absolute;
+    left: 40px;
+    right: 0;
+    bottom: 12px;
+    display: flex;
+    justify-content: space-around;
+    padding: 0 24px;
+  }
+
+  .x-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: #0F172A;
+    text-align: center;
+    flex: 1;
+    max-width: 100px;
+  }
+
+  /* Trend line and growth annotation */
+  .trend-annotation {
+    position: absolute;
+    top: 12px;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .trend-badge {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 3px;
+    padding: 3px 8px;
+  }
+
+  .trend-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #6B7280;
+  }
+
+  /* Incident callouts */
+  .callouts {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .callout-card {
+    flex: 1;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+
+  .callout-stat {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+    margin-bottom: 2px;
+  }
+
+  .callout-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    line-height: 1.4;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">AI Incident Timeline</div>
+  <div class="subtitle">Documented AI incidents are accelerating year over year</div>
+
+  <div class="chart-area">
+    <!-- Y-axis ticks -->
+    <div class="y-axis">
+      <span class="y-tick">400</span>
+      <span class="y-tick">300</span>
+      <span class="y-tick">200</span>
+      <span class="y-tick">100</span>
+      <span class="y-tick">0</span>
+    </div>
+
+    <!-- Grid lines -->
+    <div class="grid">
+      <div class="grid-line" style="top: 0%;"></div>
+      <div class="grid-line" style="top: 25%;"></div>
+      <div class="grid-line" style="top: 50%;"></div>
+      <div class="grid-line" style="top: 75%;"></div>
+      <div class="grid-line" style="top: 100%;"></div>
+    </div>
+
+    <!-- Trend annotation -->
+    <div class="trend-annotation">
+      <span class="trend-badge">55%+ YoY</span>
+      <span class="trend-label">growth rate</span>
+    </div>
+
+    <!-- Bars -->
+    <div class="bars">
+      <div class="bar-group">
+        <div class="bar bar-2023">
+          <span class="bar-value">149</span>
+        </div>
+      </div>
+      <div class="bar-group">
+        <div class="bar bar-2024">
+          <span class="bar-value">233</span>
+        </div>
+      </div>
+      <div class="bar-group">
+        <div class="bar bar-2025">
+          <span class="bar-value">362</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- X-axis labels -->
+    <div class="x-labels">
+      <span class="x-label">2023</span>
+      <span class="x-label">2024</span>
+      <span class="x-label">2025</span>
+    </div>
+  </div>
+
+  <!-- Incident callouts -->
+  <div class="callouts">
+    <div class="callout-card">
+      <div class="callout-stat">$25.6M</div>
+      <div class="callout-desc">Arup deepfake fraud -- a single AI-enabled social engineering attack</div>
+    </div>
+    <div class="callout-card">
+      <div class="callout-stat">$67.4B</div>
+      <div class="callout-desc">Estimated losses from hallucination-related errors across enterprises</div>
+    </div>
+  </div>
+
+  <div class="caption">AI incidents are accelerating. From 149 documented incidents in 2023 to 362 in 2025 -- 55%+ year-over-year growth. Sources: AI Incident Database, CoSAI.</div>
+</div>
+</body>
+</html>

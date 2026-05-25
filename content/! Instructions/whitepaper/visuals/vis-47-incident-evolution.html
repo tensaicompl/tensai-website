@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-47 — AI Incident Evolution Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 360px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 36px 28px 28px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+  }
+
+  /* Vertical escalation line */
+  .escalation-line {
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #E2E8F0, #334155, #0F172A);
+  }
+
+  /* Incident cards */
+  .incident {
+    position: relative;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+  }
+
+  .incident:last-of-type {
+    margin-bottom: 0;
+  }
+
+  /* Dots on the timeline */
+  .incident::before {
+    content: '';
+    position: absolute;
+    left: -28px;
+    top: 18px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #E2E8F0;
+    background: #FFFFFF;
+  }
+
+  .incident.level-1::before {
+    border-color: #E2E8F0;
+    background: #F1F5F9;
+  }
+
+  .incident.level-2::before {
+    border-color: #334155;
+    background: #334155;
+  }
+
+  .incident.level-3::before {
+    border-color: #0F172A;
+    background: #0F172A;
+  }
+
+  .incident-year {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #9CA3AF;
+    margin-bottom: 2px;
+  }
+
+  .incident-company {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    margin-bottom: 6px;
+  }
+
+  .incident.level-1 .incident-company { color: #6B7280; }
+  .incident.level-2 .incident-company { color: #334155; }
+  .incident.level-3 .incident-company { color: #0F172A; }
+
+  .incident-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #334155;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .incident-category {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .incident.level-1 .incident-category {
+    color: #6B7280;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+  }
+
+  .incident.level-2 .incident-category {
+    color: #334155;
+    background: #E2E8F0;
+  }
+
+  .incident.level-3 .incident-category {
+    color: #FFFFFF;
+    background: #0F172A;
+  }
+
+  /* Escalation label */
+  .escalation-label {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 8px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    transform-origin: center center;
+  }
+
+  .escalation-arrow {
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .escalation-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid #0F172A;
+  }
+
+  .summary {
+    margin-top: 20px;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    font-style: italic;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">AI Incident Evolution</div>
+  <div class="subtitle">From accidental to weaponised to systemic</div>
+
+  <div class="timeline">
+    <div class="escalation-line"></div>
+
+    <!-- Incident 1: Samsung -->
+    <div class="incident level-1">
+      <div class="incident-year">2023</div>
+      <div class="incident-company">Samsung</div>
+      <div class="incident-desc">Employees paste proprietary source code into ChatGPT. Sensitive data leaked to third-party model training.</div>
+      <span class="incident-category">Accidental exposure</span>
+    </div>
+
+    <!-- Incident 2: EchoLeak -->
+    <div class="incident level-2">
+      <div class="incident-year">2025</div>
+      <div class="incident-company">EchoLeak CVE</div>
+      <div class="incident-desc">Zero-click vulnerability in M365 Copilot. CVSS 9.3. No user interaction required for data exfiltration.</div>
+      <span class="incident-category">Weaponised injection</span>
+    </div>
+
+    <!-- Incident 3: Amazon -->
+    <div class="incident level-3">
+      <div class="incident-year">2026</div>
+      <div class="incident-company">Amazon</div>
+      <div class="incident-desc">AI agents act on outdated internal wiki documentation. 6.3 million lost orders. No governance safeguards triggered.</div>
+      <span class="incident-category">Production failure at scale</span>
+    </div>
+  </div>
+
+  <div class="summary">From accidental data leakage to weaponised injection to systemic production failures.</div>
+
+  <div class="caption">The evolution of AI security incidents: escalating severity, expanding blast radius, and deepening organisational impact.</div>
+</div>
+</body>
+</html>

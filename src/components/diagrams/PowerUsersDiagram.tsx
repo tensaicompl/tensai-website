@@ -18,18 +18,24 @@ export function PowerUsersDiagram() {
   /* ── Visibility via IntersectionObserver ──────────── */
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (prefersReduced) {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    mq.addEventListener("change", onMotionChange);
+
+    if (mq.matches) {
       setVisible(true);
-      return;
+      return () => mq.removeEventListener("change", onMotionChange);
     }
 
     const el = figRef.current;
-    if (!el) return;
+    if (!el) {
+      return () => mq.removeEventListener("change", onMotionChange);
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -41,7 +47,10 @@ export function PowerUsersDiagram() {
       { threshold: 0.2 },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      mq.removeEventListener("change", onMotionChange);
+    };
   }, []);
 
   /* ── Layout constants (scaled to 1200-wide viewBox) ─ */
@@ -341,26 +350,30 @@ export function PowerUsersDiagram() {
             capability flows down
           </text>
 
-          {/* Animated dot flowing down */}
-          <circle r="4" fill="var(--accent)" opacity="0.7">
-            <animateMotion
-              dur="2.5s"
-              repeatCount="indefinite"
-              begin="1.2s"
-            >
-              <mpath href="#puCapPath" />
-            </animateMotion>
-          </circle>
+          {/* Animated dots flowing down */}
+          {visible && !reducedMotion && (
+            <>
+              <circle r="4" fill="var(--accent)" opacity="0.7">
+                <animateMotion
+                  dur="2.5s"
+                  repeatCount="indefinite"
+                  begin="1.2s"
+                >
+                  <mpath href="#puCapPath" />
+                </animateMotion>
+              </circle>
 
-          <circle r="4" fill="var(--accent)" opacity="0.4">
-            <animateMotion
-              dur="2.5s"
-              repeatCount="indefinite"
-              begin="2.45s"
-            >
-              <mpath href="#puCapPath" />
-            </animateMotion>
-          </circle>
+              <circle r="4" fill="var(--accent)" opacity="0.4">
+                <animateMotion
+                  dur="2.5s"
+                  repeatCount="indefinite"
+                  begin="2.45s"
+                >
+                  <mpath href="#puCapPath" />
+                </animateMotion>
+              </circle>
+            </>
+          )}
         </g>
 
         {/* ==================================================
@@ -391,26 +404,30 @@ export function PowerUsersDiagram() {
             governance flows up
           </text>
 
-          {/* Animated dot flowing up */}
-          <circle r="4" fill="var(--fg-2)" opacity="0.7">
-            <animateMotion
-              dur="2.5s"
-              repeatCount="indefinite"
-              begin="1.2s"
-            >
-              <mpath href="#puGovPath" />
-            </animateMotion>
-          </circle>
+          {/* Animated dots flowing up */}
+          {visible && !reducedMotion && (
+            <>
+              <circle r="4" fill="var(--fg-2)" opacity="0.7">
+                <animateMotion
+                  dur="2.5s"
+                  repeatCount="indefinite"
+                  begin="1.2s"
+                >
+                  <mpath href="#puGovPath" />
+                </animateMotion>
+              </circle>
 
-          <circle r="4" fill="var(--fg-2)" opacity="0.4">
-            <animateMotion
-              dur="2.5s"
-              repeatCount="indefinite"
-              begin="2.45s"
-            >
-              <mpath href="#puGovPath" />
-            </animateMotion>
-          </circle>
+              <circle r="4" fill="var(--fg-2)" opacity="0.4">
+                <animateMotion
+                  dur="2.5s"
+                  repeatCount="indefinite"
+                  begin="2.45s"
+                >
+                  <mpath href="#puGovPath" />
+                </animateMotion>
+              </circle>
+            </>
+          )}
         </g>
       </svg>
     </figure>

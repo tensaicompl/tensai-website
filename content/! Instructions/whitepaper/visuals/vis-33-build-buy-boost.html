@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-33 — Build / Buy / Boost Decision Tree</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 860px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .tree {
+    position: relative;
+    width: 780px;
+    height: 520px;
+    margin: 0 auto;
+  }
+
+  /* SVG connectors */
+  .tree-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Decision diamond */
+  .decision {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .diamond-shape {
+    width: 160px;
+    height: 80px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .diamond-shape svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .diamond-text {
+    position: relative;
+    z-index: 1;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #0F172A;
+    text-align: center;
+    line-height: 1.35;
+    max-width: 120px;
+  }
+
+  /* Branch labels */
+  .branch-label {
+    position: absolute;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    z-index: 3;
+    padding: 2px 6px;
+    background: #FFFFFF;
+  }
+
+  .branch-yes { color: #0F172A; }
+  .branch-no { color: #9CA3AF; }
+
+  /* Terminal nodes */
+  .terminal {
+    position: absolute;
+    z-index: 2;
+    border-radius: 6px;
+    padding: 14px 16px;
+    text-align: center;
+    width: 190px;
+    border: 1.5px solid #E2E8F0;
+    background: #FFFFFF;
+  }
+
+  .terminal.boost {
+    border-color: #6D28D9;
+    border-width: 2px;
+  }
+
+  .terminal-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #0F172A;
+    margin-bottom: 6px;
+  }
+
+  .terminal.boost .terminal-name {
+    color: #6D28D9;
+  }
+
+  .terminal-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #334155;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .terminal-examples {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #9CA3AF;
+    margin-bottom: 6px;
+  }
+
+  .terminal-rate {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+  }
+
+  .terminal-rate-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 9px;
+    color: #6B7280;
+    margin-top: 2px;
+  }
+
+  /* Start node */
+  .start-node {
+    position: absolute;
+    z-index: 2;
+    border: 1.5px solid #0F172A;
+    border-radius: 20px;
+    padding: 8px 20px;
+    background: #FFFFFF;
+  }
+
+  .start-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #0F172A;
+  }
+
+  /* Breakeven note */
+  .breakeven {
+    position: absolute;
+    z-index: 3;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+
+  .breakeven-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 9px;
+    color: #334155;
+  }
+
+  /* Positions */
+  .start-node { top: 0; left: 50%; transform: translateX(-50%); }
+
+  .decision-1 { top: 70px; left: 50%; transform: translateX(-50%); }
+  .decision-2 { top: 200px; left: 50%; transform: translateX(-50%); }
+  .decision-3 { top: 330px; left: 50%; transform: translateX(-50%); }
+
+  .terminal-build { top: 170px; left: 0; }
+  .terminal-buy { top: 395px; right: 0; }
+  .terminal-boost { top: 395px; left: 50%; transform: translateX(-50%); }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">Build / Buy / Boost Decision Tree</div>
+  <div class="subtitle">Platform strategy selection based on three critical questions</div>
+
+  <div class="tree">
+    <svg class="tree-lines" viewBox="0 0 780 520" fill="none">
+      <!-- Start to Decision 1 -->
+      <line x1="390" y1="38" x2="390" y2="70" stroke="#0F172A" stroke-width="1.5"/>
+
+      <!-- Decision 1 YES to BUILD -->
+      <line x1="310" y1="110" x2="140" y2="170" stroke="#0F172A" stroke-width="1.5"/>
+      <path d="M140 167 L140 170 L143 170" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+
+      <!-- Decision 1 NO to Decision 2 -->
+      <line x1="390" y1="150" x2="390" y2="200" stroke="#0F172A" stroke-width="1.5"/>
+
+      <!-- Decision 2 YES to Boost -->
+      <line x1="310" y1="240" x2="390" y2="330" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Decision 2 NO to Decision 3 -->
+      <line x1="470" y1="240" x2="520" y2="330" stroke="#0F172A" stroke-width="1.5"/>
+
+      <!-- Decision 3 YES to Boost -->
+      <line x1="470" y1="370" x2="460" y2="395" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Decision 3 NO to Buy -->
+      <line x1="600" y1="370" x2="635" y2="395" stroke="#0F172A" stroke-width="1.5"/>
+    </svg>
+
+    <!-- Start -->
+    <div class="start-node">
+      <span class="start-label">Platform Decision</span>
+    </div>
+
+    <!-- Decision 1 -->
+    <div class="decision decision-1">
+      <div class="diamond-shape">
+        <svg viewBox="0 0 160 80"><polygon points="80,2 158,40 80,78 2,40" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"/></svg>
+        <span class="diamond-text">Is AI your core product or differentiator?</span>
+      </div>
+    </div>
+    <span class="branch-label branch-yes" style="top: 132px; left: 250px;">Yes</span>
+    <span class="branch-label branch-no" style="top: 158px; left: 400px;">No</span>
+
+    <!-- Decision 2 -->
+    <div class="decision decision-2">
+      <div class="diamond-shape">
+        <svg viewBox="0 0 160 80"><polygon points="80,2 158,40 80,78 2,40" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"/></svg>
+        <span class="diamond-text">Is your data highly sensitive or regulated?</span>
+      </div>
+    </div>
+    <span class="branch-label branch-yes" style="top: 268px; left: 280px;">Yes</span>
+    <span class="branch-label branch-no" style="top: 268px; left: 498px;">No</span>
+
+    <!-- Decision 3 -->
+    <div class="decision" style="position: absolute; top: 330px; left: 520px;">
+      <div class="diamond-shape">
+        <svg viewBox="0 0 160 80"><polygon points="80,2 158,40 80,78 2,40" fill="#FFFFFF" stroke="#0F172A" stroke-width="1.5"/></svg>
+        <span class="diamond-text">Do you need >11B tokens per month?</span>
+      </div>
+    </div>
+    <span class="branch-label branch-yes" style="top: 390px; left: 480px;">Yes</span>
+    <span class="branch-label branch-no" style="top: 390px; left: 660px;">No</span>
+
+    <!-- Breakeven note -->
+    <div class="breakeven" style="top: 340px; right: 0;">
+      <span class="breakeven-text">Self-hosting breakeven: ~11B tokens/month</span>
+    </div>
+
+    <!-- Terminal: BUILD -->
+    <div class="terminal terminal-build">
+      <div class="terminal-name">Build</div>
+      <div class="terminal-desc">Proprietary models on proprietary data. Maximum control, maximum investment.</div>
+      <div class="terminal-examples">Stripe, Bosch</div>
+      <div class="terminal-rate">~33%</div>
+      <div class="terminal-rate-label">success rate</div>
+    </div>
+
+    <!-- Terminal: BOOST -->
+    <div class="terminal boost terminal-boost">
+      <div class="terminal-name">Boost</div>
+      <div class="terminal-desc">Buy the model, enhance with proprietary data and guardrails. Dominant successful pattern.</div>
+      <div class="terminal-examples">JPMorgan, Morgan Stanley</div>
+      <div class="terminal-rate">~67%</div>
+      <div class="terminal-rate-label">success rate (MIT 2025)</div>
+    </div>
+
+    <!-- Terminal: BUY -->
+    <div class="terminal terminal-buy">
+      <div class="terminal-name">Buy</div>
+      <div class="terminal-desc">Vendor model as-is. Fastest time to value, least differentiation.</div>
+      <div class="terminal-examples">Deloitte</div>
+      <div class="terminal-rate">~67%</div>
+      <div class="terminal-rate-label">success rate (vendor-led)</div>
+    </div>
+  </div>
+
+  <div class="caption">The Build/Buy/Boost Decision Tree. "Boost" dominates successful enterprise deployments: buy the model, enhance with proprietary data and guardrails. Vendor-led deployments outperform internal builds 2:1 (MIT 2025).</div>
+</div>
+</body>
+</html>

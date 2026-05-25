@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-59 — Penalty Comparison Table (EU AI Act vs GDPR)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 600px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  /* Table */
+  .penalty-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .penalty-table thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .penalty-table thead th.dim-col {
+    background: #F1F5F9;
+    color: #6B7280;
+    text-align: left;
+    width: 36%;
+    border-right: 2px solid #E2E8F0;
+  }
+  .penalty-table thead th.reg-col {
+    background: #0F172A;
+    color: #FAFAFA;
+    width: 32%;
+  }
+  .penalty-table thead th.reg-col:first-of-type {
+    border-right: 1px solid #1E293B;
+  }
+  .reg-year {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.6;
+    margin-top: 3px;
+  }
+
+  .penalty-table tbody tr:nth-child(odd) td {
+    background: #FFFFFF;
+  }
+  .penalty-table tbody tr:nth-child(even) td {
+    background: #F1F5F9;
+  }
+  .penalty-table tbody td {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    vertical-align: middle;
+    line-height: 1.55;
+    text-align: center;
+  }
+  .penalty-table tbody td:last-child {
+    border-right: none;
+  }
+  .penalty-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .dim-label {
+    text-align: left;
+    font-weight: 600;
+    color: #0F172A;
+    font-size: 13px;
+    border-right: 2px solid #E2E8F0;
+  }
+
+  /* Value emphasis */
+  .fine-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 14px;
+    color: #0F172A;
+  }
+  .fine-or {
+    display: block;
+    font-size: 11px;
+    color: #9CA3AF;
+    font-weight: 400;
+    margin: 2px 0;
+    font-family: 'Inter', sans-serif;
+  }
+  .fine-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 14px;
+    color: #0F172A;
+  }
+
+  /* Multiplier annotation row */
+  .multiplier-row td {
+    background: #0F172A !important;
+    color: #FAFAFA !important;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: none;
+    text-align: center;
+    padding: 12px 20px;
+  }
+  .multiplier-row td.dim-label {
+    color: #FAFAFA !important;
+  }
+  .multiplier-badge {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #FAFAFA;
+  }
+
+  /* Scope row */
+  .scope-text {
+    font-size: 12px;
+    color: #6B7280;
+    line-height: 1.5;
+    text-align: left;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 24px; }
+    .penalty-table { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Penalty Comparison Table</h1>
+  <p class="subtitle">EU AI Act vs GDPR. AI Act penalties are approximately double GDPR maximums.</p>
+
+  <table class="penalty-table">
+    <thead>
+      <tr>
+        <th class="dim-col">Category</th>
+        <th class="reg-col">EU AI Act<span class="reg-year">2024 (effective 2025--2027)</span></th>
+        <th class="reg-col">GDPR<span class="reg-year">2016 (effective 2018)</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="dim-label">Maximum Fine</td>
+        <td>
+          <span class="fine-value">EUR 35M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">7% of global revenue</span>
+        </td>
+        <td>
+          <span class="fine-value">EUR 20M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">4% of global revenue</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-label">Prohibited Practices</td>
+        <td>
+          <span class="fine-value">EUR 35M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">7% of revenue</span>
+        </td>
+        <td>
+          <span class="scope-text">No direct equivalent. Data processing violations at max tier.</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-label">High-Risk Violations</td>
+        <td>
+          <span class="fine-value">EUR 15M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">3% of revenue</span>
+        </td>
+        <td>
+          <span class="fine-value">EUR 10M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">2% of revenue</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-label">Reporting Violations</td>
+        <td>
+          <span class="fine-value">EUR 7.5M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">1% of revenue</span>
+        </td>
+        <td>
+          <span class="fine-value">EUR 10M</span>
+          <span class="fine-or">or</span>
+          <span class="fine-pct">2% of revenue</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="dim-label">Scope</td>
+        <td><span class="scope-text">AI systems placed on the EU market or used in the EU, regardless of provider location</span></td>
+        <td><span class="scope-text">Processing of personal data of EU residents, regardless of processor location</span></td>
+      </tr>
+
+      <!-- Multiplier row -->
+      <tr class="multiplier-row">
+        <td class="dim-label">Ratio</td>
+        <td><span class="multiplier-badge">~2x GDPR</span></td>
+        <td>Baseline</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="caption"><strong>Figure VIS-59.</strong> EU AI Act penalties are approximately double GDPR maximums. This represents the most significant increase in technology regulation penalties since GDPR. Both regulations apply extraterritorially. Sources: EU AI Act (Regulation 2024/1689), GDPR (Regulation 2016/679).</p>
+
+</div>
+</body>
+</html>

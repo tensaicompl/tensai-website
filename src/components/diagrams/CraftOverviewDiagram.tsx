@@ -20,19 +20,19 @@ import { useEffect, useRef, useState } from "react";
 export function CraftOverviewDiagram() {
   const figRef = useRef<HTMLElement>(null);
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mql.matches);
+    const motionHandler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mql.addEventListener("change", motionHandler);
+    return () => mql.removeEventListener("change", motionHandler);
+  }, []);
 
   useEffect(() => {
     const el = figRef.current;
     if (!el) return;
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
-      setVisible(true);
-      return;
-    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -279,7 +279,7 @@ export function CraftOverviewDiagram() {
         })}
 
         {/* ── Flowing dots on vertical arrows (rendered only when visible) ── */}
-        {visible && (
+        {visible && !reducedMotion && (
           <g>
             {arrowSegments.map((_, i) => (
               <circle

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-49 — Published ROI Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    color: #0F172A;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 980px;
+    width: 100%;
+  }
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: #0F172A;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 32px;
+    line-height: 1.6;
+    max-width: 760px;
+  }
+
+  /* Table */
+  .roi-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .roi-table thead th {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #FAFAFA;
+    background: #0F172A;
+    padding: 14px 12px;
+    text-align: left;
+    border-right: 1px solid #1E293B;
+    white-space: nowrap;
+  }
+  .roi-table thead th:last-child {
+    border-right: none;
+  }
+
+  .roi-table tbody tr:nth-child(odd) {
+    background: #FFFFFF;
+  }
+  .roi-table tbody tr:nth-child(even) {
+    background: #F1F5F9;
+  }
+  .roi-table tbody td {
+    padding: 12px 12px;
+    font-size: 13px;
+    color: #334155;
+    border-bottom: 1px solid #E2E8F0;
+    border-right: 1px solid #E2E8F0;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .roi-table tbody td:last-child {
+    border-right: none;
+  }
+  .roi-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Company column */
+  .company-cell {
+    font-weight: 600;
+    color: #0F172A;
+    white-space: nowrap;
+  }
+
+  /* Sector */
+  .sector-cell {
+    font-size: 12px;
+    color: #6B7280;
+    white-space: nowrap;
+  }
+
+  /* Metric cell -- emphasis */
+  .metric-cell {
+    font-weight: 500;
+    color: #0F172A;
+  }
+  .metric-value {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 13px;
+    color: #0F172A;
+    margin-bottom: 2px;
+  }
+  .metric-context {
+    font-size: 12px;
+    color: #6B7280;
+    font-weight: 400;
+  }
+
+  /* Strategy badge */
+  .strategy-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .strategy-build {
+    background: #F1F5F9;
+    color: #334155;
+    border: 1px solid #E2E8F0;
+  }
+  .strategy-buy {
+    background: #F1F5F9;
+    color: #334155;
+    border: 1px solid #E2E8F0;
+  }
+  .strategy-boost {
+    background: #0F172A;
+    color: #FAFAFA;
+  }
+
+  /* Timeline */
+  .timeline-cell {
+    font-size: 12px;
+    color: #6B7280;
+    white-space: nowrap;
+  }
+
+  /* Note bar */
+  .note-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.5;
+  }
+  .note-bar .note-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #0F172A;
+    flex-shrink: 0;
+  }
+
+  /* Caption */
+  .caption {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.6;
+  }
+  .caption strong {
+    color: #334155;
+  }
+
+  @media print {
+    body { padding: 16px; }
+    .roi-table { break-inside: avoid; font-size: 11px; }
+    .roi-table thead th, .roi-table tbody td { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1 class="title">Published ROI Table</h1>
+  <p class="subtitle">Every metric is publicly reported by the named organisation. Strategy column shows that "Boost" (buy model, enhance with proprietary data) is the dominant successful pattern.</p>
+
+  <table class="roi-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Sector</th>
+        <th>AI Application</th>
+        <th>Published Metric</th>
+        <th>Timeline</th>
+        <th>Strategy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="company-cell">JPMorgan Chase</td>
+        <td class="sector-cell">Financial Services</td>
+        <td>COiN (Contract Intelligence)</td>
+        <td class="metric-cell">
+          <span class="metric-value">360,000 hrs/yr</span>
+          <span class="metric-context">Legal document review saved</span>
+        </td>
+        <td class="timeline-cell">Multi-year</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Morgan Stanley</td>
+        <td class="sector-cell">Financial Services</td>
+        <td>AI @ Morgan Stanley</td>
+        <td class="metric-cell">
+          <span class="metric-value">98% adoption</span>
+          <span class="metric-context">Advisor adoption in 9 months</span>
+        </td>
+        <td class="timeline-cell">9 months</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Goldman Sachs</td>
+        <td class="sector-cell">Financial Services</td>
+        <td>Developer tools</td>
+        <td class="metric-cell">
+          <span class="metric-value">20--30 min &rarr; &lt;2 min</span>
+          <span class="metric-context">Task completion time</span>
+        </td>
+        <td class="timeline-cell">2 weeks to 34%</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Stripe</td>
+        <td class="sector-cell">Technology</td>
+        <td>Fraud detection (Radar)</td>
+        <td class="metric-cell">
+          <span class="metric-value">59% &rarr; 97%</span>
+          <span class="metric-context">Fraud detection accuracy</span>
+        </td>
+        <td class="timeline-cell">Iterative</td>
+        <td><span class="strategy-badge strategy-build">Build</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Bosch</td>
+        <td class="sector-cell">Manufacturing</td>
+        <td>Industrial AI (energy)</td>
+        <td class="metric-cell">
+          <span class="metric-value">18% savings</span>
+          <span class="metric-context">Energy consumption reduction</span>
+        </td>
+        <td class="timeline-cell">Multi-year</td>
+        <td><span class="strategy-badge strategy-build">Build</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Mayo Clinic</td>
+        <td class="sector-cell">Healthcare</td>
+        <td>Clinical AI</td>
+        <td class="metric-cell">
+          <span class="metric-value">4 weeks &rarr; 1 week</span>
+          <span class="metric-context">Research task completion</span>
+        </td>
+        <td class="timeline-cell">12+ months</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">McKinsey</td>
+        <td class="sector-cell">Professional Services</td>
+        <td>Lilli (knowledge)</td>
+        <td class="metric-cell">
+          <span class="metric-value">1 day/week saved</span>
+          <span class="metric-context">Per consultant</span>
+        </td>
+        <td class="timeline-cell">Ongoing</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">BCG</td>
+        <td class="sector-cell">Professional Services</td>
+        <td>Enterprise AI practice</td>
+        <td class="metric-cell">
+          <span class="metric-value">$3.6B (25% of revenue)</span>
+          <span class="metric-context">AI-related revenue</span>
+        </td>
+        <td class="timeline-cell">FY 2024</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">Shopify</td>
+        <td class="sector-cell">Technology</td>
+        <td>AI-first operations</td>
+        <td class="metric-cell">
+          <span class="metric-value">AI as hiring gate</span>
+          <span class="metric-context">Prove AI can't do it first</span>
+        </td>
+        <td class="timeline-cell">2025</td>
+        <td><span class="strategy-badge strategy-boost">Boost</span></td>
+      </tr>
+      <tr>
+        <td class="company-cell">UK GDS</td>
+        <td class="sector-cell">Government</td>
+        <td>GOV.UK Chat</td>
+        <td class="metric-cell">
+          <span class="metric-value">23 seconds</span>
+          <span class="metric-context">vs hundreds of days (FOI)</span>
+        </td>
+        <td class="timeline-cell">Rapid</td>
+        <td><span class="strategy-badge strategy-buy">Buy</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note-bar">
+    <span class="note-label">Pattern</span>
+    "Boost" -- buy the model, enhance with proprietary data and guardrails -- is the dominant strategy among successful enterprise deployments. Vendor-led deployments outperform internal builds 2:1 (MIT 2025).
+  </div>
+
+  <p class="caption"><strong>Figure VIS-49.</strong> Published ROI from enterprise AI deployments. Every metric is publicly reported by the named organisation. Strategy column shows that "Boost" (buy model, enhance with proprietary data) is the dominant successful pattern. Sources: company reports, MIT 2025, Stanford Enterprise AI Playbook.</p>
+
+</div>
+</body>
+</html>

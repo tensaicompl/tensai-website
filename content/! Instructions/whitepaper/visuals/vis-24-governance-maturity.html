@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-24 — Governance Maturity Diagnostic</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 800px;
+    max-width: 560px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 44px 36px 32px;
+  }
+
+  .card-header {
+    margin-bottom: 28px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #0F172A;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.4;
+  }
+
+  .questions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .question-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .question-item:last-child {
+    border-bottom: none;
+  }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 3px;
+    margin-top: 1px;
+  }
+
+  .question-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: #9CA3AF;
+    min-width: 18px;
+    margin-top: 2px;
+  }
+
+  .question-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    color: #0F172A;
+    line-height: 1.5;
+  }
+
+  /* Scoring rubric */
+  .scoring {
+    margin-top: 28px;
+    border-top: 2px solid #0F172A;
+    padding-top: 20px;
+  }
+
+  .scoring-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+
+  .scoring-levels {
+    display: flex;
+    gap: 0;
+  }
+
+  .scoring-level {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #E2E8F0;
+    text-align: center;
+  }
+
+  .scoring-level:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+
+  .scoring-level:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+
+  .scoring-level + .scoring-level {
+    border-left: none;
+  }
+
+  .scoring-range {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+
+  .scoring-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  .scoring-desc {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+
+  .scoring-level.operational {
+    background: #EDE9FE;
+    border-color: #6D28D9;
+  }
+
+  .scoring-level.operational .scoring-range {
+    color: #6D28D9;
+  }
+
+  .scoring-level.operational .scoring-label {
+    color: #6D28D9;
+    font-weight: 600;
+  }
+
+  .scoring-level.operational .scoring-desc {
+    color: #6D28D9;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="card-header">
+    <div class="title">Governance Maturity Diagnostic</div>
+    <div class="subtitle">Is your governance operational or theatrical?</div>
+  </div>
+
+  <ul class="questions">
+    <li class="question-item">
+      <div class="checkbox"></div>
+      <div class="question-number">1</div>
+      <div class="question-text">Can you name the governance owner for every production AI system?</div>
+    </li>
+    <li class="question-item">
+      <div class="checkbox"></div>
+      <div class="question-number">2</div>
+      <div class="question-text">Does governance activate outside of audits?</div>
+    </li>
+    <li class="question-item">
+      <div class="checkbox"></div>
+      <div class="question-number">3</div>
+      <div class="question-text">Do you have a decision log for AI system changes?</div>
+    </li>
+    <li class="question-item">
+      <div class="checkbox"></div>
+      <div class="question-number">4</div>
+      <div class="question-text">Can you detect shadow AI tools within 30 days?</div>
+    </li>
+    <li class="question-item">
+      <div class="checkbox"></div>
+      <div class="question-number">5</div>
+      <div class="question-text">Have governance costs been budgeted as a line item?</div>
+    </li>
+  </ul>
+
+  <div class="scoring">
+    <div class="scoring-title">Scoring</div>
+    <div class="scoring-levels">
+      <div class="scoring-level">
+        <div class="scoring-range">0--1</div>
+        <div class="scoring-label">Theatrical</div>
+        <div class="scoring-desc">Governance exists on paper only</div>
+      </div>
+      <div class="scoring-level">
+        <div class="scoring-range">2--3</div>
+        <div class="scoring-label">Emerging</div>
+        <div class="scoring-desc">Some practices, not systematic</div>
+      </div>
+      <div class="scoring-level operational">
+        <div class="scoring-range">4--5</div>
+        <div class="scoring-label">Operational</div>
+        <div class="scoring-desc">Active, embedded, continuous</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">The Governance Maturity Diagnostic. Five questions that reveal whether your AI governance is operational or theatrical.</div>
+</div>
+</body>
+</html>

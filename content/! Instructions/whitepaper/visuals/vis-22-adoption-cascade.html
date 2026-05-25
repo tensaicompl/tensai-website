@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIS-22 — Adoption Cascade</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .frame {
+    width: 520px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 48px 40px 36px;
+  }
+
+  .title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0F172A;
+    text-align: center;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    color: #334155;
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .cascade {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .level {
+    display: flex;
+    align-items: stretch;
+    position: relative;
+  }
+
+  .level-bar {
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .level:nth-child(1) .level-bar { width: 100%; }
+  .level:nth-child(2) .level-bar { width: 85%; }
+  .level:nth-child(3) .level-bar { width: 70%; }
+  .level:nth-child(4) .level-bar { width: 55%; }
+
+  .level-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .level-number {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #E2E8F0;
+    line-height: 1;
+  }
+
+  .level-name {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0F172A;
+  }
+
+  .level-question {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #334155;
+    font-style: italic;
+    margin-bottom: 6px;
+    padding-left: 28px;
+  }
+
+  .level-metric {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    color: #6B7280;
+    padding-left: 28px;
+  }
+
+  /* Arrow connectors between levels */
+  .arrow-connector {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+  }
+
+  .arrow-connector svg {
+    display: block;
+  }
+
+  /* Conversion rate annotation */
+  .conversion {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateX(100%) translateY(-50%);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    white-space: nowrap;
+    padding-left: 12px;
+  }
+
+  .conversion-highlight {
+    color: #6D28D9;
+  }
+
+  .conversion-normal {
+    color: #6B7280;
+  }
+
+  .data-callout {
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .data-callout-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  .data-callout-text strong {
+    color: #0F172A;
+    font-weight: 700;
+  }
+
+  .caption {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 11px;
+    color: #6B7280;
+    text-align: center;
+    margin-top: 24px;
+    line-height: 1.5;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="title">Adoption Cascade</div>
+  <div class="subtitle">Four-level programme design for organisation-wide AI adoption</div>
+
+  <div class="cascade">
+    <!-- Level 1 -->
+    <div class="level">
+      <div class="level-bar">
+        <div class="level-header">
+          <span class="level-number">1</span>
+          <span class="level-name">Awareness</span>
+        </div>
+        <div class="level-question">"What AI can do"</div>
+        <div class="level-metric">Metric: 80%+ awareness score</div>
+      </div>
+    </div>
+
+    <div class="arrow-connector">
+      <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+        <line x1="8" y1="0" x2="8" y2="14" stroke="#0F172A" stroke-width="1.5"/>
+        <path d="M3 12 L8 18 L13 12" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+
+    <!-- Level 2 -->
+    <div class="level">
+      <div class="level-bar">
+        <div class="level-header">
+          <span class="level-number">2</span>
+          <span class="level-name">Skill-Building</span>
+        </div>
+        <div class="level-question">"How to use AI tools"</div>
+        <div class="level-metric">Metric: completion rates, certification</div>
+        <span class="conversion conversion-highlight" style="right: -4px;">25% to 76%<br><span style="font-size: 9px; color: #6B7280; font-weight: 400;">with structured training</span></span>
+      </div>
+    </div>
+
+    <div class="arrow-connector">
+      <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+        <line x1="8" y1="0" x2="8" y2="14" stroke="#0F172A" stroke-width="1.5"/>
+        <path d="M3 12 L8 18 L13 12" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+
+    <!-- Level 3 -->
+    <div class="level">
+      <div class="level-bar">
+        <div class="level-header">
+          <span class="level-number">3</span>
+          <span class="level-name">Workflow Integration</span>
+        </div>
+        <div class="level-question">"AI embedded in daily work"</div>
+        <div class="level-metric">Metric: daily active usage, cycle time</div>
+      </div>
+    </div>
+
+    <div class="arrow-connector">
+      <svg width="16" height="20" viewBox="0 0 16 20" fill="none">
+        <line x1="8" y1="0" x2="8" y2="14" stroke="#0F172A" stroke-width="1.5"/>
+        <path d="M3 12 L8 18 L13 12" stroke="#0F172A" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+
+    <!-- Level 4 -->
+    <div class="level">
+      <div class="level-bar">
+        <div class="level-header">
+          <span class="level-number">4</span>
+          <span class="level-name">Behaviour Change</span>
+        </div>
+        <div class="level-question">"AI as default approach"</div>
+        <div class="level-metric">Metric: time-to-AI, unprompted usage</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-callout">
+    <div class="data-callout-text">Companies with structured upskilling see <strong>2x AI ROI</strong>.<br>Adoption jumps from 25% to 76% with training programmes.</div>
+  </div>
+
+  <div class="caption">The Adoption Cascade. Four-level programme design for moving from power-user pockets to organisation-wide AI adoption. Companies with structured upskilling see 2x AI ROI.</div>
+</div>
+</body>
+</html>
