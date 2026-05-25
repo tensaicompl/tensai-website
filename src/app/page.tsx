@@ -123,13 +123,6 @@ export default function Home() {
             </div>
 
             <div className="relative flex items-center justify-center">
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(circle at center, rgba(109,40,217,0.06), transparent 60%)",
-                }}
-              />
               <img
                 src="/logos/icon-black-cropped.svg"
                 alt=""
