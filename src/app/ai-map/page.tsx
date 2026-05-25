@@ -40,37 +40,30 @@ export default function AiMapPage() {
       <SiteNav />
 
       <main>
-        {/* The Map */}
-        <section style={{ padding: "96px 16px" }}>
-          <div
-            style={{
-              maxWidth: "1440px",
-              margin: "0 auto",
-              textAlign: "center",
-              marginBottom: "64px",
-            }}
-          >
-            <Eyebrow className="justify-center">THE WHOLE SYSTEM</Eyebrow>
-            <h2
+        {/* Hero */}
+        <section style={{ padding: "96px 16px 48px" }}>
+          <div style={{ maxWidth: "1440px", margin: "0 auto" }}>
+            <Eyebrow>THE AI MAP</Eyebrow>
+            <h1
               className="font-display"
               style={{
                 marginTop: "12px",
-                fontSize: "clamp(28px, 4vw, 44px)",
+                fontSize: "clamp(36px, 5vw, 56px)",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
-                lineHeight: 1.1,
+                lineHeight: 1.05,
+                color: "var(--fg-1)",
               }}
             >
               Enterprise AI, drawn as one system.
-            </h2>
+            </h1>
             <p
               style={{
-                marginTop: "16px",
+                maxWidth: "680px",
+                color: "var(--fg-2)",
                 fontSize: "20px",
                 lineHeight: 1.55,
-                color: "var(--fg-2)",
-                maxWidth: "680px",
-                margin: "16px auto 0",
+                marginTop: "16px",
               }}
             >
               One system. It converts sourced, commodity intelligence into
@@ -79,7 +72,10 @@ export default function AiMapPage() {
               framing the whole.
             </p>
           </div>
+        </section>
 
+        {/* The Map */}
+        <section style={{ padding: "0 16px 96px" }}>
           <TheIndex />
         </section>
 
