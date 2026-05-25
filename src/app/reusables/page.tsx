@@ -268,14 +268,7 @@ export default function ReusablesPage() {
             </p>
             </div>
 
-            <div className="reusables-hero-icon" style={{ position: "relative", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", alignSelf: "center" }}>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "radial-gradient(circle at center, rgba(109,40,217,0.06), transparent 60%)",
-                }}
-              />
+            <div className="reusables-hero-icon" style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: "center" }}>
               <img
                 src="/logos/icon-black-cropped.svg"
                 alt=""
