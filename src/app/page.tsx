@@ -147,7 +147,7 @@ export default function Home() {
               <img
                 src="/logos/icon-black-cropped.svg"
                 alt=""
-                className="relative"
+                className="relative enso-icon"
                 style={{
                   width: "min(320px, 28vw)",
                   height: "auto",

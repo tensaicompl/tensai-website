@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoPaths } from "@/components/marketing/logo-paths";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface NavLink {
   label: string;
@@ -164,7 +165,7 @@ export function SiteNav() {
           height: "72px",
           display: "flex",
           alignItems: "center",
-          backgroundColor: scrolled ? "rgba(250,250,250,0.82)" : "transparent",
+          backgroundColor: scrolled ? "var(--nav-bg-scrolled, rgba(250,250,250,0.82))" : "transparent",
           backdropFilter: scrolled ? "blur(12px)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
           borderBottom: `1px solid ${scrolled ? "var(--border)" : "transparent"}`,
@@ -274,8 +275,9 @@ export function SiteNav() {
             })}
           </div>
 
-          {/* Sign in — right side */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }} className="hidden-mobile">
+          {/* Right side — theme toggle + sign in */}
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "12px" }} className="hidden-mobile">
+            <ThemeToggle />
             <button
               className="nav-signin"
               style={{
@@ -366,6 +368,9 @@ export function SiteNav() {
           }}
           className="show-mobile"
         >
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+            <ThemeToggle />
+          </div>
           <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             {NAV_ITEMS.flatMap((item) => {
               const links = [item, ...(item.dropdown || [])];
@@ -412,6 +417,7 @@ export function SiteNav() {
         .nav-link:hover { color: var(--fg-1); }
         .nav-link-active { font-weight: 600; color: var(--fg-1); }
         .nav-signin:hover { background: var(--accent-hover); }
+        .theme-toggle:hover { color: var(--fg-1); border-color: var(--fg-3); background: var(--bg-surface); }
         .nav-dropdown-wrap { position: relative; }
         .nav-chevron {
           margin-left: 4px;

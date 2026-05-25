@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat, Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -38,9 +39,19 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${montserrat.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");var r=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches)?"dark":"light";document.documentElement.setAttribute("data-theme",r)}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-[var(--bg-page)] text-[var(--fg-1)]">
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

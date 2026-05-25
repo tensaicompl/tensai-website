@@ -272,6 +272,7 @@ export default function ReusablesPage() {
               <img
                 src="/logos/icon-black-cropped.svg"
                 alt=""
+                className="enso-icon"
                 style={{ width: "min(320px, 28vw)", height: "auto", objectFit: "contain", display: "block", position: "relative" }}
               />
             </div>

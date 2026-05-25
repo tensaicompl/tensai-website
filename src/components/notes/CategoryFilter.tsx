@@ -59,14 +59,14 @@ export function CategoryFilter({
         }
 
         .category-pill--selected {
-          background: var(--color-midnight);
-          color: #ffffff;
+          background: var(--fg-1);
+          color: var(--bg-page);
           border-color: transparent;
         }
 
         .category-pill--selected:hover {
-          background: var(--color-midnight-light);
-          color: #ffffff;
+          background: var(--fg-2);
+          color: var(--bg-page);
           border-color: transparent;
         }
       `}</style>

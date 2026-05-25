@@ -60,7 +60,7 @@ export function SiteFooter() {
   return (
     <footer
       style={{
-        backgroundColor: "var(--color-midnight)",
+        backgroundColor: "#0F172A",
         paddingTop: "72px",
         paddingBottom: "36px",
       }}
